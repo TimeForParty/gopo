@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GoPo</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
+    <meta name="theme-color" content="#FF0055">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { gopo: '#FF0055' }, fontFamily: { sans: ['Inter', 'sans-serif'] },
+            animation: {
+                'mood-joy':'moodJoy 2s ease-in-out infinite','mood-anger':'moodAnger .3s ease-in-out infinite','mood-sad':'moodSad 4s ease-in-out infinite',
+                'mood-think':'moodThink 4s ease-in-out infinite','mood-party':'moodParty 1.5s ease-in-out infinite','mood-pain':'moodPain 3s ease-in-out infinite',
+                'ripple':'ripple .6s ease-out forwards','post-pulse':'postPulse .6s ease-out','gold-glow':'goldGlow 3s ease-in-out infinite',
+            },
+            keyframes: {
+                moodJoy:{'0%,100%':{transform:'translateY(0)'},'50%':{transform:'translateY(-4px)'}},
+                moodAnger:{'0%,100%':{transform:'translateX(0)'},'25%':{transform:'translateX(-2px)'},'75%':{transform:'translateX(2px)'}},
+                moodSad:{'0%,100%':{transform:'translateY(0)',opacity:1},'50%':{transform:'translateY(4px)',opacity:.85}},
+                moodThink:{'0%,100%':{transform:'translateY(0)'},'50%':{transform:'translateY(-2px)'}},
+                moodParty:{'0%,100%':{transform:'scale(1)'},'50%':{transform:'scale(1.02)'}},
+                moodPain:{'0%,100%':{transform:'rotate(0deg)'},'25%':{transform:'rotate(-1deg)'},'75%':{transform:'rotate(1deg)'}},
+                ripple:{'0%':{transform:'scale(0)',opacity:.4},'100%':{transform:'scale(4)',opacity:0}},
+                postPulse:{'0%':{transform:'scale(1)',boxShadow:'0 0 0 0 rgba(255,0,85,.4)'},'50%':{transform:'scale(1.025)',boxShadow:'0 0 30px 10px rgba(255,0,85,.15)'},'100%':{transform:'scale(1)',boxShadow:'0 0 0 0 rgba(255,0,85,0)'}},
+                goldGlow:{'0%,100%':{boxShadow:'0 0 20px 4px rgba(255,193,7,.4)'},'50%':{boxShadow:'0 0 35px 12px rgba(255,193,7,.6)'}},
+            }
+        } } }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .liquid-glass { background: rgba(255,255,255,0.65); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px 0 rgba(31,38,135,0.07); }
+        .gopo-logo { background: #FF0055; padding: 10px 30px; border-radius: 40px 40px 40px 10px; position: relative; display: inline-flex; box-shadow: 0 10px 25px rgba(255,0,85,0.4); user-select: none; -webkit-user-select: none; }
+        .gopo-logo::after { content: ''; position: absolute; bottom: -12px; right: 20px; border-left: 25px solid transparent; border-top: 35px solid #FF0055; border-bottom-left-radius: 10px; transform: rotate(-15deg); }
+        .gopo-logo span { color: #fff; font-weight: 900; font-size: 1.8rem; transform: rotate(-10deg); }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #FF0055; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .post-bubble { -webkit-touch-callout: none; touch-action: pan-y; }
+        @keyframes typingDot { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-3px);opacity:1} }
+        .typing-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; animation: typingDot 1.4s ease-in-out infinite; }
+        .typing-dot:nth-child(2){animation-delay:.2s} .typing-dot:nth-child(3){animation-delay:.4s}
+        .story-ring { background: linear-gradient(45deg,#FF0055,#FFB800,#FF0055); padding:3px; border-radius:50%; }
+        .story-ring.seen { background: #d1d5db; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .blown-post { opacity:.4; transform:scale(.96); filter:grayscale(.6); }
+        @keyframes recordingPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+        .rec-pulse { animation: recordingPulse 1s ease-in-out infinite; }
+        .hashtag { color: #FF0055; font-weight: 700; cursor: pointer; }
+        .hashtag:hover { text-decoration: underline; }
+        /* ===== ФИРМЕННАЯ ЗАГРУЗКА ===== */
+        @keyframes popIn {
+            0% { transform: scale(0.3) translateY(40px); opacity: 0; }
+            60% { transform: scale(1.08) translateY(-5px); opacity: 1; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .splash-bubble {
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            background: #ffffff;
+            border-radius: 3rem 3rem 3rem 0.5rem;
+            position: relative;
+            padding: 2rem 4rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+        .splash-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-right: 40px solid transparent;
+            border-top: 50px solid #ffffff;
+            border-bottom-left-radius: 15px;
+            transform: rotate(0deg);
+        }
+        .splash-bubble span {
+            color: #2C2C2C;
+            font-weight: 900;
+            font-size: 3.5rem;
+            letter-spacing: -2px;
+            transform: rotate(-8deg);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef, memo } = React;
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSqIewoV7YYhjJ6mx_jygVH4Ap4U7gAgs",
+            authDomain: "gopo-2b629.firebaseapp.com",
+            projectId: "gopo-2b629",
+            storageBucket: "gopo-2b629.firebasestorage.app",
+            messagingSenderId: "860909387262",
+            appId: "1:860909387262:web:1f55d6aed6c51b113614af"
+        };
+        let auth, db;
+        try { const app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e){ console.error(e); }
+
+        const MOODS = {
+            neutral:{emoji:'💬',name:'Обычный',bg:'bg-white',border:'border-slate-200',text:'text-slate-800',anim:''},
+            joy:{emoji:'😊',name:'Радость',bg:'bg-yellow-50',border:'border-yellow-200',text:'text-yellow-900',anim:'animate-mood-joy'},
+            anger:{emoji:'😡',name:'Злость',bg:'bg-red-100',border:'border-red-300',text:'text-red-900',anim:'animate-mood-anger'},
+            sad:{emoji:'😢',name:'Грусть',bg:'bg-blue-50',border:'border-blue-200',text:'text-blue-900',anim:'animate-mood-sad'},
+            think:{emoji:'🤔',name:'Мысли',bg:'bg-purple-50',border:'border-purple-200',text:'text-purple-900',anim:'animate-mood-think'},
+            party:{emoji:'🎉',name:'Веселье',bg:'bg-pink-50',border:'border-pink-300',text:'text-pink-900',anim:'animate-mood-party'},
+            pain:{emoji:'💔',name:'Боль',bg:'bg-slate-200',border:'border-slate-400',text:'text-slate-900',anim:'animate-mood-pain'},
+        };
+        const EMOJI_REACTIONS = ['❤️','😂','🔥','👍','😮','😢'];
+
+        const compressImage = (file, maxSize=800, quality=0.7) => new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const c = document.createElement('canvas');
+                    let w=img.width, h=img.height;
+                    if(w>h){if(w>maxSize){h=Math.round(h*maxSize/w);w=maxSize}}else{if(h>maxSize){w=Math.round(w*maxSize/h);h=maxSize}}
+                    c.width=w; c.height=h;
+                    c.getContext('2d').drawImage(img,0,0,w,h);
+                    res(c.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = rej;
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        const timeAgo = (ts) => {
+            if (!ts) return '...';
+            try {
+                const d = ts.toDate ? ts.toDate() : new Date(ts);
+                const diff = Math.floor((new Date() - d) / 1000);
+                if (diff < 60) return 'только что';
+                if (diff < 3600) return Math.floor(diff/60) + ' мин.';
+                if (diff < 86400) return Math.floor(diff/3600) + ' ч.';
+                return d.toLocaleDateString('ru');
+            } catch { return '...'; }
+        };
+
+        const isReallyOnline = (u) => {
+            if (!u?.isOnline) return false;
+            if (!u.lastActiveAt) return true;
+            try { return (Date.now() - u.lastActiveAt.toDate().getTime()) < 120000; } catch { return true; }
+        };
+
+        const formatLastSeen = (u) => {
+            if (!u) return '';
+            if (isReallyOnline(u)) return 'в сети';
+            if (!u.lastSeen) return 'не в сети';
+            try {
+                const d = u.lastSeen.toDate();
+                const t = d.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+                const diffD = Math.floor((new Date()-d)/86400000);
+                if (diffD===0) return `был(а) в ${t}`;
+                if (diffD===1) return `был(а) вчера в ${t}`;
+                if (diffD<7) return `был(а) ${d.toLocaleDateString('ru',{weekday:'short'})} в ${t}`;
+                return `был(а) ${d.toLocaleDateString('ru')}`;
+            } catch { return 'не в сети'; }
+        };
+
+        const isTypingNow = (u, targetId) => {
+            if (!u?.typingIn || u.typingIn !== targetId) return false;
+            if (!u.typingAt) return true;
+            try { return (Date.now() - u.typingAt.toDate().getTime()) < 6000; } catch { return true; }
+        };
+
+        const sendNotification = async (recipientId, sender, type, text, extra={}) => {
+            if (!recipientId || recipientId === sender.uid) return;
+            try {
+                await db.collection('notifications').add({
+                    recipientId, senderId: sender.uid, senderName: sender.username, senderAvatar: sender.avatar,
+                    type, text, read:false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    ...extra
+                });
+            } catch(e){ console.error('notif:', e); }
+        };
+
+        const renderTextWithHashtags = (text, onHashtagClick) => {
+            if (!text) return null;
+            const parts = text.split(/(#[\wа-яА-ЯёЁ]+)/g);
+            return parts.map((p, i) => {
+                if (p.startsWith('#')) {
+                    return <span key={i} className="hashtag" onClick={(e) => { e.stopPropagation(); onHashtagClick && onHashtagClick(p); }}>{p}</span>;
+                }
+                return <span key={i}>{p}</span>;
+            });
+        };
+
+        const I = {
+            Home: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+            Msg: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+            Search: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+            Bell: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+            Music: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
+            Shield: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+            User: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+            LogOut: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+            Send: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+            Trash: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+            Plus: () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+            X: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+            Back: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+            Image: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+            Check: ({className}) => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>,
+            Sparkles: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>,
+            Comment: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+            Info: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+            Eye: ({className}) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={className}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+            Wind: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>,
+            Mic: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
+            Play: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+            Pause: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
+            Crown: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 6l4 12h12l4-12-7 5-3-7-3 7z"/></svg>,
+        };
+
+        // ===== ФИРМЕННЫЙ ЭКРАН ЗАГРУЗКИ =====
+        const SplashScreen = () => (
+            <div className="flex h-screen w-full bg-gopo items-center justify-center overflow-hidden">
+                <div className="splash-bubble">
+                    <span>GoPo</span>
+                </div>
+            </div>
+        );
+
+        const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false }) => {
+            const inner = src
+                ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} />
+                : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
+            if (!showStatus) return <div className="flex-shrink-0">{inner}</div>;
+            const dot = Math.max(10, Math.round(size*0.28));
+            return (
+                <div className="relative flex-shrink-0" style={{width:size, height:size}}>
+                    {inner}
+                    <span className={`absolute bottom-0 right-0 rounded-full border-2 border-white shadow-sm ${isOnline?'bg-green-500':'bg-slate-300'}`} style={{width:dot, height:dot}} />
+                </div>
+            );
+        });
+
+        const TypingDots = ({ className="" }) => (
+            <span className={`inline-flex items-center space-x-1 ${className}`}>
+                <span className="typing-dot"></span><span className="typing-dot"></span><span className="typing-dot"></span>
+            </span>
+        );
+
+        const Logo = ({ small }) => <div className={`gopo-logo ${small?'scale-75 origin-left':''}`}><span>GoPo</span></div>;
+
+        // === ГЛАВНЫЙ КОМПОНЕНТ ===
+        function App() {
+            const [splashDone, setSplashDone] = useState(false);
+            const [user, setUser] = useState(null);
+            const [profile, setProfile] = useState(null);
+            const [usersMap, setUsersMap] = useState({});
+            const [loading, setLoading] = useState(true);
+            const [activeTab, setActiveTab] = useState('feed');
+            const [showCreate, setShowCreate] = useState(false);
+            const [viewingProfile, setViewingProfile] = useState(null);
+            const [viewingPost, setViewingPost] = useState(null);
+            const [showNotifications, setShowNotifications] = useState(false);
+            const [unreadNotifs, setUnreadNotifs] = useState(0);
+            const [searchHashtag, setSearchHashtag] = useState(null);
+            const isAdmin = user?.email === 'hvadim439@gmail.com';
+
+            // ⏱️ Фирменная заставка на 2 секунды при каждом открытии
+            useEffect(() => {
+                const t = setTimeout(() => setSplashDone(true), 2000);
+                return () => clearTimeout(t);
+            }, []);
+
+            useEffect(() => {
+                if (!auth) return;
+                const unsub = auth.onAuthStateChanged(u => { setUser(u); if(!u){setProfile(null);setLoading(false);} });
+                return () => unsub();
+            }, []);
+
+            useEffect(() => {
+                const unsub = db.collection('users').onSnapshot(snap => {
+                    const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); });
+                    setUsersMap(m);
+                }, err => console.error('users:', err));
+                return () => unsub();
+            }, []);
+
+            useEffect(() => {
+                if (!user) return;
+                const ref = db.collection('users').doc(user.uid);
+                const markOnline = () => ref.update({ isOnline:true, lastActiveAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+                const markOffline = () => ref.update({ isOnline:false, lastSeen: firebase.firestore.FieldValue.serverTimestamp(), typingIn:null }).catch(()=>{});
+                markOnline();
+                const vis = () => document.hidden ? markOffline() : markOnline();
+                document.addEventListener('visibilitychange', vis);
+                window.addEventListener('beforeunload', markOffline);
+                const hb = setInterval(() => { if(!document.hidden) markOnline(); }, 60000);
+                return () => {
+                    document.removeEventListener('visibilitychange', vis);
+                    window.removeEventListener('beforeunload', markOffline);
+                    clearInterval(hb); markOffline();
+                };
+            }, [user]);
+
+            useEffect(() => {
+                if (!user) return;
+                const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
+                    if (doc.exists) { setProfile(doc.data()); setLoading(false); }
+                    else if (user.displayName) {
+                        const np = {
+                            uid:user.uid, email:user.email,
+                            username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''),
+                            displayName:user.displayName, avatar:null, banner:'', bio:'',
+                            isVerified: user.email === 'hvadim439@gmail.com',
+                            isBanned:false, followers:[], following:[],
+                            isOnline:true, lastSeen:null, lastActiveAt:null,
+                            typingIn:null, typingAt:null, showTypingFeed:true,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        await db.collection('users').doc(user.uid).set(np);
+                        setProfile(np); setLoading(false);
+                    }
+                }, err => { console.error('profile:', err); setLoading(false); });
+                return () => unsub();
+            }, [user]);
+
+            useEffect(() => {
+                if (!user) return;
+                const unsub = db.collection('notifications')
+                    .where('recipientId','==',user.uid)
+                    .where('read','==',false)
+                    .onSnapshot(snap => setUnreadNotifs(snap.size), err => console.error('notifs count:', err));
+                return () => unsub();
+            }, [user]);
+
+            // 🎬 Порядок показа: Splash → Loader → Auth → App
+            if (!splashDone) return <SplashScreen />;
+            if (loading || !auth) return <div className="h-screen flex items-center justify-center bg-slate-50"><div className="loader"></div></div>;
+            if (!user) return <AuthScreen />;
+            if (!profile) return <div className="h-screen flex items-center justify-center bg-slate-50"><div className="loader"></div></div>;
+
+            if (profile.isBanned) return (
+                <div className="h-screen flex items-center justify-center p-6 text-center">
+                    <div className="liquid-glass p-10 rounded-3xl">
+                        <div className="text-red-500 text-6xl mb-4">⛔</div>
+                        <h1 className="text-2xl font-black mb-2">Аккаунт заблокирован</h1>
+                        <p className="text-slate-500 mb-6">Обратитесь к администрации GoPo.</p>
+                        <button onClick={()=>auth.signOut()} className="bg-gopo text-white font-bold px-6 py-3 rounded-xl">Выйти</button>
+                    </div>
+                </div>
+            );
+
+            const goToHashtag = (tag) => { setActiveTab('search'); setSearchHashtag(tag); };
+
+            return (
+                <div className="flex h-screen bg-[#f0f2f5] relative overflow-hidden">
+                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin}
+                        onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={unreadNotifs} />
+                    <main className="flex-1 overflow-y-auto pb-24 md:pb-8 p-4 md:p-8 relative">
+                        <div className="max-w-2xl mx-auto">
+                            <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
+                            {activeTab==='feed' && <FeedTab user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap}
+                                onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
+                            {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile}
+                                onCommentClick={setViewingPost} onHashtagClick={goToHashtag}
+                                initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
+                            {activeTab==='dm' && <MessengerTab user={user} profile={profile} usersMap={usersMap} />}
+                            {activeTab==='notifications' && <NotificationsTab user={user} onUserClick={setViewingProfile} onOpenPost={setViewingPost} />}
+                            {activeTab==='profile' && <ProfileTab user={user} profile={profile} usersMap={usersMap} />}
+                            {activeTab==='admin' && isAdmin && <AdminTab user={user} usersMap={usersMap} />}
+                            {activeTab==='music' && <div className="text-center p-10 font-bold text-slate-400">Музыка скоро появится...</div>}
+                        </div>
+                    </main>
+                    <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin}
+                        onCreate={()=>setShowCreate(true)} unread={unreadNotifs} />
+                    {showCreate && <CreatePostModal user={user} profile={profile} onClose={()=>setShowCreate(false)} />}
+                    {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user}
+                        currentProfile={profile} onClose={()=>setViewingProfile(null)} />}
+                    {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile}
+                        usersMap={usersMap} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} />}
+                    {showNotifications && <NotificationsModal user={user} onClose={()=>setShowNotifications(false)}
+                        onUserClick={(u)=>{setShowNotifications(false); setViewingProfile(u);}} />}
+                </div>
+            );
+        }
+
+        const AuthScreen = () => {
+            const [isLogin, setIsLogin] = useState(true);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [name, setName] = useState('');
+            const [username, setUsername] = useState('');
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const submit = async (e) => {
+                e.preventDefault(); setError(''); setLoading(true);
+                try {
+                    if (isLogin) await auth.signInWithEmailAndPassword(email, password);
+                    else {
+                        const cred = await auth.createUserWithEmailAndPassword(email, password);
+                        await cred.user.updateProfile({ displayName: name });
+                        await db.collection('users').doc(cred.user.uid).set({
+                            uid:cred.user.uid, email, username: username.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase(),
+                            displayName: name, avatar:null, banner:'', bio:'',
+                            isVerified: email==='hvadim439@gmail.com', isBanned:false, followers:[], following:[],
+                            isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null,
+                            showTypingFeed:true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                } catch(err) {
+                    const m = {
+                        'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль',
+                        'auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)',
+                        'auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные'
+                    };
+                    setError(m[err.code] || err.message);
+                }
+                setLoading(false);
+            };
+
+            return (
+                <div className="h-screen flex items-center justify-center p-4 relative">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80')] bg-cover opacity-20 filter blur-xl"></div>
+                    <div className="liquid-glass p-8 rounded-3xl w-full max-w-md relative z-10">
+                        <div className="flex justify-center mb-8"><Logo /></div>
+                        <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo':'Создать аккаунт'}</h2>
+                        {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 text-sm font-bold">{error}</div>}
+                        <form onSubmit={submit} className="space-y-4">
+                            {!isLogin && <>
+                                <input type="text" placeholder="Ваше имя" value={name} onChange={e=>setName(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
+                                <input type="text" placeholder="Никнейм (без @)" value={username} onChange={e=>setUsername(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
+                            </>}
+                            <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
+                            <input type="password" placeholder="Пароль (мин. 6 символов)" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
+                            <button type="submit" disabled={loading} className="w-full bg-gopo text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-200 disabled:opacity-50">
+                                {loading?'Загрузка...':(isLogin?'Войти':'Зарегистрироваться')}
+                            </button>
+                        </form>
+                        <p onClick={()=>setIsLogin(!isLogin)} className="text-center mt-5 text-sm font-bold text-slate-600 cursor-pointer hover:text-gopo">
+                            {isLogin?'Нет аккаунта? Зарегистрироваться':'Уже есть аккаунт? Войти'}
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+
+        const Sidebar = ({ activeTab, setActiveTab, isAdmin, onCreate, onOpenNotifs, unread }) => (
+            <nav className="hidden md:flex flex-col w-64 m-4 rounded-3xl liquid-glass p-4 z-20">
+                <div className="mb-6 pl-2 flex items-center justify-between">
+                    <Logo small />
+                    <button onClick={onOpenNotifs} className="relative p-2 hover:bg-white/60 rounded-xl transition">
+                        <I.Bell />
+                        {unread > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center shadow-md">{unread > 9 ? '9+' : unread}</span>}
+                    </button>
+                </div>
+                <div className="space-y-1 flex-1">
+                    <NavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} label="Лента" />
+                    <NavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} label="Чаты" />
+                    <NavItem active={activeTab==='search'} onClick={()=>setActiveTab('search')} icon={<I.Search/>} label="Поиск" />
+                    <NavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} label="Профиль" />
+                    <NavItem active={false} onClick={()=>{}} icon={<I.Music/>} label="Музыка" disabled />
+                    {isAdmin && <NavItem active={activeTab==='admin'} onClick={()=>setActiveTab('admin')} icon={<I.Shield/>} label="Админ" color="text-red-500" />}
+                </div>
+                <button onClick={onCreate} className="w-full bg-gopo text-white font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 hover:bg-pink-600 transition mb-2">
+                    <I.Plus/><span className="ml-2">Создать</span>
+                </button>
+                <button onClick={()=>auth.signOut()} className="w-full p-3 text-slate-600 font-bold hover:bg-white/50 rounded-xl flex items-center justify-center transition">
+                    <I.LogOut/><span className="ml-2">Выйти</span>
+                </button>
+            </nav>
+        );
+
+        // ===== МОБИЛЬНОЕ МЕНЮ "3 ТОЧКИ" (Поиск + Админ) =====
+        const MobileMenuButton = ({ isAdmin, setActiveTab }) => {
+            const [open, setOpen] = useState(false);
+            const ref = useRef(null);
+
+            useEffect(() => {
+                if (!open) return;
+                const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+                document.addEventListener('mousedown', handle);
+                document.addEventListener('touchstart', handle);
+                return () => {
+                    document.removeEventListener('mousedown', handle);
+                    document.removeEventListener('touchstart', handle);
+                };
+            }, [open]);
+
+            return (
+                <div ref={ref} className="md:hidden relative mb-4 flex items-center justify-between">
+                    <button
+                        onClick={()=>setOpen(!open)}
+                        className="liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition"
+                        aria-label="Меню"
+                    >
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="5" r="2.2"/>
+                            <circle cx="12" cy="12" r="2.2"/>
+                            <circle cx="12" cy="19" r="2.2"/>
+                        </svg>
+                    </button>
+                    <Logo small />
+                    {open && (
+                        <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-56 fade-in">
+                            <button
+                                onClick={()=>{ setActiveTab('search'); setOpen(false); }}
+                                className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"
+                            >
+                                <span className="text-slate-500"><I.Search /></span>
+                                <span>Поиск</span>
+                            </button>
+                            {isAdmin && (
+                                <button
+                                    onClick={()=>{ setActiveTab('admin'); setOpen(false); }}
+                                    className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"
+                                >
+                                    <span><I.Shield /></span>
+                                    <span>Админ</span>
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const MobileNav = ({ activeTab, setActiveTab, isAdmin, onCreate, unread }) => (
+            <nav className="md:hidden fixed bottom-4 left-4 right-4 liquid-glass rounded-3xl flex justify-around items-center py-3 z-50">
+                <MobileNavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} />
+                <MobileNavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} />
+                <button onClick={onCreate} className="bg-gopo text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-pink-300 -mt-8 border-4 border-white"><I.Plus/></button>
+                <MobileNavItem active={activeTab==='notifications'} onClick={()=>setActiveTab('notifications')} icon={<I.Bell/>} badge={unread} />
+                <MobileNavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} />
+            </nav>
+        );
+
+        const NavItem = ({ icon, label, active, onClick, disabled, color }) => (
+            <button onClick={onClick} disabled={disabled} className={`w-full flex items-center space-x-3 p-3.5 rounded-2xl font-bold text-sm transition-all ${disabled?'opacity-40 cursor-not-allowed text-slate-400':active?'bg-gopo text-white shadow-lg shadow-pink-200':`hover:bg-white/60 ${color||'text-slate-700'}`}`}>
+                <span className={active && !disabled?'text-white':color||'text-slate-500'}>{icon}</span>
+                <span>{label}</span>
+            </button>
+        );
+
+        const MobileNavItem = ({ icon, active, onClick, disabled, badge }) => (
+            <button onClick={onClick} disabled={disabled} className={`relative p-2 rounded-xl transition ${disabled?'opacity-30':active?'text-gopo bg-gopo/10':'text-slate-500'}`}>
+                {icon}
+                {badge > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{badge > 9 ? '9+' : badge}</span>}
+            </button>
+        );
+
+        const NotificationsModal = ({ user, onClose, onUserClick }) => {
+            const [notifs, setNotifs] = useState([]);
+            useEffect(() => {
+                const unsub = db.collection('notifications').where('recipientId','==',user.uid).onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setNotifs(arr);
+                }, err => console.error('notifs:', err));
+                return () => unsub();
+            }, [user.uid]);
+
+            const markAllRead = async () => {
+                const batch = db.batch();
+                notifs.filter(n => !n.read).forEach(n => batch.update(db.collection('notifications').doc(n.id), {read:true}));
+                await batch.commit().catch(()=>{});
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
+                    <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col fade-in shadow-2xl">
+                        <div className="p-4 border-b flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                            <h2 className="text-lg font-black">Уведомления</h2>
+                            <div className="flex items-center space-x-2">
+                                <button onClick={markAllRead} className="text-xs font-bold text-gopo px-3 py-1 rounded-lg hover:bg-gopo/10">Прочитать все</button>
+                                <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><I.X/></button>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-2">
+                            {notifs.length === 0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Пока нет уведомлений</p>}
+                            {notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const NotifItem = ({ notif, onClick }) => {
+            const typeText = {
+                resonance: 'резонировал(а) с вашим пузырём',
+                comment: 'прокомментировал(а) ваш пузырь',
+                follow: 'подписался(-ась) на вас',
+                message: 'написал(а) вам сообщение',
+            };
+            return (
+                <div onClick={onClick} className={`flex items-start space-x-3 p-3 rounded-2xl cursor-pointer transition ${notif.read?'hover:bg-slate-50':'bg-pink-50/60 hover:bg-pink-100/60'}`}>
+                    <Avatar src={notif.senderAvatar} name={notif.senderName} size={40} />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-800">
+                            <span className="font-black">@{notif.senderName}</span>{' '}
+                            <span className="font-medium">{typeText[notif.type]||notif.type}</span>
+                        </p>
+                        {notif.text && <p className="text-xs text-slate-500 mt-1 line-clamp-2 italic">«{notif.text}»</p>}
+                        <p className="text-[10px] text-slate-400 font-bold mt-1">{timeAgo(notif.createdAt)}</p>
+                    </div>
+                    {!notif.read && <span className="w-2.5 h-2.5 bg-gopo rounded-full flex-shrink-0 mt-2"></span>}
+                </div>
+            );
+        };
+
+        const NotificationsTab = ({ user, onUserClick, onOpenPost }) => {
+            const [notifs, setNotifs] = useState([]);
+            useEffect(() => {
+                const unsub = db.collection('notifications').where('recipientId','==',user.uid).onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setNotifs(arr);
+                    arr.filter(n=>!n.read).forEach(n => db.collection('notifications').doc(n.id).update({read:true}).catch(()=>{}));
+                }, err => console.error('notifs:', err));
+                return () => unsub();
+            }, [user.uid]);
+            return (
+                <div className="fade-in">
+                    <h1 className="text-2xl font-black mb-4">Уведомления</h1>
+                    {notifs.length===0 && <div className="text-center p-16 liquid-glass rounded-3xl text-slate-400"><I.Bell/><p className="mt-4 font-bold">Пока нет уведомлений</p></div>}
+                    <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
+                        {notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}
+                    </div>
+                </div>
+            );
+        };
+
+        const StoriesBar = ({ user, profile, usersMap }) => {
+            const [stories, setStories] = useState([]);
+            const [viewing, setViewing] = useState(null);
+            const [creating, setCreating] = useState(false);
+
+            useEffect(() => {
+                const unsub = db.collection('stories').onSnapshot(snap => {
+                    const now = Date.now();
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()})).filter(s => {
+                        try { return (now - s.createdAt.toDate().getTime()) < 86400000; } catch { return true; }
+                    });
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setStories(arr);
+                }, err => console.error('stories:', err));
+                return () => unsub();
+            }, []);
+
+            const myStory = stories.find(s => s.userId === user.uid);
+            const otherStories = stories.filter(s => s.userId !== user.uid);
+
+            const uploadStory = async (file) => {
+                const img = await compressImage(file, 800, 0.6);
+                await db.collection('stories').add({
+                    userId: user.uid, userName: profile.username, userAvatar: profile.avatar,
+                    image: img, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                setCreating(false);
+            };
+
+            return (
+                <>
+                    <div className="bg-white rounded-3xl p-3 mb-4 shadow-sm overflow-x-auto">
+                        <div className="flex space-x-3 min-w-max">
+                            <div className="flex flex-col items-center w-16 cursor-pointer" onClick={()=>myStory ? setViewing({...myStory, mine:true}) : setCreating(true)}>
+                                <div className="relative">
+                                    {myStory ? (
+                                        <div className="story-ring"><Avatar src={profile.avatar} name={profile.username} size={56} /></div>
+                                    ) : (
+                                        <div className="w-[62px] h-[62px] rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50"><I.Plus /></div>
+                                    )}
+                                    {!myStory && <div className="absolute -bottom-1 -right-1 bg-gopo text-white w-6 h-6 rounded-full flex items-center justify-center border-2 border-white"><I.Plus/></div>}
+                                </div>
+                                <p className="text-[10px] font-bold mt-1 text-slate-700 truncate w-full text-center">Вы</p>
+                            </div>
+                            {otherStories.map(s => (
+                                <div key={s.id} className="flex flex-col items-center w-16 cursor-pointer" onClick={()=>setViewing(s)}>
+                                    <div className="story-ring"><Avatar src={s.userAvatar} name={s.userName} size={56} /></div>
+                                    <p className="text-[10px] font-bold mt-1 text-slate-700 truncate w-full text-center">@{s.userName}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    {creating && (
+                        <div className="fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl p-6 max-w-sm w-full">
+                                <h3 className="font-black text-lg mb-4">Новая история</h3>
+                                <label className="block cursor-pointer">
+                                    <div className="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center hover:border-gopo transition">
+                                        <I.Image /><p className="text-sm font-bold text-slate-500 mt-2">Выбрать фото</p>
+                                    </div>
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e)=>e.target.files[0] && uploadStory(e.target.files[0])} />
+                                </label>
+                                <button onClick={()=>setCreating(false)} className="w-full mt-4 text-slate-500 font-bold py-2 rounded-xl hover:bg-slate-100">Отмена</button>
+                            </div>
+                        </div>
+                    )}
+                    {viewing && <StoryViewer story={viewing} onClose={()=>setViewing(null)} />}
+                </>
+            );
+        };
+
+        const StoryViewer = ({ story, onClose }) => {
+            const [progress, setProgress] = useState(0);
+            useEffect(() => {
+                const start = Date.now();
+                const t = setInterval(() => {
+                    const p = Math.min(100, ((Date.now()-start)/5000)*100);
+                    setProgress(p);
+                    if (p>=100) { clearInterval(t); onClose(); }
+                }, 50);
+                return () => clearInterval(t);
+            }, []);
+            const del = async () => {
+                if (!window.confirm('Удалить историю?')) return;
+                await db.collection('stories').doc(story.id).delete();
+                onClose();
+            };
+            return (
+                <div className="fixed inset-0 bg-black z-[80] flex flex-col">
+                    <div className="h-1 bg-white/30"><div className="h-full bg-white transition-all" style={{width:`${progress}%`}} /></div>
+                    <div className="p-3 flex items-center space-x-3 text-white">
+                        <Avatar src={story.userAvatar} name={story.userName} size={36} />
+                        <p className="font-bold flex-1">@{story.userName}</p>
+                        {story.mine && <button onClick={del} className="p-2"><I.Trash/></button>}
+                        <button onClick={onClose} className="p-2"><I.X/></button>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center">
+                        <img src={story.image} className="max-w-full max-h-full object-contain" />
+                    </div>
+                </div>
+            );
+        };
+
+        const FeedTab = ({ user, profile, isAdmin, usersMap, onUserClick, onCommentClick, onHashtagClick }) => {
+            const [posts, setPosts] = useState([]);
+            const [holdingState, setHoldingState] = useState({postId:null, progress:0});
+            const [ripples, setRipples] = useState([]);
+            const [pulsingPost, setPulsingPost] = useState(null);
+            const [showBlown, setShowBlown] = useState(false);
+            const holdTimer = useRef(null);
+            const holdStartTime = useRef(null);
+            const touchStartPos = useRef({x:0,y:0});
+
+            useEffect(() => {
+                const unsub = db.collection('posts').onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, resonances:[], blows:[], ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setPosts(arr);
+                }, err => console.error('posts:', err));
+                return () => unsub();
+            }, []);
+
+            const del = async (id) => {
+                if (window.confirm('Удалить пост?')) await db.collection('posts').doc(id).delete();
+            };
+
+            const startHold = (e, postId) => {
+                if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.hashtag')) return;
+                const cx = e.clientX || e.touches?.[0]?.clientX || 0;
+                const cy = e.clientY || e.touches?.[0]?.clientY || 0;
+                touchStartPos.current = {x:cx, y:cy};
+                const rect = e.currentTarget.getBoundingClientRect();
+                holdStartTime.current = Date.now();
+                setHoldingState({postId, progress:0});
+                holdTimer.current = setInterval(() => {
+                    const elapsed = Date.now() - holdStartTime.current;
+                    const progress = Math.min(100, (elapsed/1000)*100);
+                    setHoldingState({postId, progress});
+                    if (progress >= 100) {
+                        clearInterval(holdTimer.current);
+                        executeResonance(postId, cx - rect.left, cy - rect.top);
+                        setHoldingState({postId:null, progress:0});
+                    }
+                }, 10);
+            };
+
+            const moveHold = (e) => {
+                const cx = e.touches?.[0]?.clientX; const cy = e.touches?.[0]?.clientY;
+                if (cx === undefined) return;
+                if (Math.sqrt((cx-touchStartPos.current.x)**2 + (cy-touchStartPos.current.y)**2) > 10) endHold();
+            };
+
+            const endHold = () => {
+                if (holdTimer.current) { clearInterval(holdTimer.current); setHoldingState({postId:null, progress:0}); }
+            };
+
+            const executeResonance = async (postId, x, y) => {
+                const rid = Date.now();
+                setRipples(p => [...p, {id:rid, postId, x, y}]);
+                setTimeout(() => setRipples(p => p.filter(r => r.id !== rid)), 600);
+                setPulsingPost(postId);
+                setTimeout(() => setPulsingPost(null), 700);
+                const post = posts.find(p => p.id === postId);
+                if (!post) return;
+                const arr = post.resonances || [];
+                const has = arr.includes(user.uid);
+                const ref = db.collection('posts').doc(postId);
+                if (has) await ref.update({resonances: firebase.firestore.FieldValue.arrayRemove(user.uid)});
+                else {
+                    await ref.update({resonances: firebase.firestore.FieldValue.arrayUnion(user.uid)});
+                    sendNotification(post.authorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'resonance', post.text?.slice(0,60), {postId});
+                }
+            };
+
+            const blowPost = async (post) => {
+                const arr = post.blows || [];
+                const has = arr.includes(user.uid);
+                const ref = db.collection('posts').doc(post.id);
+                if (has) await ref.update({blows: firebase.firestore.FieldValue.arrayRemove(user.uid)});
+                else await ref.update({blows: firebase.firestore.FieldValue.arrayUnion(user.uid)});
+            };
+
+            const now = Date.now();
+            const last24h = posts.filter(p => {
+                try { return (now - p.createdAt.toDate().getTime()) < 86400000; } catch { return false; }
+            });
+            let bubbleOfDay = null;
+            if (last24h.length >= 2) {
+                const sorted = [...last24h].sort((a,b) => (b.resonances?.length||0) - (a.resonances?.length||0));
+                if ((sorted[0].resonances?.length||0) > 0) bubbleOfDay = sorted[0];
+            }
+
+            const isBlown = (post) => {
+                const b = (post.blows||[]).length;
+                const r = (post.resonances||[]).length;
+                return b >= 5 && b > r * 1.5;
+            };
+
+            const visiblePosts = posts.filter(p => !isBlown(p) || showBlown);
+            const blownCount = posts.filter(p => isBlown(p)).length;
+
+            const postCard = (post, isBubbleOfDay) => {
+                const author = usersMap[post.authorId] || {
+                    uid: post.authorId, username: post.authorName || 'unknown',
+                    displayName: post.authorName || 'Unknown', avatar: post.authorAvatar || null,
+                    isVerified: false, isOnline: false
+                };
+                const mood = MOODS[post.mood] || MOODS.neutral;
+                const resonances = post.resonances || [];
+                const blows = post.blows || [];
+                const hasResonated = resonances.includes(user.uid);
+                const hasBlown = blows.includes(user.uid);
+                const isHolding = holdingState.postId === post.id;
+                const isPulsing = pulsingPost === post.id;
+                const blown = isBlown(post);
+
+                return (
+                    <article key={post.id}
+                        className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none
+                            ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''}
+                            ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''}
+                            ${blown?'blown-post':''}`}
+                        onMouseDown={e=>startHold(e, post.id)} onMouseUp={endHold} onMouseLeave={endHold}
+                        onTouchStart={e=>startHold(e, post.id)} onTouchMove={moveHold} onTouchEnd={endHold} onTouchCancel={endHold}>
+                        {isHolding && (
+                            <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none" style={{
+                                background:`conic-gradient(#FF0055 ${holdingState.progress}%, transparent 0)`,
+                                mask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                                WebkitMask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                                maskComposite:'exclude', WebkitMaskComposite:'xor', padding:'4px'
+                            }} />
+                        )}
+                        <div className="absolute top-4 right-4 flex flex-col items-center space-y-2 z-10">
+                            {(isAdmin || post.authorId === user.uid) && (
+                                <button onClick={()=>del(post.id)} className="text-slate-400 hover:text-red-500 bg-white/60 p-2 rounded-full backdrop-blur-md shadow-sm transition"><I.Trash/></button>
+                            )}
+                            <div className={`text-3xl ${mood.text} opacity-90 drop-shadow-md`} title={mood.name}>{mood.emoji}</div>
+                        </div>
+                        {isBubbleOfDay && (
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black text-[10px] px-3 py-1 rounded-full flex items-center shadow-lg z-10">
+                                <I.Crown/><span className="ml-1">ПУЗЫРЬ ДНЯ</span>
+                            </div>
+                        )}
+                        {ripples.filter(r => r.postId === post.id).map(r => (
+                            <div key={r.id} className="absolute w-20 h-20 bg-gopo/30 rounded-full animate-ripple pointer-events-none" style={{left:r.x-40, top:r.y-40}}></div>
+                        ))}
+                        <div className="flex items-center space-x-3 mb-3 pr-12">
+                            <div onClick={()=>onUserClick(author)} className="cursor-pointer">
+                                <Avatar src={author.avatar} name={author.username} size={42} showStatus isOnline={isReallyOnline(author)} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div onClick={()=>onUserClick(author)} className="flex items-center cursor-pointer">
+                                    <span className={`font-black text-sm truncate hover:underline ${mood.text}`}>{author.displayName || author.username}</span>
+                                    {author.isVerified && <I.Check className="text-blue-500 ml-1"/>}
+                                </div>
+                                <p className={`text-xs opacity-70 ${mood.text}`}>@{author.username} • {timeAgo(post.createdAt)}</p>
+                            </div>
+                        </div>
+                        <div className="relative rounded-2xl">
+                            {post.text && <p className={`font-medium mb-3 whitespace-pre-wrap ${mood.text}`}>{renderTextWithHashtags(post.text, onHashtagClick)}</p>}
+                            {post.image && <img src={post.image} alt="" className="rounded-2xl w-full max-h-96 object-cover shadow-sm bg-white/50" />}
+                        </div>
+                        {blown && (
+                            <div className="mt-3 px-3 py-2 bg-slate-800/10 rounded-xl text-center text-xs font-black text-slate-700">
+                                💨 Сдут сообществом ({blows.length} сдуваний)
+                            </div>
+                        )}
+                        <div className={`mt-4 pt-3 border-t border-black/5 flex items-center justify-between ${mood.text}`}>
+                            <div className="flex items-center space-x-1.5 flex-wrap">
+                                <button className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasResonated?'bg-white/80 shadow-sm':'hover:bg-white/40'}`}>
+                                    <I.Sparkles className={hasResonated?'text-gopo fill-gopo/20':'opacity-60'} />
+                                    <span>{resonances.length > 0 ? resonances.length : 'Резонанс'}</span>
+                                </button>
+                                <button onClick={()=>blowPost(post)} className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasBlown?'bg-blue-100 text-blue-700':'hover:bg-white/40 opacity-70'}`} title="Сдуть (не нравится)">
+                                    <I.Wind /><span>{blows.length > 0 ? blows.length : ''}</span>
+                                </button>
+                                <button onClick={()=>onCommentClick(post)} className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold hover:bg-white/40 transition">
+                                    <I.Comment /><span>Комменты</span>
+                                </button>
+                            </div>
+                            <span className="text-[10px] opacity-40 font-bold hidden sm:block">Зажми 1 сек</span>
+                        </div>
+                    </article>
+                );
+            };
+
+            return (
+                <div className="space-y-4 fade-in">
+                    <div className="flex items-center justify-between mb-2">
+                        <h1 className="text-2xl font-black hidden md:block text-slate-800">Лента</h1>
+                        <div className="flex items-center text-xs font-bold text-slate-500 bg-white/50 px-3 py-1.5 rounded-full border border-white/50 cursor-help group relative">
+                            <I.Info/><span className="ml-1">Что такое Резонанс?</span>
+                            <div className="absolute top-full mt-2 right-0 w-64 bg-slate-800 text-white p-3 rounded-xl text-[11px] leading-tight opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl">
+                                Резонанс — это вибрация, которую ты чувствуешь с этим пузырём. Зажми пузырь на <b>1 секунду</b>, чтобы выразить поддержку автору.
+                            </div>
+                        </div>
+                    </div>
+                    <StoriesBar user={user} profile={profile} usersMap={usersMap} />
+                    {blownCount > 0 && (
+                        <button onClick={()=>setShowBlown(!showBlown)} className="w-full text-center text-xs font-bold text-slate-500 py-2 hover:text-slate-700">
+                            {showBlown ? `Скрыть сдутые (${blownCount})` : `Показать сдутые (${blownCount})`}
+                        </button>
+                    )}
+                    {visiblePosts.length === 0 && <div className="text-center p-16 liquid-glass rounded-3xl text-slate-400"><I.Home/><p className="mt-4 font-bold">Постов пока нет.</p></div>}
+                    {visiblePosts.map(p => postCard(p, bubbleOfDay && p.id === bubbleOfDay.id))}
+                </div>
+            );
+        };
+
+        const SearchTab = ({ user, usersMap, onUserClick, onCommentClick, onHashtagClick, initialHashtag, clearHashtag }) => {
+            const [query, setQuery] = useState(initialHashtag || '');
+            const [posts, setPosts] = useState([]);
+            const [tab, setTab] = useState(initialHashtag ? 'posts' : 'users');
+
+            useEffect(() => {
+                const unsub = db.collection('posts').onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, resonances:[], blows:[], ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setPosts(arr);
+                }, err => console.error('search posts:', err));
+                return () => unsub();
+            }, []);
+
+            useEffect(() => { if (initialHashtag) { setQuery(initialHashtag); setTab('posts'); } }, [initialHashtag]);
+
+            const allUsers = Object.values(usersMap).filter(u => !u.isBanned);
+            const filteredUsers = allUsers.filter(u =>
+                (u.username||'').toLowerCase().includes(query.replace('#','').toLowerCase()) ||
+                (u.displayName||'').toLowerCase().includes(query.replace('#','').toLowerCase())
+            );
+            const filteredPosts = posts.filter(p => {
+                if (!query) return false;
+                if (query.startsWith('#')) return (p.text||'').toLowerCase().includes(query.toLowerCase());
+                return (p.text||'').toLowerCase().includes(query.toLowerCase());
+            }).filter(p => {
+                const a = usersMap[p.authorId];
+                return a && !a.isBanned;
+            });
+
+            return (
+                <div className="fade-in">
+                    <h1 className="text-2xl font-black mb-4">Поиск</h1>
+                    <div className="relative mb-4">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><I.Search/></div>
+                        <input value={query} onChange={e=>{setQuery(e.target.value); clearHashtag && clearHashtag();}}
+                            placeholder="Поиск по людям, постам, #хештегам..."
+                            className="w-full p-3.5 pl-12 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
+                    </div>
+                    <div className="flex space-x-2 mb-4">
+                        <button onClick={()=>setTab('users')} className={`px-4 py-2 rounded-xl text-sm font-bold ${tab==='users'?'bg-gopo text-white shadow':`bg-white text-slate-600`}`}>Люди</button>
+                        <button onClick={()=>setTab('posts')} className={`px-4 py-2 rounded-xl text-sm font-bold ${tab==='posts'?'bg-gopo text-white shadow':`bg-white text-slate-600`}`}>Посты {filteredPosts.length>0 && `(${filteredPosts.length})`}</button>
+                    </div>
+                    {tab === 'users' && (
+                        <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
+                            {filteredUsers.length===0 && <p className="p-8 text-center text-slate-400 font-bold">Никого не нашли</p>}
+                            {filteredUsers.map(u => (
+                                <button key={u.uid} onClick={()=>onUserClick(u)} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 transition text-left border-b border-slate-50 last:border-0">
+                                    <Avatar src={u.avatar} name={u.username} size={48} showStatus isOnline={isReallyOnline(u)} />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center">
+                                            <span className="font-black text-sm truncate">{u.displayName || u.username}</span>
+                                            {u.isVerified && <I.Check className="text-blue-500 ml-1"/>}
+                                        </div>
+                                        <p className="text-xs text-slate-500">@{u.username} • {u.followers?.length||0} подписчиков</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {tab === 'posts' && (
+                        <div className="space-y-4">
+                            {filteredPosts.length === 0 && <p className="p-8 text-center text-slate-400 font-bold bg-white rounded-3xl">Постов не нашли</p>}
+                            {filteredPosts.map(post => {
+                                const author = usersMap[post.authorId] || {};
+                                const mood = MOODS[post.mood] || MOODS.neutral;
+                                return (
+                                    <div key={post.id} onClick={()=>onCommentClick(post)} className={`rounded-[2rem] p-4 border-2 cursor-pointer ${mood.bg} ${mood.border}`}>
+                                        <div className="flex items-center mb-2">
+                                            <Avatar src={author.avatar} name={author.username} size={32} />
+                                            <div className="ml-2 flex-1 min-w-0">
+                                                <span className={`font-bold text-xs ${mood.text}`}>@{author.username}</span>
+                                                <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
+                                            </div>
+                                            <span className="text-xl">{mood.emoji}</span>
+                                        </div>
+                                        {post.text && <p className={`text-sm ${mood.text}`}>{renderTextWithHashtags(post.text, onHashtagClick)}</p>}
+                                        {post.image && <img src={post.image} className="rounded-xl max-h-48 mt-2 w-full object-cover" />}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const CommentsModal = ({ post, user, profile, usersMap, onClose, onHashtagClick }) => {
+            const [comments, setComments] = useState([]);
+            const [text, setText] = useState('');
+            const [sending, setSending] = useState(false);
+            const endRef = useRef(null);
+
+            useEffect(() => {
+                const unsub = db.collection('posts').doc(post.id).collection('comments').onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
+                    setComments(arr);
+                    setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth'}), 100);
+                }, err => console.error('comments:', err));
+                return () => unsub();
+            }, [post.id]);
+
+            const send = async (e) => {
+                e.preventDefault();
+                if (!text.trim()) return;
+                setSending(true);
+                try {
+                    await db.collection('posts').doc(post.id).collection('comments').add({
+                        text: text.trim(), authorId: user.uid,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    if (post.authorId !== user.uid) {
+                        sendNotification(post.authorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'comment', text.trim().slice(0,60), {postId:post.id});
+                    }
+                    setText('');
+                } catch(err) { alert(err.message); }
+                setSending(false);
+            };
+
+            const mood = MOODS[post.mood] || MOODS.neutral;
+            const author = usersMap[post.authorId];
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
+                    <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-lg h-[80vh] md:h-[600px] flex flex-col fade-in shadow-2xl">
+                        <div className="p-4 border-b flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                            <h2 className="text-lg font-black">Комментарии</h2>
+                            <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><I.X/></button>
+                        </div>
+                        <div className={`p-4 border-b ${mood.bg} ${mood.text}`}>
+                            <div className="flex items-center space-x-2 mb-1">
+                                <Avatar src={author?.avatar} name={author?.username} size={24} />
+                                <span className="font-bold text-xs">@{author?.username || 'unknown'}</span>
+                            </div>
+                            <p className="text-sm line-clamp-2">{renderTextWithHashtags(post.text, onHashtagClick)}</p>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
+                            {comments.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Комментариев пока нет. Будь первым!</p>}
+                            {comments.map(c => {
+                                const ca = usersMap[c.authorId] || {username:'unknown', avatar:null};
+                                return (
+                                    <div key={c.id} className="flex space-x-3">
+                                        <Avatar src={ca.avatar} name={ca.username} size={32} showStatus isOnline={isReallyOnline(ca)} />
+                                        <div className="flex-1 bg-slate-50 p-3 rounded-2xl rounded-tl-sm">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="font-bold text-xs text-slate-800">@{ca.username}</span>
+                                                <span className="text-[10px] text-slate-400">{timeAgo(c.createdAt)}</span>
+                                            </div>
+                                            <p className="text-sm text-slate-700">{renderTextWithHashtags(c.text, onHashtagClick)}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            <div ref={endRef} />
+                        </div>
+                        <form onSubmit={send} className="p-3 border-t flex gap-2 bg-slate-50 rounded-b-3xl">
+                            <input value={text} onChange={e=>setText(e.target.value)} placeholder="Написать комментарий..."
+                                className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
+                            <button type="submit" disabled={sending || !text.trim()} className="bg-gopo text-white p-3 rounded-xl disabled:opacity-50"><I.Send/></button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const CreatePostModal = ({ user, profile, onClose }) => {
+            const [text, setText] = useState('');
+            const [image, setImage] = useState(null);
+            const [mood, setMood] = useState('neutral');
+            const [posting, setPosting] = useState(false);
+            const fileRef = useRef(null);
+
+            const handle = async (e) => {
+                const f = e.target.files[0]; if (!f) return;
+                setImage(await compressImage(f, 800, 0.7));
+            };
+
+            const submit = async () => {
+                if (!text.trim() && !image) return;
+                setPosting(true);
+                try {
+                    await db.collection('posts').add({
+                        text: text.trim(), image, mood, authorId: user.uid,
+                        authorName: profile.username, authorAvatar: profile.avatar,
+                        resonances: [], blows: [],
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    onClose();
+                } catch(err) { alert('Ошибка: ' + err.message); }
+                setPosting(false);
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+                    <div className="bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto fade-in shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-black">Новый пузырь</h2>
+                            <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><I.X/></button>
+                        </div>
+                        <div className="mb-4">
+                            <p className="text-xs font-bold text-slate-500 mb-2 ml-1">Выбери настроение</p>
+                            <div className="grid grid-cols-3 gap-2">
+                                {Object.entries(MOODS).map(([k, m]) => (
+                                    <button key={k} onClick={()=>setMood(k)}
+                                        className={`flex flex-col items-center p-2 rounded-xl border-2 transition ${mood===k?`${m.bg} ${m.border} shadow-sm scale-105`:'border-transparent hover:bg-slate-50'}`}>
+                                        <span className="text-2xl mb-1">{m.emoji}</span>
+                                        <span className="text-[10px] font-bold text-slate-700">{m.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-3 mb-3">
+                            <Avatar src={profile.avatar} name={profile.username} size={36} />
+                            <span className="font-bold text-sm">@{profile.username}</span>
+                        </div>
+                        <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Что у тебя на душе?" rows="3"
+                            className="w-full p-3 bg-slate-50 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-gopo/30 font-medium" />
+                        {image && (
+                            <div className="relative mt-3">
+                                <img src={image} className="rounded-2xl max-h-64 w-full object-cover" />
+                                <button onClick={()=>setImage(null)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full"><I.X/></button>
+                            </div>
+                        )}
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                            <button onClick={()=>fileRef.current.click()} className="flex items-center space-x-2 text-slate-500 hover:text-gopo font-bold p-2">
+                                <I.Image/><span>Фото</span>
+                            </button>
+                            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handle} />
+                            <button onClick={submit} disabled={posting || (!text.trim() && !image)}
+                                className="bg-gopo text-white font-bold px-6 py-2.5 rounded-2xl disabled:opacity-50 shadow-md shadow-pink-200">
+                                {posting?'Публикация...':'Запустить пузырь'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MessengerTab = ({ user, profile, usersMap }) => {
+            const [query, setQuery] = useState('');
+            const [selected, setSelected] = useState(null);
+            const [, tick] = useState(0);
+            useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 10000); return () => clearInterval(t); }, []);
+
+            const all = Object.values(usersMap).filter(u => u.uid !== user.uid && !u.isBanned);
+            const filtered = all.filter(u => (u.username||'').toLowerCase().includes(query.toLowerCase()) || (u.displayName||'').toLowerCase().includes(query.toLowerCase()));
+
+            return (
+                <div className="flex h-[calc(100vh-100px)] md:h-[calc(100vh-64px)] liquid-glass rounded-3xl overflow-hidden fade-in">
+                    <div className={`w-full md:w-80 flex flex-col border-r border-white/50 ${selected?'hidden md:flex':'flex'}`}>
+                        <div className="p-4 border-b border-white/50 bg-white/30">
+                            <h2 className="text-xl font-black mb-3">Чаты</h2>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><I.Search/></div>
+                                <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Поиск..."
+                                    className="w-full p-2.5 pl-10 bg-white/70 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            {filtered.map(u => {
+                                const typing = isTypingNow(u, user.uid);
+                                return (
+                                    <button key={u.uid} onClick={()=>setSelected(u)} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selected?.uid===u.uid?'bg-white/60':''}`}>
+                                        <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center">
+                                                <span className="font-bold text-sm truncate">{u.displayName || u.username}</span>
+                                                {u.isVerified && <I.Check className="text-blue-500 ml-1"/>}
+                                            </div>
+                                            {typing ? (
+                                                <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
+                                            ) : (
+                                                <p className={`text-xs truncate ${isReallyOnline(u)?'text-green-600 font-bold':'text-slate-500'}`}>{formatLastSeen(u)}</p>
+                                            )}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <div className={`flex-1 flex-col ${selected?'flex':'hidden md:flex'}`}>
+                        {selected ? <ChatView user={user} profile={profile} other={selected} onBack={()=>setSelected(null)} /> : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+                                <I.Msg/><p className="mt-4 font-bold">Выберите чат</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const ChatView = ({ user, profile, other, onBack }) => {
+            const [messages, setMessages] = useState([]);
+            const [text, setText] = useState('');
+            const [otherUser, setOtherUser] = useState(other);
+            const [showEmojiPicker, setShowEmojiPicker] = useState(null);
+            const [recording, setRecording] = useState(false);
+            const [recSecs, setRecSecs] = useState(0);
+            const [playingId, setPlayingId] = useState(null);
+            const participants = [user.uid, other.uid].sort();
+            const endRef = useRef(null);
+            const typingThrottle = useRef(0);
+            const typingClear = useRef(null);
+            const mediaRecorder = useRef(null);
+            const recChunks = useRef([]);
+            const recInterval = useRef(null);
+            const audioRefs = useRef({});
+            const [, tick] = useState(0);
+
+            useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 5000); return () => clearInterval(t); }, []);
+
+            useEffect(() => {
+                const unsub = db.collection('users').doc(other.uid).onSnapshot(doc => { if (doc.exists) setOtherUser(doc.data()); });
+                return () => unsub();
+            }, [other.uid]);
+
+            useEffect(() => {
+                const unsub = db.collection('messages').where('participants','==',participants).onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, reactions:{}, ...d.data()}));
+                    arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
+                    setMessages(arr);
+                    setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth'}), 100);
+                }, err => console.error('messages:', err));
+                return () => unsub();
+            }, [participants.join(',')]);
+
+            useEffect(() => {
+                return () => {
+                    db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{});
+                    clearTimeout(typingClear.current);
+                };
+            }, [user.uid]);
+
+            const deleteMessage = async (id) => {
+                if (!window.confirm('Удалить сообщение?')) return;
+                try { await db.collection('messages').doc(id).delete(); } catch(err) { alert('Не удалось: ' + err.message); }
+            };
+
+            const toggleReaction = async (msg, emoji) => {
+                const current = msg.reactions || {};
+                const users = current[emoji] || [];
+                const has = users.includes(user.uid);
+                const newR = {...current};
+                if (has) { newR[emoji] = users.filter(u => u !== user.uid); if (newR[emoji].length === 0) delete newR[emoji]; }
+                else newR[emoji] = [...users, user.uid];
+                await db.collection('messages').doc(msg.id).update({reactions:newR});
+                setShowEmojiPicker(null);
+            };
+
+            const handleChange = (val) => {
+                setText(val);
+                const ref = db.collection('users').doc(user.uid);
+                if (!val.trim()) { ref.update({typingIn:null}).catch(()=>{}); clearTimeout(typingClear.current); return; }
+                const now = Date.now();
+                if (now - typingThrottle.current > 2000) {
+                    typingThrottle.current = now;
+                    ref.update({typingIn:other.uid, typingAt: firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
+                }
+                clearTimeout(typingClear.current);
+                typingClear.current = setTimeout(()=>ref.update({typingIn:null}).catch(()=>{}), 3000);
+            };
+
+            const send = async (e) => {
+                e.preventDefault();
+                if (!text.trim()) return;
+                await db.collection('messages').add({
+                    participants, text: text.trim(), senderId: user.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                if (other.uid !== user.uid) {
+                    sendNotification(other.uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'message', text.trim().slice(0,60));
+                }
+                setText('');
+                db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{});
+                clearTimeout(typingClear.current);
+            };
+
+            const startRecording = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+                    const mr = new MediaRecorder(stream);
+                    recChunks.current = [];
+                    mr.ondataavailable = e => recChunks.current.push(e.data);
+                    mr.onstop = async () => {
+                        stream.getTracks().forEach(t => t.stop());
+                        const blob = new Blob(recChunks.current, {type:'audio/webm'});
+                        const reader = new FileReader();
+                        reader.onloadend = async () => {
+                            const base64 = reader.result;
+                            const dur = recSecs;
+                            if (base64 && dur > 0) {
+                                await db.collection('messages').add({
+                                    participants, senderId: user.uid, audio: base64, audioDuration: dur,
+                                    text: '🎤 Голосовое сообщение',
+                                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                            }
+                        };
+                        reader.readAsDataURL(blob);
+                    };
+                    mr.start();
+                    mediaRecorder.current = mr;
+                    setRecording(true);
+                    setRecSecs(0);
+                    recInterval.current = setInterval(()=>setRecSecs(s => s+1), 1000);
+                } catch(e) { alert('Микрофон недоступен: ' + e.message); }
+            };
+
+            const stopRecording = (cancel=false) => {
+                if (mediaRecorder.current && mediaRecorder.current.state !== 'inactive') {
+                    if (cancel) recChunks.current = [];
+                    mediaRecorder.current.stop();
+                }
+                clearInterval(recInterval.current);
+                setRecording(false);
+            };
+
+            const playAudio = (msg) => {
+                if (playingId === msg.id) {
+                    audioRefs.current[msg.id]?.pause();
+                    setPlayingId(null);
+                    return;
+                }
+                Object.values(audioRefs.current).forEach(a => a?.pause());
+                const audio = new Audio(msg.audio);
+                audioRefs.current[msg.id] = audio;
+                audio.onended = () => setPlayingId(null);
+                audio.play();
+                setPlayingId(msg.id);
+            };
+
+            const isOtherTyping = isTypingNow(otherUser, user.uid);
+            const isOtherOnline = isReallyOnline(otherUser);
+
+            return (
+                <div className="flex-1 flex flex-col h-full bg-white/40">
+                    <div className="p-3 border-b border-white/50 flex items-center space-x-3 bg-white/50 backdrop-blur-md">
+                        <button onClick={onBack} className="p-2 text-slate-600 hover:bg-white rounded-full md:hidden"><I.Back/></button>
+                        <Avatar src={otherUser.avatar} name={otherUser.username} size={40} showStatus isOnline={isOtherOnline} />
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center">
+                                <span className="font-black text-sm truncate">{otherUser.displayName || otherUser.username}</span>
+                                {otherUser.isVerified && <I.Check className="text-blue-500 ml-1"/>}
+                            </div>
+                            {isOtherTyping ? (
+                                <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
+                            ) : (
+                                <p className={`text-xs font-bold ${isOtherOnline?'text-green-600':'text-slate-500'}`}>{formatLastSeen(otherUser)}</p>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                        {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните диалог 👋</p>}
+                        {messages.map(m => {
+                            const mine = m.senderId === user.uid;
+                            const reactions = m.reactions || {};
+                            return (
+                                <div key={m.id} className={`flex flex-col ${mine?'items-end':'items-start'} group`}>
+                                    <div className={`flex items-center ${mine?'flex-row':'flex-row-reverse'} space-x-1`}>
+                                        <div className="flex items-center space-x-1">
+                                            {mine && (
+                                                <button onClick={()=>deleteMessage(m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 transition opacity-0 group-hover:opacity-100">
+                                                    <I.Trash size={14}/>
+                                                </button>
+                                            )}
+                                            <button onClick={()=>setShowEmojiPicker(showEmojiPicker===m.id?null:m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-gopo transition opacity-0 group-hover:opacity-100 text-sm">😊</button>
+                                        </div>
+                                        <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
+                                            {m.audio ? (
+                                                <button onClick={()=>playAudio(m)} className="flex items-center space-x-2">
+                                                    {playingId===m.id ? <I.Pause size={16}/> : <I.Play size={16}/>}
+                                                    <div className="flex items-end space-x-0.5 h-5">
+                                                        {[...Array(12)].map((_,i)=>(
+                                                            <span key={i} className={`w-0.5 ${mine?'bg-white':'bg-slate-600'}`} style={{height:`${Math.random()*100}%`}}></span>
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-xs opacity-70">{m.audioDuration}s</span>
+                                                </button>
+                                            ) : m.text}
+                                        </div>
+                                    </div>
+                                    {Object.keys(reactions).length > 0 && (
+                                        <div className={`flex space-x-1 mt-1 ${mine?'mr-0':'ml-0'}`}>
+                                            {Object.entries(reactions).map(([emoji, users]) => (
+                                                users.length > 0 && (
+                                                    <button key={emoji} onClick={()=>toggleReaction(m, emoji)}
+                                                        className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center space-x-1 ${users.includes(user.uid)?'bg-gopo/15 text-gopo':'bg-white border border-slate-200 text-slate-600'}`}>
+                                                        <span>{emoji}</span><span>{users.length}</span>
+                                                    </button>
+                                                )
+                                            ))}
+                                        </div>
+                                    )}
+                                    {showEmojiPicker === m.id && (
+                                        <div className="mt-1 bg-white border border-slate-200 rounded-full shadow-lg px-2 py-1 flex space-x-1 z-10">
+                                            {EMOJI_REACTIONS.map(e => (
+                                                <button key={e} onClick={()=>toggleReaction(m, e)} className="p-1.5 text-lg hover:scale-125 transition">{e}</button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                        <div ref={endRef} />
+                    </div>
+                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center">
+                        {recording ? (
+                            <>
+                                <div className="flex-1 flex items-center space-x-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                                    <span className="rec-pulse w-3 h-3 bg-red-500 rounded-full"></span>
+                                    <span className="text-red-600 font-bold text-sm">Запись... {recSecs}s</span>
+                                </div>
+                                <button type="button" onClick={()=>stopRecording(true)} className="p-3 bg-slate-200 text-slate-700 rounded-xl"><I.X/></button>
+                                <button type="button" onClick={()=>stopRecording(false)} className="p-3 bg-gopo text-white rounded-xl"><I.Send/></button>
+                            </>
+                        ) : (
+                            <>
+                                <input value={text} onChange={e=>handleChange(e.target.value)} placeholder="Сообщение..."
+                                    className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
+                                {text.trim() ? (
+                                    <button type="submit" className="bg-gopo text-white p-3 rounded-xl shadow-md"><I.Send/></button>
+                                ) : (
+                                    <button type="button" onClick={startRecording} className="bg-gopo text-white p-3 rounded-xl shadow-md"><I.Mic/></button>
+                                )}
+                            </>
+                        )}
+                    </form>
+                </div>
+            );
+        };
+
+        const ProfileTab = ({ user, profile, usersMap }) => {
+            const [editing, setEditing] = useState(false);
+            const [name, setName] = useState(profile.displayName || '');
+            const [username, setUsername] = useState(profile.username || '');
+            const [bio, setBio] = useState(profile.bio || '');
+            const [avatar, setAvatar] = useState(profile.avatar);
+            const [banner, setBanner] = useState(profile.banner || '');
+            const [saving, setSaving] = useState(false);
+            const [userPosts, setUserPosts] = useState([]);
+            const bannerRef = useRef(null);
+
+            useEffect(() => {
+                const unsub = db.collection('posts').where('authorId','==',user.uid).onSnapshot(s => {
+                    const arr = s.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setUserPosts(arr);
+                });
+                return () => unsub();
+            }, [user.uid]);
+
+            const upload = async (e, setter, max) => {
+                const f = e.target.files[0]; if (!f) return;
+                setter(await compressImage(f, max, 0.7));
+            };
+
+            const deletePost = async (id) => {
+                if (!window.confirm('Удалить пузырь навсегда?')) return;
+                try { await db.collection('posts').doc(id).delete(); } catch(err) { alert('Не удалось: ' + err.message); }
+            };
+
+            const save = async () => {
+                setSaving(true);
+                try {
+                    await db.collection('users').doc(user.uid).update({
+                        displayName: name.trim() || username.trim(),
+                        username: username.trim().replace(/[^a-zA-Z0-9_]/g,''),
+                        bio: bio.trim(), avatar, banner: banner || ''
+                    });
+                    setEditing(false);
+                } catch(err) { alert(err.message); }
+                setSaving(false);
+            };
+
+            return (
+                <div className="fade-in max-w-xl mx-auto">
+                    <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm mb-6">
+                        <div className="h-40 bg-slate-200 relative bg-cover bg-center" style={{backgroundImage:`url(${profile.banner||''})`}}>
+                            {!profile.banner && <div className="absolute inset-0 bg-gradient-to-br from-gopo to-pink-400"></div>}
+                        </div>
+                        <div className="px-6 pb-6 relative">
+                            <div className="-mt-14 mb-3 inline-block p-1 bg-white rounded-full shadow-lg">
+                                <Avatar src={profile.avatar} name={profile.username} size={100} showStatus isOnline={isReallyOnline(profile)} />
+                            </div>
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <div className="flex items-center">
+                                        <h1 className="text-2xl font-black mr-2">{profile.displayName || profile.username}</h1>
+                                        {profile.isVerified && <I.Check className="text-blue-500"/>}
+                                    </div>
+                                    <p className="text-slate-500 font-medium">@{profile.username}</p>
+                                    <p className={`text-xs font-bold mt-1 ${isReallyOnline(profile)?'text-green-600':'text-slate-400'}`}>{formatLastSeen(profile)}</p>
+                                    {profile.bio && <p className="text-slate-700 mt-2 text-sm">{profile.bio}</p>}
+                                </div>
+                                <button onClick={()=>setEditing(true)} className="border-2 border-slate-200 hover:border-slate-300 font-bold px-4 py-2 rounded-xl text-sm transition">Изменить</button>
+                            </div>
+                            <div className="flex space-x-6 mt-5 pt-5 border-t border-slate-100">
+                                <div><span className="font-black text-lg">{userPosts.length}</span> <span className="text-slate-500 text-sm font-medium">пузырей</span></div>
+                                <div><span className="font-black text-lg">{profile.followers?.length||0}</span> <span className="text-slate-500 text-sm font-medium">подписчиков</span></div>
+                                <div><span className="font-black text-lg">{profile.following?.length||0}</span> <span className="text-slate-500 text-sm font-medium">подписок</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 className="font-black text-lg mb-3 ml-2">Мои пузыри</h3>
+                    <div className="space-y-4">
+                        {userPosts.map(post => {
+                            const mood = MOODS[post.mood] || MOODS.neutral;
+                            return (
+                                <div key={post.id} className={`relative rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border}`}>
+                                    <button onClick={()=>deletePost(post.id)} className="absolute top-3 right-3 p-2 rounded-full bg-white/70 text-slate-400 hover:text-red-500 hover:bg-red-50 backdrop-blur-sm shadow-sm transition z-10">
+                                        <I.Trash/>
+                                    </button>
+                                    <div className="flex items-center justify-between mb-2 pr-10">
+                                        <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
+                                        <span className="text-xl">{mood.emoji}</span>
+                                    </div>
+                                    {post.text && <p className={`text-sm mb-2 ${mood.text}`}>{post.text}</p>}
+                                    {post.image && <img src={post.image} className="rounded-xl max-h-60 w-full object-cover shadow-sm" />}
+                                </div>
+                            );
+                        })}
+                        {userPosts.length===0 && <p className="text-center text-slate-400 font-bold text-sm py-8">У вас пока нет пузырей</p>}
+                    </div>
+                    {editing && (
+                        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                            <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-black">Редактировать</h2>
+                                    <button onClick={()=>setEditing(false)} className="p-2"><I.X/></button>
+                                </div>
+                                <div className="mb-4">
+                                    <p className="text-xs font-bold text-slate-600 mb-1 ml-1">Фон профиля</p>
+                                    <div onClick={()=>bannerRef.current.click()} className="h-24 bg-slate-100 rounded-xl cursor-pointer bg-cover bg-center flex items-center justify-center overflow-hidden" style={{backgroundImage:`url(${banner||''})`}}>
+                                        {!banner && <span className="text-xs font-bold text-slate-400">Загрузить фон</span>}
+                                    </div>
+                                    <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={e=>upload(e, setBanner, 800)} />
+                                </div>
+                                <div className="flex flex-col items-center mb-4">
+                                    <label className="cursor-pointer relative">
+                                        <Avatar src={avatar} name={username} size={80} />
+                                        <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center text-white opacity-0 hover:opacity-100 transition"><I.Image/></div>
+                                        <input type="file" accept="image/*" className="hidden" onChange={e=>upload(e, setAvatar, 200)} />
+                                    </label>
+                                </div>
+                                <label className="text-xs font-bold text-slate-600 ml-1">Имя</label>
+                                <input value={name} onChange={e=>setName(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" />
+                                <label className="text-xs font-bold text-slate-600 ml-1">Ник (@)</label>
+                                <input value={username} onChange={e=>setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g,''))} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" />
+                                <label className="text-xs font-bold text-slate-600 ml-1">О себе</label>
+                                <textarea value={bio} onChange={e=>setBio(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-4 font-medium resize-none h-20" />
+                                <button onClick={save} disabled={saving} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">{saving?'Сохранение...':'Сохранить'}</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const UserProfileModal = ({ targetUser, currentUser, currentProfile, onClose }) => {
+            const [targetPosts, setTargetPosts] = useState([]);
+            const [liveUser, setLiveUser] = useState(targetUser);
+            const isSelf = targetUser.uid === currentUser.uid;
+            const isFollowing = currentProfile.following?.includes(targetUser.uid);
+
+            useEffect(() => {
+                const unsubU = db.collection('users').doc(targetUser.uid).onSnapshot(d => { if (d.exists) setLiveUser(d.data()); });
+                const unsub = db.collection('posts').where('authorId','==',targetUser.uid).onSnapshot(s => {
+                    const arr = s.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setTargetPosts(arr);
+                });
+                return () => { unsubU(); unsub(); };
+            }, [targetUser.uid]);
+
+            const toggleFollow = async () => {
+                const myRef = db.collection('users').doc(currentUser.uid);
+                const targetRef = db.collection('users').doc(targetUser.uid);
+                if (isFollowing) {
+                    await myRef.update({following: firebase.firestore.FieldValue.arrayRemove(targetUser.uid)});
+                    await targetRef.update({followers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)});
+                } else {
+                    await myRef.update({following: firebase.firestore.FieldValue.arrayUnion(targetUser.uid)});
+                    await targetRef.update({followers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)});
+                    sendNotification(targetUser.uid, {uid:currentUser.uid, username:currentProfile.username, avatar:currentProfile.avatar}, 'follow', '');
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto relative fade-in">
+                        <button onClick={onClose} className="absolute top-4 right-4 z-10 bg-black/40 text-white p-2 rounded-full hover:bg-black/60"><I.X/></button>
+                        <div className="h-40 bg-slate-200 relative bg-cover bg-center rounded-t-[2.5rem]" style={{backgroundImage:`url(${liveUser.banner||''})`}}>
+                            {!liveUser.banner && <div className="absolute inset-0 bg-gradient-to-br from-gopo to-pink-400 rounded-t-[2.5rem]"></div>}
+                        </div>
+                        <div className="px-6 pb-6 relative">
+                            <div className="-mt-14 mb-3 inline-block p-1 bg-white rounded-full shadow-lg">
+                                <Avatar src={liveUser.avatar} name={liveUser.username} size={100} showStatus isOnline={isReallyOnline(liveUser)} />
+                            </div>
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <div className="flex items-center">
+                                        <h1 className="text-2xl font-black mr-2">{liveUser.displayName || liveUser.username}</h1>
+                                        {liveUser.isVerified && <I.Check className="text-blue-500"/>}
+                                    </div>
+                                    <p className="text-slate-500 font-medium">@{liveUser.username}</p>
+                                    <p className={`text-xs font-bold mt-1 ${isReallyOnline(liveUser)?'text-green-600':'text-slate-400'}`}>{formatLastSeen(liveUser)}</p>
+                                    {liveUser.bio && <p className="text-slate-700 mt-2 text-sm">{liveUser.bio}</p>}
+                                </div>
+                                {!isSelf && (
+                                    <button onClick={toggleFollow} className={`font-bold px-6 py-2 rounded-xl text-sm transition ${isFollowing?'bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-500':'bg-gopo text-white shadow-md'}`}>
+                                        {isFollowing?'Отписаться':'Подписаться'}
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex space-x-6 mt-5 pt-5 border-t border-slate-100">
+                                <div><span className="font-black text-lg">{targetPosts.length}</span> <span className="text-slate-500 text-sm font-medium">пузырей</span></div>
+                                <div><span className="font-black text-lg">{liveUser.followers?.length||0}</span> <span className="text-slate-500 text-sm font-medium">подписчиков</span></div>
+                            </div>
+                        </div>
+                        <div className="px-4 pb-6 space-y-3 bg-slate-50">
+                            <h3 className="font-black text-sm pt-4 mb-2">Пузыри</h3>
+                            {targetPosts.map(post => {
+                                const mood = MOODS[post.mood] || MOODS.neutral;
+                                return (
+                                    <div key={post.id} className={`rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border}`}>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <p className={`text-xs opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
+                                            <span className="text-xl">{mood.emoji}</span>
+                                        </div>
+                                        {post.text && <p className={`text-sm mb-2 ${mood.text}`}>{post.text}</p>}
+                                        {post.image && <img src={post.image} className="rounded-xl max-h-60 w-full object-cover shadow-sm" />}
+                                    </div>
+                                );
+                            })}
+                            {targetPosts.length===0 && <p className="text-center text-slate-400 font-bold text-sm py-4">Пузырей нет</p>}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const AdminTab = ({ user, usersMap }) => {
+            const users = Object.values(usersMap);
+            const me = usersMap[user.uid];
+            const showTyping = me?.showTypingFeed !== false;
+            const [, tick] = useState(0);
+            useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 5000); return () => clearInterval(t); }, []);
+
+            const toggleVerify = async (id, cur) => await db.collection('users').doc(id).update({isVerified:!cur});
+            const toggleBan = async (id, cur) => {
+                if (window.confirm(cur?'Разбанить?':'Забанить?'))
+                    await db.collection('users').doc(id).update({isBanned:!cur});
+            };
+            const toggleTyping = async () => await db.collection('users').doc(user.uid).update({showTypingFeed:!showTyping});
+
+            const typingUsers = users.filter(u => {
+                if (!u.typingIn) return false;
+                if (!u.typingAt) return true;
+                try { return (Date.now()-u.typingAt.toDate().getTime()) < 6000; } catch { return true; }
+            });
+            const onlineCount = users.filter(u => isReallyOnline(u)).length;
+
+            return (
+                <div className="fade-in space-y-6">
+                    <div className="flex items-center space-x-2 text-red-500"><I.Shield/><h1 className="text-2xl font-black">Админ-панель</h1></div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white/80 rounded-2xl p-4 border border-white/50 shadow-sm">
+                            <p className="text-xs font-bold text-slate-500 uppercase">Всего</p>
+                            <p className="text-2xl font-black text-slate-800">{users.length}</p>
+                        </div>
+                        <div className="bg-green-50 rounded-2xl p-4 border border-green-200 shadow-sm">
+                            <p className="text-xs font-bold text-green-700 uppercase">Онлайн</p>
+                            <p className="text-2xl font-black text-green-800">{onlineCount}</p>
+                        </div>
+                    </div>
+                    <div className={`rounded-2xl p-4 border-2 transition ${showTyping?'bg-purple-50 border-purple-200':'bg-slate-50 border-slate-200'}`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                                <p className="font-black text-sm text-slate-800 flex items-center"><I.Eye className="mr-2 text-purple-500" />Трекинг печатающих</p>
+                                <p className="text-xs text-slate-500 font-medium mt-1">{showTyping?'Показывать, кто и кому печатает':'Скрыто'}</p>
+                            </div>
+                            <button onClick={toggleTyping} className={`relative w-12 h-6 rounded-full transition ${showTyping?'bg-purple-500':'bg-slate-300'}`}>
+                                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${showTyping?'left-6':'left-0.5'}`}></span>
+                            </button>
+                        </div>
+                        {showTyping && (
+                            <div className="mt-3 pt-3 border-t border-purple-200">
+                                <p className="text-[10px] font-bold text-purple-700 uppercase mb-2">Сейчас печатают:</p>
+                                {typingUsers.length===0 ? <p className="text-xs text-slate-400 font-bold italic">Никто не печатает</p> : (
+                                    <div className="space-y-2">
+                                        {typingUsers.map(u => {
+                                            const target = usersMap[u.typingIn];
+                                            return (
+                                                <div key={u.uid} className="flex items-center space-x-2 bg-white/80 rounded-xl p-2">
+                                                    <Avatar src={u.avatar} name={u.username} size={28} />
+                                                    <p className="text-xs font-bold text-slate-800 truncate flex-1">@{u.username} <span className="text-slate-400 font-medium">→</span> {target?`@${target.username}`:'...'}</p>
+                                                    <TypingDots className="text-purple-500" />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <p className="text-slate-500 text-sm font-medium mb-3">Управление пользователями</p>
+                        <div className="liquid-glass rounded-3xl overflow-hidden shadow-sm">
+                            {users.map(u => {
+                                const online = isReallyOnline(u);
+                                return (
+                                    <div key={u.uid} className={`p-4 border-b border-white/50 last:border-0 ${u.isBanned?'bg-red-50/50':''}`}>
+                                        <div className="flex items-center space-x-3 mb-2">
+                                            <Avatar src={u.avatar} name={u.username} size={42} showStatus isOnline={online} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center">
+                                                    <span className="font-black text-sm truncate">{u.displayName || u.username}</span>
+                                                    {u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}
+                                                </div>
+                                                <p className="text-xs text-slate-400 truncate">@{u.username}</p>
+                                                <p className={`text-[10px] font-bold ${online?'text-green-600':'text-slate-400'}`}>{formatLastSeen(u)}</p>
+                                                {u.isBanned && <p className="text-[10px] text-red-500 font-bold">ЗАБАНЕН</p>}
+                                            </div>
+                                        </div>
+                                        {u.uid !== user.uid && (
+                                            <div className="flex gap-2 mt-2">
+                                                <button onClick={()=>toggleVerify(u.uid, u.isVerified)} className={`flex-1 text-xs font-bold py-2 rounded-lg border-2 ${u.isVerified?'border-blue-500 text-blue-500':'border-slate-200 text-slate-600 bg-white/50'}`}>
+                                                    {u.isVerified?'Снять галочку':'Дать галочку'}
+                                                </button>
+                                                <button onClick={()=>toggleBan(u.uid, u.isBanned)} className={`flex-1 text-xs font-bold py-2 rounded-lg border-2 ${u.isBanned?'border-green-500 text-green-600 bg-white/50':'border-red-500 text-red-500 bg-white/50'}`}>
+                                                    {u.isBanned?'Разбанить':'Забанить'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
