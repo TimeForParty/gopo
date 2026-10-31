@@ -49,47 +49,18 @@
         .typing-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; animation: typingDot 1.4s ease-in-out infinite; }
         .typing-dot:nth-child(2){animation-delay:.2s} .typing-dot:nth-child(3){animation-delay:.4s}
         .story-ring { background: linear-gradient(45deg,#FF0055,#FFB800,#FF0055); padding:3px; border-radius:50%; }
-        .story-ring.seen { background: #d1d5db; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .blown-post { opacity:.4; transform:scale(.96); filter:grayscale(.6); }
         @keyframes recordingPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
         .rec-pulse { animation: recordingPulse 1s ease-in-out infinite; }
         .hashtag { color: #FF0055; font-weight: 700; cursor: pointer; }
         .hashtag:hover { text-decoration: underline; }
-        /* ===== ФИРМЕННАЯ ЗАГРУЗКА ===== */
-        @keyframes popIn {
-            0% { transform: scale(0.3) translateY(40px); opacity: 0; }
-            60% { transform: scale(1.08) translateY(-5px); opacity: 1; }
-            100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        .splash-bubble {
-            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            background: #ffffff;
-            border-radius: 3rem 3rem 3rem 0.5rem;
-            position: relative;
-            padding: 2rem 4rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-        }
-        .splash-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            border-right: 40px solid transparent;
-            border-top: 50px solid #ffffff;
-            border-bottom-left-radius: 15px;
-            transform: rotate(0deg);
-        }
-        .splash-bubble span {
-            color: #2C2C2C;
-            font-weight: 900;
-            font-size: 3.5rem;
-            letter-spacing: -2px;
-            transform: rotate(-8deg);
-            display: inline-block;
-        }
+        @keyframes popIn { 0%{transform:scale(.3) translateY(40px);opacity:0} 60%{transform:scale(1.08) translateY(-5px);opacity:1} 100%{transform:scale(1) translateY(0);opacity:1} }
+        .splash-bubble { animation: popIn .8s cubic-bezier(.175,.885,.32,1.275) forwards; background:#fff; border-radius:3rem 3rem 3rem .5rem; position:relative; padding:2rem 4rem; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+        .splash-bubble::after { content:''; position:absolute; bottom:0; left:0; border-right:40px solid transparent; border-top:50px solid #fff; border-bottom-left-radius:15px; }
+        .splash-bubble span { color:#2C2C2C; font-weight:900; font-size:3.5rem; letter-spacing:-2px; transform:rotate(-8deg); display:inline-block; }
+        .mini-player { animation: slideUp .3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -147,13 +118,9 @@
                 return d.toLocaleDateString('ru');
             } catch { return '...'; }
         };
-
-        const isReallyOnline = (u) => {
-            if (!u?.isOnline) return false;
-            if (!u.lastActiveAt) return true;
-            try { return (Date.now() - u.lastActiveAt.toDate().getTime()) < 120000; } catch { return true; }
-        };
-
+        const postTime = (p) => p.createdAt?.toDate?.()?.getTime?.() ?? (p.createdAt ? 0 : Date.now());
+        const waveBars = (id) => { let h=0; for(let i=0;i<(id||'').length;i++) h=(h*31+id.charCodeAt(i))>>>0; const o=[]; for(let i=0;i<12;i++){h=(h*1103515245+12345)>>>0;o.push(20+(h%80));} return o; };
+        const isReallyOnline = (u) => { if(!u?.isOnline) return false; if(!u.lastActiveAt) return true; try{return (Date.now()-u.lastActiveAt.toDate().getTime())<120000;}catch{return true;} };
         const formatLastSeen = (u) => {
             if (!u) return '';
             if (isReallyOnline(u)) return 'в сети';
@@ -168,34 +135,15 @@
                 return `был(а) ${d.toLocaleDateString('ru')}`;
             } catch { return 'не в сети'; }
         };
-
-        const isTypingNow = (u, targetId) => {
-            if (!u?.typingIn || u.typingIn !== targetId) return false;
-            if (!u.typingAt) return true;
-            try { return (Date.now() - u.typingAt.toDate().getTime()) < 6000; } catch { return true; }
-        };
-
+        const isTypingNow = (u, targetId) => { if(!u?.typingIn||u.typingIn!==targetId) return false; if(!u.typingAt) return true; try{return (Date.now()-u.typingAt.toDate().getTime())<6000;}catch{return true;} };
         const sendNotification = async (recipientId, sender, type, text, extra={}) => {
             if (!recipientId || recipientId === sender.uid) return;
-            try {
-                await db.collection('notifications').add({
-                    recipientId, senderId: sender.uid, senderName: sender.username, senderAvatar: sender.avatar,
-                    type, text, read:false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    ...extra
-                });
-            } catch(e){ console.error('notif:', e); }
+            try { await db.collection('notifications').add({ recipientId, senderId: sender.uid, senderName: sender.username, senderAvatar: sender.avatar, type, text, read:false, createdAt: firebase.firestore.FieldValue.serverTimestamp(), ...extra }); } catch(e){ console.error('notif:', e); }
         };
-
         const renderTextWithHashtags = (text, onHashtagClick) => {
             if (!text) return null;
             const parts = text.split(/(#[\wа-яА-ЯёЁ]+)/g);
-            return parts.map((p, i) => {
-                if (p.startsWith('#')) {
-                    return <span key={i} className="hashtag" onClick={(e) => { e.stopPropagation(); onHashtagClick && onHashtagClick(p); }}>{p}</span>;
-                }
-                return <span key={i}>{p}</span>;
-            });
+            return parts.map((p, i) => p.startsWith('#') ? <span key={i} className="hashtag" onClick={(e)=>{e.stopPropagation(); onHashtagClick&&onHashtagClick(p);}}>{p}</span> : <span key={i}>{p}</span>);
         };
 
         const I = {
@@ -214,7 +162,7 @@
             Back: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
             Image: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
             Check: ({className}) => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>,
-            Sparkles: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>,
+            Sparkles: ({className}) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={className}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>,
             Comment: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
             Info: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
             Eye: ({className}) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={className}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
@@ -222,41 +170,30 @@
             Mic: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
             Play: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
             Pause: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
+            Next: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="4" width="3" height="16"/></svg>,
+            Prev: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="4" y="4" width="3" height="16"/></svg>,
             Crown: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 6l4 12h12l4-12-7 5-3-7-3 7z"/></svg>,
+            Group: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            Heart: ({filled}) => <svg width="18" height="18" viewBox="0 0 24 24" fill={filled?'currentColor':'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+            Upload: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
         };
 
-        // ===== ФИРМЕННЫЙ ЭКРАН ЗАГРУЗКИ =====
         const SplashScreen = () => (
             <div className="flex h-screen w-full bg-gopo items-center justify-center overflow-hidden">
-                <div className="splash-bubble">
-                    <span>GoPo</span>
-                </div>
+                <div className="splash-bubble"><span>GoPo</span></div>
             </div>
         );
 
         const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false }) => {
-            const inner = src
-                ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} />
-                : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
+            const inner = src ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} /> : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
             if (!showStatus) return <div className="flex-shrink-0">{inner}</div>;
             const dot = Math.max(10, Math.round(size*0.28));
-            return (
-                <div className="relative flex-shrink-0" style={{width:size, height:size}}>
-                    {inner}
-                    <span className={`absolute bottom-0 right-0 rounded-full border-2 border-white shadow-sm ${isOnline?'bg-green-500':'bg-slate-300'}`} style={{width:dot, height:dot}} />
-                </div>
-            );
+            return (<div className="relative flex-shrink-0" style={{width:size, height:size}}>{inner}<span className={`absolute bottom-0 right-0 rounded-full border-2 border-white shadow-sm ${isOnline?'bg-green-500':'bg-slate-300'}`} style={{width:dot, height:dot}} /></div>);
         });
 
-        const TypingDots = ({ className="" }) => (
-            <span className={`inline-flex items-center space-x-1 ${className}`}>
-                <span className="typing-dot"></span><span className="typing-dot"></span><span className="typing-dot"></span>
-            </span>
-        );
-
+        const TypingDots = ({ className="" }) => (<span className={`inline-flex items-center space-x-1 ${className}`}><span className="typing-dot"></span><span className="typing-dot"></span><span className="typing-dot"></span></span>);
         const Logo = ({ small }) => <div className={`gopo-logo ${small?'scale-75 origin-left':''}`}><span>GoPo</span></div>;
 
-        // === ГЛАВНЫЙ КОМПОНЕНТ ===
         function App() {
             const [splashDone, setSplashDone] = useState(false);
             const [user, setUser] = useState(null);
@@ -272,25 +209,29 @@
             const [searchHashtag, setSearchHashtag] = useState(null);
             const isAdmin = user?.email === 'hvadim439@gmail.com';
 
-            // ⏱️ Фирменная заставка на 2 секунды при каждом открытии
-            useEffect(() => {
-                const t = setTimeout(() => setSplashDone(true), 2000);
-                return () => clearTimeout(t);
-            }, []);
+            const [playerTrack, setPlayerTrack] = useState(null);
+            const [playerQueue, setPlayerQueue] = useState([]);
+            const [playerPlaying, setPlayerPlaying] = useState(false);
+            const [playerProgress, setPlayerProgress] = useState(0);
+            const [playerDuration, setPlayerDuration] = useState(0);
+            const playerAudioRef = useRef(null);
 
             useEffect(() => {
-                if (!auth) return;
-                const unsub = auth.onAuthStateChanged(u => { setUser(u); if(!u){setProfile(null);setLoading(false);} });
-                return () => unsub();
-            }, []);
+                if (!playerAudioRef.current || !playerTrack) return;
+                if (playerPlaying) playerAudioRef.current.play().catch(()=>setPlayerPlaying(false));
+                else playerAudioRef.current.pause();
+            }, [playerTrack, playerPlaying]);
 
-            useEffect(() => {
-                const unsub = db.collection('users').onSnapshot(snap => {
-                    const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); });
-                    setUsersMap(m);
-                }, err => console.error('users:', err));
-                return () => unsub();
-            }, []);
+            const playTrack = (track, queue) => {
+                if (playerTrack?.id === track.id) { setPlayerPlaying(p => !p); return; }
+                setPlayerTrack(track); setPlayerQueue(queue || []); setPlayerProgress(0); setPlayerPlaying(true);
+            };
+            const nextTrack = () => { if (!playerQueue.length) return; const idx = playerQueue.findIndex(t => t.id === playerTrack?.id); setPlayerTrack(playerQueue[(idx + 1) % playerQueue.length]); setPlayerProgress(0); setPlayerPlaying(true); };
+            const prevTrack = () => { if (!playerQueue.length) return; const idx = playerQueue.findIndex(t => t.id === playerTrack?.id); setPlayerTrack(playerQueue[(idx - 1 + playerQueue.length) % playerQueue.length]); setPlayerProgress(0); setPlayerPlaying(true); };
+
+            useEffect(() => { const t = setTimeout(() => setSplashDone(true), 2000); return () => clearTimeout(t); }, []);
+            useEffect(() => { if (!auth) return; const unsub = auth.onAuthStateChanged(u => { setUser(u); if(!u){setProfile(null);setLoading(false);} }); return () => unsub(); }, []);
+            useEffect(() => { const unsub = db.collection('users').onSnapshot(snap => { const m={}; snap.docs.forEach(d=>{m[d.id]=d.data();}); setUsersMap(m); }); return () => unsub(); }, []);
 
             useEffect(() => {
                 if (!user) return;
@@ -302,11 +243,7 @@
                 document.addEventListener('visibilitychange', vis);
                 window.addEventListener('beforeunload', markOffline);
                 const hb = setInterval(() => { if(!document.hidden) markOnline(); }, 60000);
-                return () => {
-                    document.removeEventListener('visibilitychange', vis);
-                    window.removeEventListener('beforeunload', markOffline);
-                    clearInterval(hb); markOffline();
-                };
+                return () => { document.removeEventListener('visibilitychange', vis); window.removeEventListener('beforeunload', markOffline); clearInterval(hb); markOffline(); };
             }, [user]);
 
             useEffect(() => {
@@ -314,16 +251,7 @@
                 const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
                     if (doc.exists) { setProfile(doc.data()); setLoading(false); }
                     else if (user.displayName) {
-                        const np = {
-                            uid:user.uid, email:user.email,
-                            username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''),
-                            displayName:user.displayName, avatar:null, banner:'', bio:'',
-                            isVerified: user.email === 'hvadim439@gmail.com',
-                            isBanned:false, followers:[], following:[],
-                            isOnline:true, lastSeen:null, lastActiveAt:null,
-                            typingIn:null, typingAt:null, showTypingFeed:true,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        };
+                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === 'hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], createdAt: firebase.firestore.FieldValue.serverTimestamp() };
                         await db.collection('users').doc(user.uid).set(np);
                         setProfile(np); setLoading(false);
                     }
@@ -333,14 +261,10 @@
 
             useEffect(() => {
                 if (!user) return;
-                const unsub = db.collection('notifications')
-                    .where('recipientId','==',user.uid)
-                    .where('read','==',false)
-                    .onSnapshot(snap => setUnreadNotifs(snap.size), err => console.error('notifs count:', err));
+                const unsub = db.collection('notifications').where('recipientId','==',user.uid).where('read','==',false).onSnapshot(snap => setUnreadNotifs(snap.size));
                 return () => unsub();
             }, [user]);
 
-            // 🎬 Порядок показа: Splash → Loader → Auth → App
             if (!splashDone) return <SplashScreen />;
             if (loading || !auth) return <div className="h-screen flex items-center justify-center bg-slate-50"><div className="loader"></div></div>;
             if (!user) return <AuthScreen />;
@@ -361,32 +285,53 @@
 
             return (
                 <div className="flex h-screen bg-[#f0f2f5] relative overflow-hidden">
-                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin}
-                        onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={unreadNotifs} />
-                    <main className="flex-1 overflow-y-auto pb-24 md:pb-8 p-4 md:p-8 relative">
+                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={unreadNotifs} />
+                    <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${playerTrack ? 'pb-56 md:pb-40' : 'pb-24 md:pb-8'}`}>
                         <div className="max-w-2xl mx-auto">
                             <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
-                            {activeTab==='feed' && <FeedTab user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap}
-                                onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
-                            {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile}
-                                onCommentClick={setViewingPost} onHashtagClick={goToHashtag}
-                                initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
+                            {activeTab==='feed' && <FeedTab user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
+                            {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
                             {activeTab==='dm' && <MessengerTab user={user} profile={profile} usersMap={usersMap} />}
                             {activeTab==='notifications' && <NotificationsTab user={user} onUserClick={setViewingProfile} onOpenPost={setViewingPost} />}
                             {activeTab==='profile' && <ProfileTab user={user} profile={profile} usersMap={usersMap} />}
                             {activeTab==='admin' && isAdmin && <AdminTab user={user} usersMap={usersMap} />}
-                            {activeTab==='music' && <div className="text-center p-10 font-bold text-slate-400">Музыка скоро появится...</div>}
+                            {activeTab==='music' && <MusicTab user={user} profile={profile} playerTrack={playerTrack} playerPlaying={playerPlaying} playTrack={playTrack} />}
                         </div>
                     </main>
-                    <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin}
-                        onCreate={()=>setShowCreate(true)} unread={unreadNotifs} />
+                    <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} unread={unreadNotifs} />
                     {showCreate && <CreatePostModal user={user} profile={profile} onClose={()=>setShowCreate(false)} />}
-                    {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user}
-                        currentProfile={profile} onClose={()=>setViewingProfile(null)} />}
-                    {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile}
-                        usersMap={usersMap} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} />}
-                    {showNotifications && <NotificationsModal user={user} onClose={()=>setShowNotifications(false)}
-                        onUserClick={(u)=>{setShowNotifications(false); setViewingProfile(u);}} />}
+                    {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user} currentProfile={profile} onClose={()=>setViewingProfile(null)} />}
+                    {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile} usersMap={usersMap} isAdmin={isAdmin} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} />}
+                    {showNotifications && <NotificationsModal user={user} onClose={()=>setShowNotifications(false)} onUserClick={(u)=>{setShowNotifications(false); setViewingProfile(u);}} />}
+                    <audio ref={playerAudioRef} src={playerTrack?.audioUrl}
+                        onPlay={()=>setPlayerPlaying(true)} onPause={()=>setPlayerPlaying(false)}
+                        onTimeUpdate={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerProgress((a.currentTime/a.duration)*100); }}
+                        onLoadedMetadata={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerDuration(a.duration); }}
+                        onEnded={()=>{ nextTrack(); }}
+                    />
+                    {playerTrack && (
+                        <div className="fixed bottom-20 left-3 right-3 md:left-auto md:right-6 md:bottom-6 md:w-96 z-[45] mini-player">
+                            <div className="liquid-glass rounded-2xl p-3 shadow-2xl">
+                                <div className="flex items-center space-x-3">
+                                    {playerTrack.cover
+                                        ? <img src={playerTrack.cover} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                                        : <div className="w-12 h-12 rounded-lg bg-gopo flex items-center justify-center text-white flex-shrink-0"><I.Music/></div>}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-black text-sm truncate">{playerTrack.title}</p>
+                                        <p className="text-xs text-slate-500 truncate">{playerTrack.artist}</p>
+                                    </div>
+                                    <button onClick={prevTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Prev/></button>
+                                    <button onClick={()=>setPlayerPlaying(p=>!p)} className="p-2.5 bg-gopo text-white rounded-full shadow-md">
+                                        {playerPlaying ? <I.Pause size={18}/> : <I.Play size={18}/>}
+                                    </button>
+                                    <button onClick={nextTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Next/></button>
+                                    <button onClick={()=>{setPlayerPlaying(false); setPlayerTrack(null);}} className="p-2 text-slate-400 hover:text-red-500"><I.X/></button>
+                                </div>
+                                <input type="range" min="0" max="100" value={playerProgress} onChange={e=>{ const a=playerAudioRef.current; if(a?.duration) a.currentTime=(e.target.value/100)*a.duration; }} className="w-full accent-gopo mt-2 h-1" />
+                                <p className="text-[10px] text-slate-400 font-bold mt-0.5 text-right">{playerDuration ? `${Math.floor((playerProgress/100*playerDuration)/60)}:${String(Math.floor((playerProgress/100*playerDuration)%60)).padStart(2,'0')}` : ''}</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -405,22 +350,16 @@
                 try {
                     if (isLogin) await auth.signInWithEmailAndPassword(email, password);
                     else {
+                        const uname = username.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase();
+                        if (!uname) { setError('Введите никнейм'); setLoading(false); return; }
+                        const dup = await db.collection('users').where('username','==',uname).limit(1).get();
+                        if (!dup.empty) { setError('Этот никнейм уже занят'); setLoading(false); return; }
                         const cred = await auth.createUserWithEmailAndPassword(email, password);
                         await cred.user.updateProfile({ displayName: name });
-                        await db.collection('users').doc(cred.user.uid).set({
-                            uid:cred.user.uid, email, username: username.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase(),
-                            displayName: name, avatar:null, banner:'', bio:'',
-                            isVerified: email==='hvadim439@gmail.com', isBanned:false, followers:[], following:[],
-                            isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null,
-                            showTypingFeed:true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
+                        await db.collection('users').doc(cred.user.uid).set({ uid:cred.user.uid, email, username: uname, displayName: name, avatar:null, banner:'', bio:'', isVerified: email==='hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     }
                 } catch(err) {
-                    const m = {
-                        'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль',
-                        'auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)',
-                        'auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные'
-                    };
+                    const m = {'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль','auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)','auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные'};
                     setError(m[err.code] || err.message);
                 }
                 setLoading(false);
@@ -428,7 +367,7 @@
 
             return (
                 <div className="h-screen flex items-center justify-center p-4 relative">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80')] bg-cover opacity-20 filter blur-xl"></div>
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80')] bg-cover opacity-20 filter blur-xl"></div>
                     <div className="liquid-glass p-8 rounded-3xl w-full max-w-md relative z-10">
                         <div className="flex justify-center mb-8"><Logo /></div>
                         <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo':'Создать аккаунт'}</h2>
@@ -440,13 +379,9 @@
                             </>}
                             <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
                             <input type="password" placeholder="Пароль (мин. 6 символов)" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
-                            <button type="submit" disabled={loading} className="w-full bg-gopo text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-200 disabled:opacity-50">
-                                {loading?'Загрузка...':(isLogin?'Войти':'Зарегистрироваться')}
-                            </button>
+                            <button type="submit" disabled={loading} className="w-full bg-gopo text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-200 disabled:opacity-50">{loading?'Загрузка...':(isLogin?'Войти':'Зарегистрироваться')}</button>
                         </form>
-                        <p onClick={()=>setIsLogin(!isLogin)} className="text-center mt-5 text-sm font-bold text-slate-600 cursor-pointer hover:text-gopo">
-                            {isLogin?'Нет аккаунта? Зарегистрироваться':'Уже есть аккаунт? Войти'}
-                        </p>
+                        <p onClick={()=>setIsLogin(!isLogin)} className="text-center mt-5 text-sm font-bold text-slate-600 cursor-pointer hover:text-gopo">{isLogin?'Нет аккаунта? Зарегистрироваться':'Уже есть аккаунт? Войти'}</p>
                     </div>
                 </div>
             );
@@ -456,76 +391,41 @@
             <nav className="hidden md:flex flex-col w-64 m-4 rounded-3xl liquid-glass p-4 z-20">
                 <div className="mb-6 pl-2 flex items-center justify-between">
                     <Logo small />
-                    <button onClick={onOpenNotifs} className="relative p-2 hover:bg-white/60 rounded-xl transition">
-                        <I.Bell />
-                        {unread > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center shadow-md">{unread > 9 ? '9+' : unread}</span>}
-                    </button>
+                    <button onClick={onOpenNotifs} className="relative p-2 hover:bg-white/60 rounded-xl transition"><I.Bell />{unread > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center shadow-md">{unread > 9 ? '9+' : unread}</span>}</button>
                 </div>
                 <div className="space-y-1 flex-1">
                     <NavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} label="Лента" />
                     <NavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} label="Чаты" />
                     <NavItem active={activeTab==='search'} onClick={()=>setActiveTab('search')} icon={<I.Search/>} label="Поиск" />
                     <NavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} label="Профиль" />
-                    <NavItem active={false} onClick={()=>{}} icon={<I.Music/>} label="Музыка" disabled />
+                    <NavItem active={activeTab==='music'} onClick={()=>setActiveTab('music')} icon={<I.Music/>} label="Музыка" />
                     {isAdmin && <NavItem active={activeTab==='admin'} onClick={()=>setActiveTab('admin')} icon={<I.Shield/>} label="Админ" color="text-red-500" />}
                 </div>
-                <button onClick={onCreate} className="w-full bg-gopo text-white font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 hover:bg-pink-600 transition mb-2">
-                    <I.Plus/><span className="ml-2">Создать</span>
-                </button>
-                <button onClick={()=>auth.signOut()} className="w-full p-3 text-slate-600 font-bold hover:bg-white/50 rounded-xl flex items-center justify-center transition">
-                    <I.LogOut/><span className="ml-2">Выйти</span>
-                </button>
+                <button onClick={onCreate} className="w-full bg-gopo text-white font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 hover:bg-pink-600 transition mb-2"><I.Plus/><span className="ml-2">Создать</span></button>
+                <button onClick={()=>auth.signOut()} className="w-full p-3 text-slate-600 font-bold hover:bg-white/50 rounded-xl flex items-center justify-center transition"><I.LogOut/><span className="ml-2">Выйти</span></button>
             </nav>
         );
 
-        // ===== МОБИЛЬНОЕ МЕНЮ "3 ТОЧКИ" (Поиск + Админ) =====
         const MobileMenuButton = ({ isAdmin, setActiveTab }) => {
             const [open, setOpen] = useState(false);
             const ref = useRef(null);
-
             useEffect(() => {
                 if (!open) return;
                 const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-                document.addEventListener('mousedown', handle);
-                document.addEventListener('touchstart', handle);
-                return () => {
-                    document.removeEventListener('mousedown', handle);
-                    document.removeEventListener('touchstart', handle);
-                };
+                document.addEventListener('mousedown', handle); document.addEventListener('touchstart', handle);
+                return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle); };
             }, [open]);
-
             return (
                 <div ref={ref} className="md:hidden relative mb-4 flex items-center justify-between">
-                    <button
-                        onClick={()=>setOpen(!open)}
-                        className="liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition"
-                        aria-label="Меню"
-                    >
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                            <circle cx="12" cy="5" r="2.2"/>
-                            <circle cx="12" cy="12" r="2.2"/>
-                            <circle cx="12" cy="19" r="2.2"/>
-                        </svg>
+                    <button onClick={()=>setOpen(!open)} className="liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition" aria-label="Меню">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
                     </button>
                     <Logo small />
                     {open && (
                         <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-56 fade-in">
-                            <button
-                                onClick={()=>{ setActiveTab('search'); setOpen(false); }}
-                                className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"
-                            >
-                                <span className="text-slate-500"><I.Search /></span>
-                                <span>Поиск</span>
-                            </button>
-                            {isAdmin && (
-                                <button
-                                    onClick={()=>{ setActiveTab('admin'); setOpen(false); }}
-                                    className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"
-                                >
-                                    <span><I.Shield /></span>
-                                    <span>Админ</span>
-                                </button>
-                            )}
+                            <button onClick={()=>{ setActiveTab('search'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"><span className="text-slate-500"><I.Search /></span><span>Поиск</span></button>
+                            <button onClick={()=>{ setActiveTab('music'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700 border-t border-slate-100"><span className="text-slate-500"><I.Music /></span><span>Музыка</span></button>
+                            {isAdmin && <button onClick={()=>{ setActiveTab('admin'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"><span><I.Shield /></span><span>Админ</span></button>}
                         </div>
                     )}
                 </div>
@@ -544,15 +444,13 @@
 
         const NavItem = ({ icon, label, active, onClick, disabled, color }) => (
             <button onClick={onClick} disabled={disabled} className={`w-full flex items-center space-x-3 p-3.5 rounded-2xl font-bold text-sm transition-all ${disabled?'opacity-40 cursor-not-allowed text-slate-400':active?'bg-gopo text-white shadow-lg shadow-pink-200':`hover:bg-white/60 ${color||'text-slate-700'}`}`}>
-                <span className={active && !disabled?'text-white':color||'text-slate-500'}>{icon}</span>
-                <span>{label}</span>
+                <span className={active && !disabled?'text-white':color||'text-slate-500'}>{icon}</span><span>{label}</span>
             </button>
         );
 
         const MobileNavItem = ({ icon, active, onClick, disabled, badge }) => (
             <button onClick={onClick} disabled={disabled} className={`relative p-2 rounded-xl transition ${disabled?'opacity-30':active?'text-gopo bg-gopo/10':'text-slate-500'}`}>
-                {icon}
-                {badge > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{badge > 9 ? '9+' : badge}</span>}
+                {icon}{badge > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{badge > 9 ? '9+' : badge}</span>}
             </button>
         );
 
@@ -563,16 +461,10 @@
                     const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
                     arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
                     setNotifs(arr);
-                }, err => console.error('notifs:', err));
+                });
                 return () => unsub();
             }, [user.uid]);
-
-            const markAllRead = async () => {
-                const batch = db.batch();
-                notifs.filter(n => !n.read).forEach(n => batch.update(db.collection('notifications').doc(n.id), {read:true}));
-                await batch.commit().catch(()=>{});
-            };
-
+            const markAllRead = async () => { const batch = db.batch(); notifs.filter(n => !n.read).forEach(n => batch.update(db.collection('notifications').doc(n.id), {read:true})); await batch.commit().catch(()=>{}); };
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
                     <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col fade-in shadow-2xl">
@@ -594,19 +486,18 @@
 
         const NotifItem = ({ notif, onClick }) => {
             const typeText = {
-                resonance: 'резонировал(а) с вашим пузырём',
-                comment: 'прокомментировал(а) ваш пузырь',
-                follow: 'подписался(-ась) на вас',
-                message: 'написал(а) вам сообщение',
+                resonance:'резонировал(а) с вашим пузырём',
+                comment:'прокомментировал(а) ваш пузырь',
+                follow:'подписался(-ась) на вас',
+                message:'написал(а) вам сообщение',
+                music_approved:'— ваш трек одобрен и опубликован',
+                music_rejected:'— ваш трек отклонён'
             };
             return (
                 <div onClick={onClick} className={`flex items-start space-x-3 p-3 rounded-2xl cursor-pointer transition ${notif.read?'hover:bg-slate-50':'bg-pink-50/60 hover:bg-pink-100/60'}`}>
                     <Avatar src={notif.senderAvatar} name={notif.senderName} size={40} />
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-800">
-                            <span className="font-black">@{notif.senderName}</span>{' '}
-                            <span className="font-medium">{typeText[notif.type]||notif.type}</span>
-                        </p>
+                        <p className="text-sm text-slate-800"><span className="font-black">@{notif.senderName}</span>{' '}<span className="font-medium">{typeText[notif.type]||notif.type}</span></p>
                         {notif.text && <p className="text-xs text-slate-500 mt-1 line-clamp-2 italic">«{notif.text}»</p>}
                         <p className="text-[10px] text-slate-400 font-bold mt-1">{timeAgo(notif.createdAt)}</p>
                     </div>
@@ -623,60 +514,45 @@
                     arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
                     setNotifs(arr);
                     arr.filter(n=>!n.read).forEach(n => db.collection('notifications').doc(n.id).update({read:true}).catch(()=>{}));
-                }, err => console.error('notifs:', err));
+                });
                 return () => unsub();
             }, [user.uid]);
             return (
                 <div className="fade-in">
                     <h1 className="text-2xl font-black mb-4">Уведомления</h1>
                     {notifs.length===0 && <div className="text-center p-16 liquid-glass rounded-3xl text-slate-400"><I.Bell/><p className="mt-4 font-bold">Пока нет уведомлений</p></div>}
-                    <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
-                        {notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}
-                    </div>
+                    <div className="bg-white rounded-3xl overflow-hidden shadow-sm">{notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}</div>
                 </div>
             );
         };
 
-        const StoriesBar = ({ user, profile, usersMap }) => {
+        const StoriesBar = ({ user, profile }) => {
             const [stories, setStories] = useState([]);
             const [viewing, setViewing] = useState(null);
             const [creating, setCreating] = useState(false);
-
             useEffect(() => {
                 const unsub = db.collection('stories').onSnapshot(snap => {
                     const now = Date.now();
-                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()})).filter(s => {
-                        try { return (now - s.createdAt.toDate().getTime()) < 86400000; } catch { return true; }
-                    });
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()})).filter(s => { try { return (now - s.createdAt.toDate().getTime()) < 86400000; } catch { return true; } });
                     arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
                     setStories(arr);
-                }, err => console.error('stories:', err));
+                });
                 return () => unsub();
             }, []);
-
             const myStory = stories.find(s => s.userId === user.uid);
             const otherStories = stories.filter(s => s.userId !== user.uid);
-
             const uploadStory = async (file) => {
                 const img = await compressImage(file, 800, 0.6);
-                await db.collection('stories').add({
-                    userId: user.uid, userName: profile.username, userAvatar: profile.avatar,
-                    image: img, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                await db.collection('stories').add({ userId: user.uid, userName: profile.username, userAvatar: profile.avatar, image: img, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 setCreating(false);
             };
-
             return (
                 <>
                     <div className="bg-white rounded-3xl p-3 mb-4 shadow-sm overflow-x-auto">
                         <div className="flex space-x-3 min-w-max">
                             <div className="flex flex-col items-center w-16 cursor-pointer" onClick={()=>myStory ? setViewing({...myStory, mine:true}) : setCreating(true)}>
                                 <div className="relative">
-                                    {myStory ? (
-                                        <div className="story-ring"><Avatar src={profile.avatar} name={profile.username} size={56} /></div>
-                                    ) : (
-                                        <div className="w-[62px] h-[62px] rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50"><I.Plus /></div>
-                                    )}
+                                    {myStory ? <div className="story-ring"><Avatar src={profile.avatar} name={profile.username} size={56} /></div> : <div className="w-[62px] h-[62px] rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50"><I.Plus /></div>}
                                     {!myStory && <div className="absolute -bottom-1 -right-1 bg-gopo text-white w-6 h-6 rounded-full flex items-center justify-center border-2 border-white"><I.Plus/></div>}
                                 </div>
                                 <p className="text-[10px] font-bold mt-1 text-slate-700 truncate w-full text-center">Вы</p>
@@ -694,9 +570,7 @@
                             <div className="bg-white rounded-3xl p-6 max-w-sm w-full">
                                 <h3 className="font-black text-lg mb-4">Новая история</h3>
                                 <label className="block cursor-pointer">
-                                    <div className="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center hover:border-gopo transition">
-                                        <I.Image /><p className="text-sm font-bold text-slate-500 mt-2">Выбрать фото</p>
-                                    </div>
+                                    <div className="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center hover:border-gopo transition"><I.Image /><p className="text-sm font-bold text-slate-500 mt-2">Выбрать фото</p></div>
                                     <input type="file" accept="image/*" className="hidden" onChange={(e)=>e.target.files[0] && uploadStory(e.target.files[0])} />
                                 </label>
                                 <button onClick={()=>setCreating(false)} className="w-full mt-4 text-slate-500 font-bold py-2 rounded-xl hover:bg-slate-100">Отмена</button>
@@ -712,18 +586,10 @@
             const [progress, setProgress] = useState(0);
             useEffect(() => {
                 const start = Date.now();
-                const t = setInterval(() => {
-                    const p = Math.min(100, ((Date.now()-start)/5000)*100);
-                    setProgress(p);
-                    if (p>=100) { clearInterval(t); onClose(); }
-                }, 50);
+                const t = setInterval(() => { const p = Math.min(100, ((Date.now()-start)/5000)*100); setProgress(p); if (p>=100) { clearInterval(t); onClose(); } }, 50);
                 return () => clearInterval(t);
             }, []);
-            const del = async () => {
-                if (!window.confirm('Удалить историю?')) return;
-                await db.collection('stories').doc(story.id).delete();
-                onClose();
-            };
+            const del = async () => { if (!window.confirm('Удалить историю?')) return; await db.collection('stories').doc(story.id).delete(); onClose(); };
             return (
                 <div className="fixed inset-0 bg-black z-[80] flex flex-col">
                     <div className="h-1 bg-white/30"><div className="h-full bg-white transition-all" style={{width:`${progress}%`}} /></div>
@@ -733,9 +599,7 @@
                         {story.mine && <button onClick={del} className="p-2"><I.Trash/></button>}
                         <button onClick={onClose} className="p-2"><I.X/></button>
                     </div>
-                    <div className="flex-1 flex items-center justify-center">
-                        <img src={story.image} className="max-w-full max-h-full object-contain" />
-                    </div>
+                    <div className="flex-1 flex items-center justify-center"><img src={story.image} className="max-w-full max-h-full object-contain" /></div>
                 </div>
             );
         };
@@ -746,27 +610,22 @@
             const [ripples, setRipples] = useState([]);
             const [pulsingPost, setPulsingPost] = useState(null);
             const [showBlown, setShowBlown] = useState(false);
-            const holdTimer = useRef(null);
-            const holdStartTime = useRef(null);
-            const touchStartPos = useRef({x:0,y:0});
+            const holdTimer = useRef(null); const holdStartTime = useRef(null); const touchStartPos = useRef({x:0,y:0});
 
             useEffect(() => {
                 const unsub = db.collection('posts').onSnapshot(snap => {
-                    const arr = snap.docs.map(d => ({id:d.id, resonances:[], blows:[], ...d.data()}));
-                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    const arr = snap.docs.map(d => ({id:d.id, resonances:[], blows:[], commentsCount:0, ...d.data()}));
+                    arr.sort((a,b) => postTime(b) - postTime(a));
                     setPosts(arr);
-                }, err => console.error('posts:', err));
+                });
                 return () => unsub();
             }, []);
 
-            const del = async (id) => {
-                if (window.confirm('Удалить пост?')) await db.collection('posts').doc(id).delete();
-            };
+            const del = async (id) => { if (window.confirm('Удалить пост?')) await db.collection('posts').doc(id).delete(); };
 
             const startHold = (e, postId) => {
                 if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.hashtag')) return;
-                const cx = e.clientX || e.touches?.[0]?.clientX || 0;
-                const cy = e.clientY || e.touches?.[0]?.clientY || 0;
+                const cx = e.clientX || e.touches?.[0]?.clientX || 0; const cy = e.clientY || e.touches?.[0]?.clientY || 0;
                 touchStartPos.current = {x:cx, y:cy};
                 const rect = e.currentTarget.getBoundingClientRect();
                 holdStartTime.current = Date.now();
@@ -775,118 +634,57 @@
                     const elapsed = Date.now() - holdStartTime.current;
                     const progress = Math.min(100, (elapsed/1000)*100);
                     setHoldingState({postId, progress});
-                    if (progress >= 100) {
-                        clearInterval(holdTimer.current);
-                        executeResonance(postId, cx - rect.left, cy - rect.top);
-                        setHoldingState({postId:null, progress:0});
-                    }
+                    if (progress >= 100) { clearInterval(holdTimer.current); executeResonance(postId, cx - rect.left, cy - rect.top); setHoldingState({postId:null, progress:0}); }
                 }, 10);
             };
-
-            const moveHold = (e) => {
-                const cx = e.touches?.[0]?.clientX; const cy = e.touches?.[0]?.clientY;
-                if (cx === undefined) return;
-                if (Math.sqrt((cx-touchStartPos.current.x)**2 + (cy-touchStartPos.current.y)**2) > 10) endHold();
-            };
-
-            const endHold = () => {
-                if (holdTimer.current) { clearInterval(holdTimer.current); setHoldingState({postId:null, progress:0}); }
-            };
-
+            const moveHold = (e) => { const cx = e.touches?.[0]?.clientX; const cy = e.touches?.[0]?.clientY; if (cx === undefined) return; if (Math.sqrt((cx-touchStartPos.current.x)**2 + (cy-touchStartPos.current.y)**2) > 10) endHold(); };
+            const endHold = () => { if (holdTimer.current) { clearInterval(holdTimer.current); setHoldingState({postId:null, progress:0}); } };
             const executeResonance = async (postId, x, y) => {
                 const rid = Date.now();
                 setRipples(p => [...p, {id:rid, postId, x, y}]);
                 setTimeout(() => setRipples(p => p.filter(r => r.id !== rid)), 600);
-                setPulsingPost(postId);
-                setTimeout(() => setPulsingPost(null), 700);
-                const post = posts.find(p => p.id === postId);
-                if (!post) return;
-                const arr = post.resonances || [];
-                const has = arr.includes(user.uid);
+                setPulsingPost(postId); setTimeout(() => setPulsingPost(null), 700);
+                const post = posts.find(p => p.id === postId); if (!post) return;
+                const arr = post.resonances || []; const has = arr.includes(user.uid);
                 const ref = db.collection('posts').doc(postId);
                 if (has) await ref.update({resonances: firebase.firestore.FieldValue.arrayRemove(user.uid)});
-                else {
-                    await ref.update({resonances: firebase.firestore.FieldValue.arrayUnion(user.uid)});
-                    sendNotification(post.authorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'resonance', post.text?.slice(0,60), {postId});
-                }
+                else { await ref.update({resonances: firebase.firestore.FieldValue.arrayUnion(user.uid)}); sendNotification(post.authorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'resonance', post.text?.slice(0,60), {postId}); }
             };
-
             const blowPost = async (post) => {
-                const arr = post.blows || [];
-                const has = arr.includes(user.uid);
+                const arr = post.blows || []; const has = arr.includes(user.uid);
                 const ref = db.collection('posts').doc(post.id);
                 if (has) await ref.update({blows: firebase.firestore.FieldValue.arrayRemove(user.uid)});
                 else await ref.update({blows: firebase.firestore.FieldValue.arrayUnion(user.uid)});
             };
 
             const now = Date.now();
-            const last24h = posts.filter(p => {
-                try { return (now - p.createdAt.toDate().getTime()) < 86400000; } catch { return false; }
-            });
+            const last24h = posts.filter(p => { try { return (now - p.createdAt.toDate().getTime()) < 86400000; } catch { return false; } });
             let bubbleOfDay = null;
-            if (last24h.length >= 2) {
-                const sorted = [...last24h].sort((a,b) => (b.resonances?.length||0) - (a.resonances?.length||0));
-                if ((sorted[0].resonances?.length||0) > 0) bubbleOfDay = sorted[0];
-            }
-
-            const isBlown = (post) => {
-                const b = (post.blows||[]).length;
-                const r = (post.resonances||[]).length;
-                return b >= 5 && b > r * 1.5;
-            };
-
+            if (last24h.length >= 2) { const sorted = [...last24h].sort((a,b) => (b.resonances?.length||0) - (a.resonances?.length||0)); if ((sorted[0].resonances?.length||0) > 0) bubbleOfDay = sorted[0]; }
+            const isBlown = (post) => { const b=(post.blows||[]).length; const r=(post.resonances||[]).length; return b>=5 && b>r*1.5; };
             const visiblePosts = posts.filter(p => !isBlown(p) || showBlown);
             const blownCount = posts.filter(p => isBlown(p)).length;
 
             const postCard = (post, isBubbleOfDay) => {
-                const author = usersMap[post.authorId] || {
-                    uid: post.authorId, username: post.authorName || 'unknown',
-                    displayName: post.authorName || 'Unknown', avatar: post.authorAvatar || null,
-                    isVerified: false, isOnline: false
-                };
+                const author = usersMap[post.authorId] || {uid:post.authorId, username:post.authorName||'unknown', displayName:post.authorName||'Unknown', avatar:post.authorAvatar||null, isVerified:false, isOnline:false};
                 const mood = MOODS[post.mood] || MOODS.neutral;
-                const resonances = post.resonances || [];
-                const blows = post.blows || [];
-                const hasResonated = resonances.includes(user.uid);
-                const hasBlown = blows.includes(user.uid);
-                const isHolding = holdingState.postId === post.id;
-                const isPulsing = pulsingPost === post.id;
-                const blown = isBlown(post);
-
+                const resonances = post.resonances || []; const blows = post.blows || [];
+                const hasResonated = resonances.includes(user.uid); const hasBlown = blows.includes(user.uid);
+                const isHolding = holdingState.postId === post.id; const isPulsing = pulsingPost === post.id; const blown = isBlown(post);
+                const commentsCount = post.commentsCount || 0;
                 return (
                     <article key={post.id}
-                        className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none
-                            ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''}
-                            ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''}
-                            ${blown?'blown-post':''}`}
-                        onMouseDown={e=>startHold(e, post.id)} onMouseUp={endHold} onMouseLeave={endHold}
-                        onTouchStart={e=>startHold(e, post.id)} onTouchMove={moveHold} onTouchEnd={endHold} onTouchCancel={endHold}>
-                        {isHolding && (
-                            <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none" style={{
-                                background:`conic-gradient(#FF0055 ${holdingState.progress}%, transparent 0)`,
-                                mask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                                WebkitMask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                                maskComposite:'exclude', WebkitMaskComposite:'xor', padding:'4px'
-                            }} />
-                        )}
+                        className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''}`}
+                        onMouseDown={e=>startHold(e, post.id)} onMouseUp={endHold} onMouseLeave={endHold} onTouchStart={e=>startHold(e, post.id)} onTouchMove={moveHold} onTouchEnd={endHold} onTouchCancel={endHold}>
+                        {isHolding && <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none" style={{background:`conic-gradient(#FF0055 ${holdingState.progress}%, transparent 0)`,mask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',WebkitMask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',maskComposite:'exclude',WebkitMaskComposite:'xor',padding:'4px'}} />}
                         <div className="absolute top-4 right-4 flex flex-col items-center space-y-2 z-10">
-                            {(isAdmin || post.authorId === user.uid) && (
-                                <button onClick={()=>del(post.id)} className="text-slate-400 hover:text-red-500 bg-white/60 p-2 rounded-full backdrop-blur-md shadow-sm transition"><I.Trash/></button>
-                            )}
+                            {(isAdmin || post.authorId === user.uid) && <button onClick={()=>del(post.id)} className="text-slate-400 hover:text-red-500 bg-white/60 p-2 rounded-full backdrop-blur-md shadow-sm transition"><I.Trash/></button>}
                             <div className={`text-3xl ${mood.text} opacity-90 drop-shadow-md`} title={mood.name}>{mood.emoji}</div>
                         </div>
-                        {isBubbleOfDay && (
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black text-[10px] px-3 py-1 rounded-full flex items-center shadow-lg z-10">
-                                <I.Crown/><span className="ml-1">ПУЗЫРЬ ДНЯ</span>
-                            </div>
-                        )}
-                        {ripples.filter(r => r.postId === post.id).map(r => (
-                            <div key={r.id} className="absolute w-20 h-20 bg-gopo/30 rounded-full animate-ripple pointer-events-none" style={{left:r.x-40, top:r.y-40}}></div>
-                        ))}
+                        {isBubbleOfDay && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black text-[10px] px-3 py-1 rounded-full flex items-center shadow-lg z-10"><I.Crown/><span className="ml-1">ПУЗЫРЬ ДНЯ</span></div>}
+                        {ripples.filter(r => r.postId === post.id).map(r => <div key={r.id} className="absolute w-20 h-20 bg-gopo/30 rounded-full animate-ripple pointer-events-none" style={{left:r.x-40, top:r.y-40}}></div>)}
                         <div className="flex items-center space-x-3 mb-3 pr-12">
-                            <div onClick={()=>onUserClick(author)} className="cursor-pointer">
-                                <Avatar src={author.avatar} name={author.username} size={42} showStatus isOnline={isReallyOnline(author)} />
-                            </div>
+                            <div onClick={()=>onUserClick(author)} className="cursor-pointer"><Avatar src={author.avatar} name={author.username} size={42} showStatus isOnline={isReallyOnline(author)} /></div>
                             <div className="flex-1 min-w-0">
                                 <div onClick={()=>onUserClick(author)} className="flex items-center cursor-pointer">
                                     <span className={`font-black text-sm truncate hover:underline ${mood.text}`}>{author.displayName || author.username}</span>
@@ -899,22 +697,13 @@
                             {post.text && <p className={`font-medium mb-3 whitespace-pre-wrap ${mood.text}`}>{renderTextWithHashtags(post.text, onHashtagClick)}</p>}
                             {post.image && <img src={post.image} alt="" className="rounded-2xl w-full max-h-96 object-cover shadow-sm bg-white/50" />}
                         </div>
-                        {blown && (
-                            <div className="mt-3 px-3 py-2 bg-slate-800/10 rounded-xl text-center text-xs font-black text-slate-700">
-                                💨 Сдут сообществом ({blows.length} сдуваний)
-                            </div>
-                        )}
+                        {blown && <div className="mt-3 px-3 py-2 bg-slate-800/10 rounded-xl text-center text-xs font-black text-slate-700">💨 Сдут сообществом ({blows.length} сдуваний)</div>}
                         <div className={`mt-4 pt-3 border-t border-black/5 flex items-center justify-between ${mood.text}`}>
                             <div className="flex items-center space-x-1.5 flex-wrap">
-                                <button className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasResonated?'bg-white/80 shadow-sm':'hover:bg-white/40'}`}>
-                                    <I.Sparkles className={hasResonated?'text-gopo fill-gopo/20':'opacity-60'} />
-                                    <span>{resonances.length > 0 ? resonances.length : 'Резонанс'}</span>
-                                </button>
-                                <button onClick={()=>blowPost(post)} className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasBlown?'bg-blue-100 text-blue-700':'hover:bg-white/40 opacity-70'}`} title="Сдуть (не нравится)">
-                                    <I.Wind /><span>{blows.length > 0 ? blows.length : ''}</span>
-                                </button>
+                                <button className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasResonated?'bg-white/80 shadow-sm':'hover:bg-white/40'}`}><I.Sparkles className={hasResonated?'text-gopo':'opacity-60'} /><span>{resonances.length > 0 ? resonances.length : 'Резонанс'}</span></button>
+                                <button onClick={()=>blowPost(post)} className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasBlown?'bg-blue-100 text-blue-700':'hover:bg-white/40 opacity-70'}`} title="Сдуть"><I.Wind /><span>{blows.length > 0 ? blows.length : ''}</span></button>
                                 <button onClick={()=>onCommentClick(post)} className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold hover:bg-white/40 transition">
-                                    <I.Comment /><span>Комменты</span>
+                                    <I.Comment /><span>{commentsCount}</span>
                                 </button>
                             </div>
                             <span className="text-[10px] opacity-40 font-bold hidden sm:block">Зажми 1 сек</span>
@@ -929,17 +718,11 @@
                         <h1 className="text-2xl font-black hidden md:block text-slate-800">Лента</h1>
                         <div className="flex items-center text-xs font-bold text-slate-500 bg-white/50 px-3 py-1.5 rounded-full border border-white/50 cursor-help group relative">
                             <I.Info/><span className="ml-1">Что такое Резонанс?</span>
-                            <div className="absolute top-full mt-2 right-0 w-64 bg-slate-800 text-white p-3 rounded-xl text-[11px] leading-tight opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl">
-                                Резонанс — это вибрация, которую ты чувствуешь с этим пузырём. Зажми пузырь на <b>1 секунду</b>, чтобы выразить поддержку автору.
-                            </div>
+                            <div className="absolute top-full mt-2 right-0 w-64 bg-slate-800 text-white p-3 rounded-xl text-[11px] leading-tight opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl">Резонанс — это вибрация, которую ты чувствуешь с этим пузырём. Зажми пузырь на <b>1 секунду</b>, чтобы выразить поддержку автору.</div>
                         </div>
                     </div>
-                    <StoriesBar user={user} profile={profile} usersMap={usersMap} />
-                    {blownCount > 0 && (
-                        <button onClick={()=>setShowBlown(!showBlown)} className="w-full text-center text-xs font-bold text-slate-500 py-2 hover:text-slate-700">
-                            {showBlown ? `Скрыть сдутые (${blownCount})` : `Показать сдутые (${blownCount})`}
-                        </button>
-                    )}
+                    <StoriesBar user={user} profile={profile} />
+                    {blownCount > 0 && <button onClick={()=>setShowBlown(!showBlown)} className="w-full text-center text-xs font-bold text-slate-500 py-2 hover:text-slate-700">{showBlown ? `Скрыть сдутые (${blownCount})` : `Показать сдутые (${blownCount})`}</button>}
                     {visiblePosts.length === 0 && <div className="text-center p-16 liquid-glass rounded-3xl text-slate-400"><I.Home/><p className="mt-4 font-bold">Постов пока нет.</p></div>}
                     {visiblePosts.map(p => postCard(p, bubbleOfDay && p.id === bubbleOfDay.id))}
                 </div>
@@ -950,40 +733,24 @@
             const [query, setQuery] = useState(initialHashtag || '');
             const [posts, setPosts] = useState([]);
             const [tab, setTab] = useState(initialHashtag ? 'posts' : 'users');
-
             useEffect(() => {
                 const unsub = db.collection('posts').onSnapshot(snap => {
-                    const arr = snap.docs.map(d => ({id:d.id, resonances:[], blows:[], ...d.data()}));
-                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    const arr = snap.docs.map(d => ({id:d.id, resonances:[], blows:[], commentsCount:0, ...d.data()}));
+                    arr.sort((a,b) => postTime(b) - postTime(a));
                     setPosts(arr);
-                }, err => console.error('search posts:', err));
+                });
                 return () => unsub();
             }, []);
-
             useEffect(() => { if (initialHashtag) { setQuery(initialHashtag); setTab('posts'); } }, [initialHashtag]);
-
             const allUsers = Object.values(usersMap).filter(u => !u.isBanned);
-            const filteredUsers = allUsers.filter(u =>
-                (u.username||'').toLowerCase().includes(query.replace('#','').toLowerCase()) ||
-                (u.displayName||'').toLowerCase().includes(query.replace('#','').toLowerCase())
-            );
-            const filteredPosts = posts.filter(p => {
-                if (!query) return false;
-                if (query.startsWith('#')) return (p.text||'').toLowerCase().includes(query.toLowerCase());
-                return (p.text||'').toLowerCase().includes(query.toLowerCase());
-            }).filter(p => {
-                const a = usersMap[p.authorId];
-                return a && !a.isBanned;
-            });
-
+            const filteredUsers = allUsers.filter(u => (u.username||'').toLowerCase().includes(query.replace('#','').toLowerCase()) || (u.displayName||'').toLowerCase().includes(query.replace('#','').toLowerCase()));
+            const filteredPosts = posts.filter(p => { if (!query) return false; return (p.text||'').toLowerCase().includes(query.toLowerCase()); }).filter(p => { const a=usersMap[p.authorId]; return a && !a.isBanned; });
             return (
                 <div className="fade-in">
                     <h1 className="text-2xl font-black mb-4">Поиск</h1>
                     <div className="relative mb-4">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><I.Search/></div>
-                        <input value={query} onChange={e=>{setQuery(e.target.value); clearHashtag && clearHashtag();}}
-                            placeholder="Поиск по людям, постам, #хештегам..."
-                            className="w-full p-3.5 pl-12 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
+                        <input value={query} onChange={e=>{setQuery(e.target.value); clearHashtag && clearHashtag();}} placeholder="Поиск по людям, постам, #хештегам..." className="w-full p-3.5 pl-12 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
                     </div>
                     <div className="flex space-x-2 mb-4">
                         <button onClick={()=>setTab('users')} className={`px-4 py-2 rounded-xl text-sm font-bold ${tab==='users'?'bg-gopo text-white shadow':`bg-white text-slate-600`}`}>Люди</button>
@@ -996,10 +763,7 @@
                                 <button key={u.uid} onClick={()=>onUserClick(u)} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 transition text-left border-b border-slate-50 last:border-0">
                                     <Avatar src={u.avatar} name={u.username} size={48} showStatus isOnline={isReallyOnline(u)} />
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center">
-                                            <span className="font-black text-sm truncate">{u.displayName || u.username}</span>
-                                            {u.isVerified && <I.Check className="text-blue-500 ml-1"/>}
-                                        </div>
+                                        <div className="flex items-center"><span className="font-black text-sm truncate">{u.displayName || u.username}</span>{u.isVerified && <I.Check className="text-blue-500 ml-1"/>}</div>
                                         <p className="text-xs text-slate-500">@{u.username} • {u.followers?.length||0} подписчиков</p>
                                     </div>
                                 </button>
@@ -1009,31 +773,23 @@
                     {tab === 'posts' && (
                         <div className="space-y-4">
                             {filteredPosts.length === 0 && <p className="p-8 text-center text-slate-400 font-bold bg-white rounded-3xl">Постов не нашли</p>}
-                            {filteredPosts.map(post => {
-                                const author = usersMap[post.authorId] || {};
-                                const mood = MOODS[post.mood] || MOODS.neutral;
-                                return (
-                                    <div key={post.id} onClick={()=>onCommentClick(post)} className={`rounded-[2rem] p-4 border-2 cursor-pointer ${mood.bg} ${mood.border}`}>
-                                        <div className="flex items-center mb-2">
-                                            <Avatar src={author.avatar} name={author.username} size={32} />
-                                            <div className="ml-2 flex-1 min-w-0">
-                                                <span className={`font-bold text-xs ${mood.text}`}>@{author.username}</span>
-                                                <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
-                                            </div>
-                                            <span className="text-xl">{mood.emoji}</span>
-                                        </div>
-                                        {post.text && <p className={`text-sm ${mood.text}`}>{renderTextWithHashtags(post.text, onHashtagClick)}</p>}
-                                        {post.image && <img src={post.image} className="rounded-xl max-h-48 mt-2 w-full object-cover" />}
+                            {filteredPosts.map(post => { const author = usersMap[post.authorId] || {}; const mood = MOODS[post.mood] || MOODS.neutral; return (
+                                <div key={post.id} onClick={()=>onCommentClick(post)} className={`rounded-[2rem] p-4 border-2 cursor-pointer ${mood.bg} ${mood.border}`}>
+                                    <div className="flex items-center mb-2">
+                                        <Avatar src={author.avatar} name={author.username} size={32} />
+                                        <div className="ml-2 flex-1 min-w-0"><span className={`font-bold text-xs ${mood.text}`}>@{author.username}</span><p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p></div>
+                                        <span className="text-xl">{mood.emoji}</span>
                                     </div>
-                                );
-                            })}
+                                    {post.text && <p className={`text-sm ${mood.text}`}>{renderTextWithHashtags(post.text, onHashtagClick)}</p>}
+                                    {post.image && <img src={post.image} className="rounded-xl max-h-48 mt-2 w-full object-cover" />}
+                                </div>
+                            ); })}
                         </div>
                     )}
                 </div>
             );
         };
-
-        const CommentsModal = ({ post, user, profile, usersMap, onClose, onHashtagClick }) => {
+        const CommentsModal = ({ post, user, profile, usersMap, isAdmin, onClose, onHashtagClick }) => {
             const [comments, setComments] = useState([]);
             const [text, setText] = useState('');
             const [sending, setSending] = useState(false);
@@ -1045,25 +801,28 @@
                     arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
                     setComments(arr);
                     setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth'}), 100);
-                }, err => console.error('comments:', err));
+                });
                 return () => unsub();
             }, [post.id]);
 
             const send = async (e) => {
-                e.preventDefault();
-                if (!text.trim()) return;
+                e.preventDefault(); if (!text.trim()) return;
                 setSending(true);
                 try {
-                    await db.collection('posts').doc(post.id).collection('comments').add({
-                        text: text.trim(), authorId: user.uid,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    if (post.authorId !== user.uid) {
-                        sendNotification(post.authorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'comment', text.trim().slice(0,60), {postId:post.id});
-                    }
+                    await db.collection('posts').doc(post.id).collection('comments').add({ text: text.trim(), authorId: user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    await db.collection('posts').doc(post.id).update({commentsCount: firebase.firestore.FieldValue.increment(1)});
+                    if (post.authorId !== user.uid) sendNotification(post.authorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'comment', text.trim().slice(0,60), {postId:post.id});
                     setText('');
                 } catch(err) { alert(err.message); }
                 setSending(false);
+            };
+
+            const delComment = async (c) => {
+                if (!window.confirm('Удалить комментарий?')) return;
+                try {
+                    await db.collection('posts').doc(post.id).collection('comments').doc(c.id).delete();
+                    await db.collection('posts').doc(post.id).update({commentsCount: firebase.firestore.FieldValue.increment(-1)});
+                } catch(err) { alert(err.message); }
             };
 
             const mood = MOODS[post.mood] || MOODS.neutral;
@@ -1073,29 +832,28 @@
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
                     <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-lg h-[80vh] md:h-[600px] flex flex-col fade-in shadow-2xl">
                         <div className="p-4 border-b flex justify-between items-center bg-slate-50 rounded-t-3xl">
-                            <h2 className="text-lg font-black">Комментарии</h2>
+                            <h2 className="text-lg font-black">Комментарии ({comments.length})</h2>
                             <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><I.X/></button>
                         </div>
                         <div className={`p-4 border-b ${mood.bg} ${mood.text}`}>
-                            <div className="flex items-center space-x-2 mb-1">
-                                <Avatar src={author?.avatar} name={author?.username} size={24} />
-                                <span className="font-bold text-xs">@{author?.username || 'unknown'}</span>
-                            </div>
+                            <div className="flex items-center space-x-2 mb-1"><Avatar src={author?.avatar} name={author?.username} size={24} /><span className="font-bold text-xs">@{author?.username || 'unknown'}</span></div>
                             <p className="text-sm line-clamp-2">{renderTextWithHashtags(post.text, onHashtagClick)}</p>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
                             {comments.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Комментариев пока нет. Будь первым!</p>}
                             {comments.map(c => {
                                 const ca = usersMap[c.authorId] || {username:'unknown', avatar:null};
+                                const canDel = c.authorId === user.uid || post.authorId === user.uid || isAdmin;
                                 return (
-                                    <div key={c.id} className="flex space-x-3">
+                                    <div key={c.id} className="flex space-x-3 group">
                                         <Avatar src={ca.avatar} name={ca.username} size={32} showStatus isOnline={isReallyOnline(ca)} />
-                                        <div className="flex-1 bg-slate-50 p-3 rounded-2xl rounded-tl-sm">
-                                            <div className="flex justify-between items-center mb-1">
+                                        <div className="flex-1 bg-slate-50 p-3 rounded-2xl rounded-tl-sm relative">
+                                            <div className="flex justify-between items-center mb-1 pr-6">
                                                 <span className="font-bold text-xs text-slate-800">@{ca.username}</span>
                                                 <span className="text-[10px] text-slate-400">{timeAgo(c.createdAt)}</span>
                                             </div>
                                             <p className="text-sm text-slate-700">{renderTextWithHashtags(c.text, onHashtagClick)}</p>
+                                            {canDel && <button onClick={()=>delComment(c)} className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><I.Trash size={14}/></button>}
                                         </div>
                                     </div>
                                 );
@@ -1103,8 +861,7 @@
                             <div ref={endRef} />
                         </div>
                         <form onSubmit={send} className="p-3 border-t flex gap-2 bg-slate-50 rounded-b-3xl">
-                            <input value={text} onChange={e=>setText(e.target.value)} placeholder="Написать комментарий..."
-                                className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
+                            <input value={text} onChange={e=>setText(e.target.value)} placeholder="Написать комментарий..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
                             <button type="submit" disabled={sending || !text.trim()} className="bg-gopo text-white p-3 rounded-xl disabled:opacity-50"><I.Send/></button>
                         </form>
                     </div>
@@ -1118,67 +875,37 @@
             const [mood, setMood] = useState('neutral');
             const [posting, setPosting] = useState(false);
             const fileRef = useRef(null);
-
-            const handle = async (e) => {
-                const f = e.target.files[0]; if (!f) return;
-                setImage(await compressImage(f, 800, 0.7));
-            };
-
+            const handle = async (e) => { const f = e.target.files[0]; if (!f) return; setImage(await compressImage(f, 800, 0.7)); };
             const submit = async () => {
                 if (!text.trim() && !image) return;
                 setPosting(true);
                 try {
-                    await db.collection('posts').add({
-                        text: text.trim(), image, mood, authorId: user.uid,
-                        authorName: profile.username, authorAvatar: profile.avatar,
-                        resonances: [], blows: [],
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    await db.collection('posts').add({ text: text.trim(), image, mood, authorId: user.uid, authorName: profile.username, authorAvatar: profile.avatar, resonances: [], blows: [], commentsCount: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     onClose();
                 } catch(err) { alert('Ошибка: ' + err.message); }
                 setPosting(false);
             };
-
             return (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
                     <div className="bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto fade-in shadow-2xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-black">Новый пузырь</h2>
-                            <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><I.X/></button>
-                        </div>
+                        <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-black">Новый пузырь</h2><button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full"><I.X/></button></div>
                         <div className="mb-4">
                             <p className="text-xs font-bold text-slate-500 mb-2 ml-1">Выбери настроение</p>
                             <div className="grid grid-cols-3 gap-2">
                                 {Object.entries(MOODS).map(([k, m]) => (
-                                    <button key={k} onClick={()=>setMood(k)}
-                                        className={`flex flex-col items-center p-2 rounded-xl border-2 transition ${mood===k?`${m.bg} ${m.border} shadow-sm scale-105`:'border-transparent hover:bg-slate-50'}`}>
-                                        <span className="text-2xl mb-1">{m.emoji}</span>
-                                        <span className="text-[10px] font-bold text-slate-700">{m.name}</span>
+                                    <button key={k} onClick={()=>setMood(k)} className={`flex flex-col items-center p-2 rounded-xl border-2 transition ${mood===k?`${m.bg} ${m.border} shadow-sm scale-105`:'border-transparent hover:bg-slate-50'}`}>
+                                        <span className="text-2xl mb-1">{m.emoji}</span><span className="text-[10px] font-bold text-slate-700">{m.name}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="flex items-center space-x-3 mb-3">
-                            <Avatar src={profile.avatar} name={profile.username} size={36} />
-                            <span className="font-bold text-sm">@{profile.username}</span>
-                        </div>
-                        <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Что у тебя на душе?" rows="3"
-                            className="w-full p-3 bg-slate-50 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-gopo/30 font-medium" />
-                        {image && (
-                            <div className="relative mt-3">
-                                <img src={image} className="rounded-2xl max-h-64 w-full object-cover" />
-                                <button onClick={()=>setImage(null)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full"><I.X/></button>
-                            </div>
-                        )}
+                        <div className="flex items-center space-x-3 mb-3"><Avatar src={profile.avatar} name={profile.username} size={36} /><span className="font-bold text-sm">@{profile.username}</span></div>
+                        <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Что у тебя на душе?" rows="3" className="w-full p-3 bg-slate-50 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-gopo/30 font-medium" />
+                        {image && <div className="relative mt-3"><img src={image} className="rounded-2xl max-h-64 w-full object-cover" /><button onClick={()=>setImage(null)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full"><I.X/></button></div>}
                         <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                            <button onClick={()=>fileRef.current.click()} className="flex items-center space-x-2 text-slate-500 hover:text-gopo font-bold p-2">
-                                <I.Image/><span>Фото</span>
-                            </button>
+                            <button onClick={()=>fileRef.current.click()} className="flex items-center space-x-2 text-slate-500 hover:text-gopo font-bold p-2"><I.Image/><span>Фото</span></button>
                             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handle} />
-                            <button onClick={submit} disabled={posting || (!text.trim() && !image)}
-                                className="bg-gopo text-white font-bold px-6 py-2.5 rounded-2xl disabled:opacity-50 shadow-md shadow-pink-200">
-                                {posting?'Публикация...':'Запустить пузырь'}
-                            </button>
+                            <button onClick={submit} disabled={posting || (!text.trim() && !image)} className="bg-gopo text-white font-bold px-6 py-2.5 rounded-2xl disabled:opacity-50 shadow-md shadow-pink-200">{posting?'Публикация...':'Запустить пузырь'}</button>
                         </div>
                     </div>
                 </div>
@@ -1187,29 +914,46 @@
 
         const MessengerTab = ({ user, profile, usersMap }) => {
             const [query, setQuery] = useState('');
-            const [selected, setSelected] = useState(null);
+            const [selectedUser, setSelectedUser] = useState(null);
+            const [selectedGroup, setSelectedGroup] = useState(null);
+            const [view, setView] = useState('users');
+            const [groups, setGroups] = useState([]);
+            const [showCreateGroup, setShowCreateGroup] = useState(false);
             const [, tick] = useState(0);
             useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 10000); return () => clearInterval(t); }, []);
-
-            const all = Object.values(usersMap).filter(u => u.uid !== user.uid && !u.isBanned);
-            const filtered = all.filter(u => (u.username||'').toLowerCase().includes(query.toLowerCase()) || (u.displayName||'').toLowerCase().includes(query.toLowerCase()));
-
+            useEffect(() => {
+                const unsub = db.collection('groups').where('members','array-contains',user.uid).onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (b.lastMessageAt?.toDate?.()?.getTime()||0) - (a.lastMessageAt?.toDate?.()?.getTime()||0));
+                    setGroups(arr);
+                });
+                return () => unsub();
+            }, [user.uid]);
+            const allUsers = Object.values(usersMap).filter(u => u.uid !== user.uid && !u.isBanned);
+            const filteredUsers = allUsers.filter(u => (u.username||'').toLowerCase().includes(query.toLowerCase()) || (u.displayName||'').toLowerCase().includes(query.toLowerCase()));
+            const filteredGroups = groups.filter(g => (g.name||'').toLowerCase().includes(query.toLowerCase()));
             return (
                 <div className="flex h-[calc(100vh-100px)] md:h-[calc(100vh-64px)] liquid-glass rounded-3xl overflow-hidden fade-in">
-                    <div className={`w-full md:w-80 flex flex-col border-r border-white/50 ${selected?'hidden md:flex':'flex'}`}>
+                    <div className={`w-full md:w-80 flex flex-col border-r border-white/50 ${(selectedUser||selectedGroup)?'hidden md:flex':'flex'}`}>
                         <div className="p-4 border-b border-white/50 bg-white/30">
-                            <h2 className="text-xl font-black mb-3">Чаты</h2>
+                            <div className="flex items-center justify-between mb-3">
+                                <h2 className="text-xl font-black">Чаты</h2>
+                                <button onClick={()=>setShowCreateGroup(true)} className="bg-gopo text-white p-2 rounded-xl shadow-md" title="Новая группа"><I.Group/></button>
+                            </div>
+                            <div className="flex space-x-1 mb-3 bg-white/50 p-1 rounded-xl">
+                                <button onClick={()=>setView('users')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold ${view==='users'?'bg-gopo text-white':'text-slate-600'}`}>Личные</button>
+                                <button onClick={()=>setView('groups')} className={`flex-1 py-1.5 rounded-lg text-xs font-bold ${view==='groups'?'bg-gopo text-white':'text-slate-600'}`}>Группы ({groups.length})</button>
+                            </div>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><I.Search/></div>
-                                <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Поиск..."
-                                    className="w-full p-2.5 pl-10 bg-white/70 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
+                                <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Поиск..." className="w-full p-2.5 pl-10 bg-white/70 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto">
-                            {filtered.map(u => {
+                            {view==='users' && filteredUsers.map(u => {
                                 const typing = isTypingNow(u, user.uid);
                                 return (
-                                    <button key={u.uid} onClick={()=>setSelected(u)} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selected?.uid===u.uid?'bg-white/60':''}`}>
+                                    <button key={u.uid} onClick={()=>setSelectedUser(u)} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedUser?.uid===u.uid?'bg-white/60':''}`}>
                                         <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center">
@@ -1225,14 +969,82 @@
                                     </button>
                                 );
                             })}
+                            {view==='groups' && filteredGroups.map(g => (
+                                <button key={g.id} onClick={()=>setSelectedGroup(g)} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedGroup?.id===g.id?'bg-white/60':''}`}>
+                                    {g.avatar ? <img src={g.avatar} className="w-11 h-11 rounded-full object-cover" /> : <div className="w-11 h-11 rounded-full bg-gopo text-white flex items-center justify-center font-black">{g.name?.[0]?.toUpperCase()}</div>}
+                                    <div className="min-w-0 flex-1">
+                                        <span className="font-bold text-sm truncate block">{g.name}</span>
+                                        <p className="text-xs text-slate-500">{g.members?.length || 0} участников</p>
+                                    </div>
+                                </button>
+                            ))}
+                            {view==='groups' && filteredGroups.length===0 && <p className="text-center text-slate-400 text-xs font-bold p-6">Групп нет. Создай первую!</p>}
                         </div>
                     </div>
-                    <div className={`flex-1 flex-col ${selected?'flex':'hidden md:flex'}`}>
-                        {selected ? <ChatView user={user} profile={profile} other={selected} onBack={()=>setSelected(null)} /> : (
-                            <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-                                <I.Msg/><p className="mt-4 font-bold">Выберите чат</p>
-                            </div>
+                    <div className={`flex-1 flex-col ${(selectedUser||selectedGroup)?'flex':'hidden md:flex'}`}>
+                        {selectedUser && <ChatView user={user} profile={profile} other={selectedUser} onBack={()=>setSelectedUser(null)} />}
+                        {selectedGroup && <GroupChatView user={user} profile={profile} group={selectedGroup} usersMap={usersMap} onBack={()=>setSelectedGroup(null)} />}
+                        {!selectedUser && !selectedGroup && (
+                            <div className="flex-1 flex flex-col items-center justify-center text-slate-400"><I.Msg/><p className="mt-4 font-bold">Выберите чат или группу</p></div>
                         )}
+                    </div>
+                    {showCreateGroup && <CreateGroupModal user={user} profile={profile} usersMap={usersMap} onClose={()=>setShowCreateGroup(false)} />}
+                </div>
+            );
+        };
+
+        const CreateGroupModal = ({ user, profile, usersMap, onClose }) => {
+            const [name, setName] = useState('');
+            const [avatar, setAvatar] = useState(null);
+            const [selected, setSelected] = useState([]);
+            const [creating, setCreating] = useState(false);
+            const [query, setQuery] = useState('');
+            const fileRef = useRef(null);
+            const others = Object.values(usersMap).filter(u => u.uid !== user.uid && !u.isBanned);
+            const filtered = others.filter(u => (u.username||'').toLowerCase().includes(query.toLowerCase()) || (u.displayName||'').toLowerCase().includes(query.toLowerCase()));
+            const toggle = (uid) => setSelected(s => s.includes(uid) ? s.filter(x=>x!==uid) : [...s, uid]);
+            const create = async () => {
+                if (!name.trim()) { alert('Введите название'); return; }
+                if (selected.length === 0) { alert('Выберите хотя бы одного участника'); return; }
+                setCreating(true);
+                try {
+                    await db.collection('groups').add({
+                        name: name.trim(), avatar, creatorId: user.uid, admins: [user.uid],
+                        members: [user.uid, ...selected],
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    selected.forEach(uid => sendNotification(uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'message', `Приглашение в группу "${name}"`));
+                    onClose();
+                } catch(e) { alert(e.message); }
+                setCreating(false);
+            };
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-black">Новая группа</h2>
+                            <button onClick={onClose} className="p-2 text-slate-400"><I.X/></button>
+                        </div>
+                        <div className="flex flex-col items-center mb-4">
+                            <div onClick={()=>fileRef.current.click()} className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200">
+                                {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Group/><p className="text-[10px] font-bold mt-1">Аватар</p></div>}
+                            </div>
+                            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={async (e)=>{ const f=e.target.files[0]; if(f) setAvatar(await compressImage(f, 300, 0.7)); }} />
+                        </div>
+                        <input value={name} onChange={e=>setName(e.target.value)} placeholder="Название группы" className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" />
+                        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Поиск участников..." className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" />
+                        <p className="text-xs font-bold text-slate-600 mb-2">Выбрано: {selected.length}</p>
+                        <div className="max-h-48 overflow-y-auto mb-4 border border-slate-100 rounded-xl">
+                            {filtered.map(u => (
+                                <button key={u.uid} onClick={()=>toggle(u.uid)} className={`w-full flex items-center space-x-2 p-2 hover:bg-slate-50 ${selected.includes(u.uid)?'bg-pink-50':''}`}>
+                                    <Avatar src={u.avatar} name={u.username} size={32} />
+                                    <span className="font-bold text-sm flex-1 text-left truncate">{u.displayName || u.username}</span>
+                                    {selected.includes(u.uid) && <span className="text-gopo font-black">✓</span>}
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={create} disabled={creating} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">{creating ? 'Создание...' : 'Создать группу'}</button>
                     </div>
                 </div>
             );
@@ -1243,144 +1055,64 @@
             const [text, setText] = useState('');
             const [otherUser, setOtherUser] = useState(other);
             const [showEmojiPicker, setShowEmojiPicker] = useState(null);
-            const [recording, setRecording] = useState(false);
-            const [recSecs, setRecSecs] = useState(0);
             const [playingId, setPlayingId] = useState(null);
             const participants = [user.uid, other.uid].sort();
             const endRef = useRef(null);
             const typingThrottle = useRef(0);
             const typingClear = useRef(null);
-            const mediaRecorder = useRef(null);
-            const recChunks = useRef([]);
-            const recInterval = useRef(null);
             const audioRefs = useRef({});
+            const prevLen = useRef(0);
             const [, tick] = useState(0);
-
             useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 5000); return () => clearInterval(t); }, []);
-
-            useEffect(() => {
-                const unsub = db.collection('users').doc(other.uid).onSnapshot(doc => { if (doc.exists) setOtherUser(doc.data()); });
-                return () => unsub();
-            }, [other.uid]);
-
+            useEffect(() => { const unsub = db.collection('users').doc(other.uid).onSnapshot(doc => { if (doc.exists) setOtherUser(doc.data()); }); return () => unsub(); }, [other.uid]);
             useEffect(() => {
                 const unsub = db.collection('messages').where('participants','==',participants).onSnapshot(snap => {
-                    const arr = snap.docs.map(d => ({id:d.id, reactions:{}, ...d.data()}));
+                    const arr = snap.docs.map(d => ({id:d.id, reactions:{}, readBy:[], ...d.data()}));
                     arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
                     setMessages(arr);
-                    setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth'}), 100);
-                }, err => console.error('messages:', err));
+                    if (arr.length > prevLen.current) {
+                        prevLen.current = arr.length;
+                        setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth', block:'end'}), 80);
+                    }
+                    arr.filter(m => m.senderId === other.uid && !(m.readBy||[]).includes(user.uid))
+                       .forEach(m => db.collection('messages').doc(m.id).update({readBy: firebase.firestore.FieldValue.arrayUnion(user.uid)}).catch(()=>{}));
+                });
                 return () => unsub();
             }, [participants.join(',')]);
-
-            useEffect(() => {
-                return () => {
-                    db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{});
-                    clearTimeout(typingClear.current);
-                };
-            }, [user.uid]);
-
-            const deleteMessage = async (id) => {
-                if (!window.confirm('Удалить сообщение?')) return;
-                try { await db.collection('messages').doc(id).delete(); } catch(err) { alert('Не удалось: ' + err.message); }
-            };
-
+            useEffect(() => () => { db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{}); clearTimeout(typingClear.current); }, [user.uid]);
+            const delMsg = async (id) => { if (!window.confirm('Удалить сообщение?')) return; await db.collection('messages').doc(id).delete(); };
             const toggleReaction = async (msg, emoji) => {
-                const current = msg.reactions || {};
-                const users = current[emoji] || [];
-                const has = users.includes(user.uid);
-                const newR = {...current};
-                if (has) { newR[emoji] = users.filter(u => u !== user.uid); if (newR[emoji].length === 0) delete newR[emoji]; }
-                else newR[emoji] = [...users, user.uid];
-                await db.collection('messages').doc(msg.id).update({reactions:newR});
+                const cur = msg.reactions || {}; const users = cur[emoji] || []; const has = users.includes(user.uid);
+                const nr = {...cur};
+                if (has) { nr[emoji] = users.filter(u => u !== user.uid); if (nr[emoji].length === 0) delete nr[emoji]; }
+                else nr[emoji] = [...users, user.uid];
+                await db.collection('messages').doc(msg.id).update({reactions:nr});
                 setShowEmojiPicker(null);
             };
-
             const handleChange = (val) => {
                 setText(val);
                 const ref = db.collection('users').doc(user.uid);
                 if (!val.trim()) { ref.update({typingIn:null}).catch(()=>{}); clearTimeout(typingClear.current); return; }
                 const now = Date.now();
-                if (now - typingThrottle.current > 2000) {
-                    typingThrottle.current = now;
-                    ref.update({typingIn:other.uid, typingAt: firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-                }
+                if (now - typingThrottle.current > 2000) { typingThrottle.current = now; ref.update({typingIn:other.uid, typingAt: firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{}); }
                 clearTimeout(typingClear.current);
                 typingClear.current = setTimeout(()=>ref.update({typingIn:null}).catch(()=>{}), 3000);
             };
-
             const send = async (e) => {
-                e.preventDefault();
-                if (!text.trim()) return;
-                await db.collection('messages').add({
-                    participants, text: text.trim(), senderId: user.uid,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                if (other.uid !== user.uid) {
-                    sendNotification(other.uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'message', text.trim().slice(0,60));
-                }
+                e.preventDefault(); if (!text.trim()) return;
+                await db.collection('messages').add({ participants, text: text.trim(), senderId: user.uid, readBy: [user.uid], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                if (other.uid !== user.uid) sendNotification(other.uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'message', text.trim().slice(0,60));
                 setText('');
                 db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{});
                 clearTimeout(typingClear.current);
             };
-
-            const startRecording = async () => {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-                    const mr = new MediaRecorder(stream);
-                    recChunks.current = [];
-                    mr.ondataavailable = e => recChunks.current.push(e.data);
-                    mr.onstop = async () => {
-                        stream.getTracks().forEach(t => t.stop());
-                        const blob = new Blob(recChunks.current, {type:'audio/webm'});
-                        const reader = new FileReader();
-                        reader.onloadend = async () => {
-                            const base64 = reader.result;
-                            const dur = recSecs;
-                            if (base64 && dur > 0) {
-                                await db.collection('messages').add({
-                                    participants, senderId: user.uid, audio: base64, audioDuration: dur,
-                                    text: '🎤 Голосовое сообщение',
-                                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                            }
-                        };
-                        reader.readAsDataURL(blob);
-                    };
-                    mr.start();
-                    mediaRecorder.current = mr;
-                    setRecording(true);
-                    setRecSecs(0);
-                    recInterval.current = setInterval(()=>setRecSecs(s => s+1), 1000);
-                } catch(e) { alert('Микрофон недоступен: ' + e.message); }
-            };
-
-            const stopRecording = (cancel=false) => {
-                if (mediaRecorder.current && mediaRecorder.current.state !== 'inactive') {
-                    if (cancel) recChunks.current = [];
-                    mediaRecorder.current.stop();
-                }
-                clearInterval(recInterval.current);
-                setRecording(false);
-            };
-
             const playAudio = (msg) => {
-                if (playingId === msg.id) {
-                    audioRefs.current[msg.id]?.pause();
-                    setPlayingId(null);
-                    return;
-                }
+                if (playingId === msg.id) { audioRefs.current[msg.id]?.pause(); setPlayingId(null); return; }
                 Object.values(audioRefs.current).forEach(a => a?.pause());
-                const audio = new Audio(msg.audio);
-                audioRefs.current[msg.id] = audio;
-                audio.onended = () => setPlayingId(null);
-                audio.play();
-                setPlayingId(msg.id);
+                const a = new Audio(msg.audio); audioRefs.current[msg.id] = a; a.onended = () => setPlayingId(null); a.play(); setPlayingId(msg.id);
             };
-
             const isOtherTyping = isTypingNow(otherUser, user.uid);
             const isOtherOnline = isReallyOnline(otherUser);
-
             return (
                 <div className="flex-1 flex flex-col h-full bg-white/40">
                     <div className="p-3 border-b border-white/50 flex items-center space-x-3 bg-white/50 backdrop-blur-md">
@@ -1391,11 +1123,8 @@
                                 <span className="font-black text-sm truncate">{otherUser.displayName || otherUser.username}</span>
                                 {otherUser.isVerified && <I.Check className="text-blue-500 ml-1"/>}
                             </div>
-                            {isOtherTyping ? (
-                                <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
-                            ) : (
-                                <p className={`text-xs font-bold ${isOtherOnline?'text-green-600':'text-slate-500'}`}>{formatLastSeen(otherUser)}</p>
-                            )}
+                            {isOtherTyping ? <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
+                                : <p className={`text-xs font-bold ${isOtherOnline?'text-green-600':'text-slate-500'}`}>{formatLastSeen(otherUser)}</p>}
                         </div>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -1403,48 +1132,37 @@
                         {messages.map(m => {
                             const mine = m.senderId === user.uid;
                             const reactions = m.reactions || {};
+                            const wf = waveBars(m.id);
                             return (
                                 <div key={m.id} className={`flex flex-col ${mine?'items-end':'items-start'} group`}>
                                     <div className={`flex items-center ${mine?'flex-row':'flex-row-reverse'} space-x-1`}>
                                         <div className="flex items-center space-x-1">
-                                            {mine && (
-                                                <button onClick={()=>deleteMessage(m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 transition opacity-0 group-hover:opacity-100">
-                                                    <I.Trash size={14}/>
-                                                </button>
-                                            )}
-                                            <button onClick={()=>setShowEmojiPicker(showEmojiPicker===m.id?null:m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-gopo transition opacity-0 group-hover:opacity-100 text-sm">😊</button>
+                                            {mine && <button onClick={()=>delMsg(m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100"><I.Trash size={14}/></button>}
+                                            <button onClick={()=>setShowEmojiPicker(showEmojiPicker===m.id?null:m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-gopo opacity-0 group-hover:opacity-100 text-sm">😊</button>
                                         </div>
                                         <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
                                             {m.audio ? (
                                                 <button onClick={()=>playAudio(m)} className="flex items-center space-x-2">
                                                     {playingId===m.id ? <I.Pause size={16}/> : <I.Play size={16}/>}
-                                                    <div className="flex items-end space-x-0.5 h-5">
-                                                        {[...Array(12)].map((_,i)=>(
-                                                            <span key={i} className={`w-0.5 ${mine?'bg-white':'bg-slate-600'}`} style={{height:`${Math.random()*100}%`}}></span>
-                                                        ))}
-                                                    </div>
+                                                    <div className="flex items-end space-x-0.5 h-5">{wf.map((h,i)=><span key={i} className={`w-0.5 ${mine?'bg-white':'bg-slate-600'}`} style={{height:`${h}%`}}></span>)}</div>
                                                     <span className="text-xs opacity-70">{m.audioDuration}s</span>
                                                 </button>
                                             ) : m.text}
+                                            {mine && <span className="inline-block ml-1 text-[10px] align-middle">{(m.readBy||[]).includes(other.uid)?'✓✓':'✓'}</span>}
                                         </div>
                                     </div>
                                     {Object.keys(reactions).length > 0 && (
-                                        <div className={`flex space-x-1 mt-1 ${mine?'mr-0':'ml-0'}`}>
-                                            {Object.entries(reactions).map(([emoji, users]) => (
-                                                users.length > 0 && (
-                                                    <button key={emoji} onClick={()=>toggleReaction(m, emoji)}
-                                                        className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center space-x-1 ${users.includes(user.uid)?'bg-gopo/15 text-gopo':'bg-white border border-slate-200 text-slate-600'}`}>
-                                                        <span>{emoji}</span><span>{users.length}</span>
-                                                    </button>
-                                                )
+                                        <div className="flex space-x-1 mt-1">
+                                            {Object.entries(reactions).map(([emoji, users]) => users.length > 0 && (
+                                                <button key={emoji} onClick={()=>toggleReaction(m, emoji)} className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center space-x-1 ${users.includes(user.uid)?'bg-gopo/15 text-gopo':'bg-white border border-slate-200 text-slate-600'}`}>
+                                                    <span>{emoji}</span><span>{users.length}</span>
+                                                </button>
                                             ))}
                                         </div>
                                     )}
                                     {showEmojiPicker === m.id && (
                                         <div className="mt-1 bg-white border border-slate-200 rounded-full shadow-lg px-2 py-1 flex space-x-1 z-10">
-                                            {EMOJI_REACTIONS.map(e => (
-                                                <button key={e} onClick={()=>toggleReaction(m, e)} className="p-1.5 text-lg hover:scale-125 transition">{e}</button>
-                                            ))}
+                                            {EMOJI_REACTIONS.map(e => <button key={e} onClick={()=>toggleReaction(m, e)} className="p-1.5 text-lg hover:scale-125 transition">{e}</button>)}
                                         </div>
                                     )}
                                 </div>
@@ -1453,26 +1171,75 @@
                         <div ref={endRef} />
                     </div>
                     <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center">
-                        {recording ? (
-                            <>
-                                <div className="flex-1 flex items-center space-x-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-                                    <span className="rec-pulse w-3 h-3 bg-red-500 rounded-full"></span>
-                                    <span className="text-red-600 font-bold text-sm">Запись... {recSecs}s</span>
+                        <input value={text} onChange={e=>handleChange(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
+                        <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50"><I.Send/></button>
+                    </form>
+                </div>
+            );
+        };
+
+        const GroupChatView = ({ user, profile, group, usersMap, onBack }) => {
+            const [messages, setMessages] = useState([]);
+            const [text, setText] = useState('');
+            const [liveGroup, setLiveGroup] = useState(group);
+            const endRef = useRef(null);
+            const prevLen = useRef(0);
+            useEffect(() => { const unsub = db.collection('groups').doc(group.id).onSnapshot(d => { if(d.exists) setLiveGroup(d.data()); }); return () => unsub(); }, [group.id]);
+            useEffect(() => {
+                const unsub = db.collection('groups').doc(group.id).collection('messages').onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
+                    setMessages(arr);
+                    if (arr.length > prevLen.current) { prevLen.current = arr.length; setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth', block:'end'}), 80); }
+                });
+                return () => unsub();
+            }, [group.id]);
+            const send = async (e) => {
+                e.preventDefault(); if (!text.trim()) return;
+                await db.collection('groups').doc(group.id).collection('messages').add({ senderId: user.uid, senderName: profile.username, senderAvatar: profile.avatar, text: text.trim(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                await db.collection('groups').doc(group.id).update({lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()});
+                setText('');
+            };
+            const delMsg = async (m) => {
+                if (m.senderId !== user.uid && !(liveGroup.admins||[]).includes(user.uid)) return;
+                if (!window.confirm('Удалить?')) return;
+                await db.collection('groups').doc(group.id).collection('messages').doc(m.id).delete();
+            };
+            const leave = async () => { if (!window.confirm('Выйти из группы?')) return; await db.collection('groups').doc(group.id).update({members: firebase.firestore.FieldValue.arrayRemove(user.uid)}); onBack(); };
+            const isAdmin = (liveGroup.admins||[]).includes(user.uid);
+            return (
+                <div className="flex-1 flex flex-col h-full bg-white/40">
+                    <div className="p-3 border-b border-white/50 flex items-center space-x-3 bg-white/50 backdrop-blur-md">
+                        <button onClick={onBack} className="p-2 text-slate-600 hover:bg-white rounded-full md:hidden"><I.Back/></button>
+                        {liveGroup.avatar ? <img src={liveGroup.avatar} className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-gopo text-white flex items-center justify-center font-black">{liveGroup.name?.[0]?.toUpperCase()}</div>}
+                        <div className="flex-1 min-w-0">
+                            <span className="font-black text-sm truncate block">{liveGroup.name}</span>
+                            <p className="text-xs text-slate-500">{liveGroup.members?.length || 0} участников{isAdmin ? ' • вы админ' : ''}</p>
+                        </div>
+                        <button onClick={leave} className="text-xs font-bold text-red-500 px-3 py-1 rounded-lg hover:bg-red-50">Выйти</button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                        {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните общение 👋</p>}
+                        {messages.map(m => {
+                            const mine = m.senderId === user.uid;
+                            return (
+                                <div key={m.id} className={`flex flex-col ${mine?'items-end':'items-start'} group`}>
+                                    <div className={`flex ${mine?'flex-row':'flex-row-reverse'} items-end space-x-1.5`}>
+                                        {!mine && <Avatar src={m.senderAvatar} name={m.senderName} size={28} />}
+                                        <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm font-medium shadow-sm ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
+                                            {!mine && <p className="text-[10px] font-black text-gopo mb-0.5">@{m.senderName}</p>}
+                                            {m.text}
+                                        </div>
+                                        {(mine || isAdmin) && <button onClick={()=>delMsg(m)} className="p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100"><I.Trash size={12}/></button>}
+                                    </div>
                                 </div>
-                                <button type="button" onClick={()=>stopRecording(true)} className="p-3 bg-slate-200 text-slate-700 rounded-xl"><I.X/></button>
-                                <button type="button" onClick={()=>stopRecording(false)} className="p-3 bg-gopo text-white rounded-xl"><I.Send/></button>
-                            </>
-                        ) : (
-                            <>
-                                <input value={text} onChange={e=>handleChange(e.target.value)} placeholder="Сообщение..."
-                                    className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
-                                {text.trim() ? (
-                                    <button type="submit" className="bg-gopo text-white p-3 rounded-xl shadow-md"><I.Send/></button>
-                                ) : (
-                                    <button type="button" onClick={startRecording} className="bg-gopo text-white p-3 rounded-xl shadow-md"><I.Mic/></button>
-                                )}
-                            </>
-                        )}
+                            );
+                        })}
+                        <div ref={endRef} />
+                    </div>
+                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center">
+                        <input value={text} onChange={e=>setText(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
+                        <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50"><I.Send/></button>
                     </form>
                 </div>
             );
@@ -1488,39 +1255,30 @@
             const [saving, setSaving] = useState(false);
             const [userPosts, setUserPosts] = useState([]);
             const bannerRef = useRef(null);
-
             useEffect(() => {
                 const unsub = db.collection('posts').where('authorId','==',user.uid).onSnapshot(s => {
                     const arr = s.docs.map(d => ({id:d.id, ...d.data()}));
-                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    arr.sort((a,b) => postTime(b) - postTime(a));
                     setUserPosts(arr);
                 });
                 return () => unsub();
             }, [user.uid]);
-
-            const upload = async (e, setter, max) => {
-                const f = e.target.files[0]; if (!f) return;
-                setter(await compressImage(f, max, 0.7));
-            };
-
-            const deletePost = async (id) => {
-                if (!window.confirm('Удалить пузырь навсегда?')) return;
-                try { await db.collection('posts').doc(id).delete(); } catch(err) { alert('Не удалось: ' + err.message); }
-            };
-
+            const upload = async (e, setter, max) => { const f = e.target.files[0]; if (!f) return; setter(await compressImage(f, max, 0.7)); };
+            const deletePost = async (id) => { if (!window.confirm('Удалить пузырь навсегда?')) return; try { await db.collection('posts').doc(id).delete(); } catch(err) { alert('Не удалось: ' + err.message); } };
             const save = async () => {
                 setSaving(true);
                 try {
-                    await db.collection('users').doc(user.uid).update({
-                        displayName: name.trim() || username.trim(),
-                        username: username.trim().replace(/[^a-zA-Z0-9_]/g,''),
-                        bio: bio.trim(), avatar, banner: banner || ''
-                    });
+                    const uname = username.trim().replace(/[^a-zA-Z0-9_]/g,'').toLowerCase();
+                    if (!uname) { alert('Никнейм не может быть пустым'); setSaving(false); return; }
+                    if (uname !== profile.username) {
+                        const dup = await db.collection('users').where('username','==',uname).limit(1).get();
+                        if (!dup.empty) { alert('Этот никнейм уже занят'); setSaving(false); return; }
+                    }
+                    await db.collection('users').doc(user.uid).update({ displayName: name.trim() || uname, username: uname, bio: bio.trim(), avatar, banner: banner || '' });
                     setEditing(false);
                 } catch(err) { alert(err.message); }
                 setSaving(false);
             };
-
             return (
                 <div className="fade-in max-w-xl mx-auto">
                     <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm mb-6">
@@ -1556,9 +1314,7 @@
                             const mood = MOODS[post.mood] || MOODS.neutral;
                             return (
                                 <div key={post.id} className={`relative rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border}`}>
-                                    <button onClick={()=>deletePost(post.id)} className="absolute top-3 right-3 p-2 rounded-full bg-white/70 text-slate-400 hover:text-red-500 hover:bg-red-50 backdrop-blur-sm shadow-sm transition z-10">
-                                        <I.Trash/>
-                                    </button>
+                                    <button onClick={()=>deletePost(post.id)} className="absolute top-3 right-3 p-2 rounded-full bg-white/70 text-slate-400 hover:text-red-500 backdrop-blur-sm shadow-sm z-10"><I.Trash/></button>
                                     <div className="flex items-center justify-between mb-2 pr-10">
                                         <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
                                         <span className="text-xl">{mood.emoji}</span>
@@ -1573,10 +1329,7 @@
                     {editing && (
                         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-black">Редактировать</h2>
-                                    <button onClick={()=>setEditing(false)} className="p-2"><I.X/></button>
-                                </div>
+                                <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-black">Редактировать</h2><button onClick={()=>setEditing(false)} className="p-2"><I.X/></button></div>
                                 <div className="mb-4">
                                     <p className="text-xs font-bold text-slate-600 mb-1 ml-1">Фон профиля</p>
                                     <div onClick={()=>bannerRef.current.click()} className="h-24 bg-slate-100 rounded-xl cursor-pointer bg-cover bg-center flex items-center justify-center overflow-hidden" style={{backgroundImage:`url(${banner||''})`}}>
@@ -1610,17 +1363,15 @@
             const [liveUser, setLiveUser] = useState(targetUser);
             const isSelf = targetUser.uid === currentUser.uid;
             const isFollowing = currentProfile.following?.includes(targetUser.uid);
-
             useEffect(() => {
                 const unsubU = db.collection('users').doc(targetUser.uid).onSnapshot(d => { if (d.exists) setLiveUser(d.data()); });
                 const unsub = db.collection('posts').where('authorId','==',targetUser.uid).onSnapshot(s => {
                     const arr = s.docs.map(d => ({id:d.id, ...d.data()}));
-                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    arr.sort((a,b) => postTime(b) - postTime(a));
                     setTargetPosts(arr);
                 });
                 return () => { unsubU(); unsub(); };
             }, [targetUser.uid]);
-
             const toggleFollow = async () => {
                 const myRef = db.collection('users').doc(currentUser.uid);
                 const targetRef = db.collection('users').doc(targetUser.uid);
@@ -1633,7 +1384,6 @@
                     sendNotification(targetUser.uid, {uid:currentUser.uid, username:currentProfile.username, avatar:currentProfile.avatar}, 'follow', '');
                 }
             };
-
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto relative fade-in">
@@ -1692,99 +1442,401 @@
             const users = Object.values(usersMap);
             const me = usersMap[user.uid];
             const showTyping = me?.showTypingFeed !== false;
+            const [adminTab, setAdminTab] = useState('users');
+            const [pendingTracks, setPendingTracks] = useState([]);
+            const [playingId, setPlayingId] = useState(null);
+            const [rejectingTrack, setRejectingTrack] = useState(null);
+            const [rejectReason, setRejectReason] = useState('');
+            const audioRefs = useRef({});
             const [, tick] = useState(0);
             useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 5000); return () => clearInterval(t); }, []);
 
+            useEffect(() => {
+                const unsub = db.collection('tracks').onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()})).filter(t => t.status === 'pending');
+                    arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
+                    setPendingTracks(arr);
+                });
+                return () => unsub();
+            }, []);
+
             const toggleVerify = async (id, cur) => await db.collection('users').doc(id).update({isVerified:!cur});
-            const toggleBan = async (id, cur) => {
-                if (window.confirm(cur?'Разбанить?':'Забанить?'))
-                    await db.collection('users').doc(id).update({isBanned:!cur});
-            };
+            const toggleBan = async (id, cur) => { if (window.confirm(cur?'Разбанить?':'Забанить?')) await db.collection('users').doc(id).update({isBanned:!cur}); };
             const toggleTyping = async () => await db.collection('users').doc(user.uid).update({showTypingFeed:!showTyping});
 
-            const typingUsers = users.filter(u => {
-                if (!u.typingIn) return false;
-                if (!u.typingAt) return true;
-                try { return (Date.now()-u.typingAt.toDate().getTime()) < 6000; } catch { return true; }
-            });
+            const playTrackPreview = (t) => {
+                if (playingId === t.id) { audioRefs.current[t.id]?.pause(); setPlayingId(null); return; }
+                Object.values(audioRefs.current).forEach(a => a?.pause());
+                const a = new Audio(t.audioUrl);
+                audioRefs.current[t.id] = a;
+                a.onended = () => setPlayingId(null);
+                a.play().catch(()=>{});
+                setPlayingId(t.id);
+            };
+
+            const approveTrack = async (t) => {
+                await db.collection('tracks').doc(t.id).update({
+                    status: 'approved', rejectionReason: '',
+                    moderatedBy: user.uid,
+                    moderatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                sendNotification(t.uploadedBy, {uid:user.uid, username:'admin', avatar:null}, 'music_approved', `Трек «${t.title}» опубликован`, {trackId: t.id});
+            };
+
+            const confirmReject = async () => {
+                if (!rejectingTrack) return;
+                if (!rejectReason.trim()) { alert('Укажите причину'); return; }
+                await db.collection('tracks').doc(rejectingTrack.id).update({
+                    status: 'rejected',
+                    rejectionReason: rejectReason.trim(),
+                    moderatedBy: user.uid,
+                    moderatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                sendNotification(rejectingTrack.uploadedBy, {uid:user.uid, username:'admin', avatar:null}, 'music_rejected', rejectReason.trim(), {trackId: rejectingTrack.id});
+                setRejectingTrack(null);
+                setRejectReason('');
+            };
+
+            const typingUsers = users.filter(u => { if (!u.typingIn) return false; if (!u.typingAt) return true; try { return (Date.now()-u.typingAt.toDate().getTime()) < 6000; } catch { return true; } });
             const onlineCount = users.filter(u => isReallyOnline(u)).length;
 
             return (
                 <div className="fade-in space-y-6">
                     <div className="flex items-center space-x-2 text-red-500"><I.Shield/><h1 className="text-2xl font-black">Админ-панель</h1></div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-white/80 rounded-2xl p-4 border border-white/50 shadow-sm">
-                            <p className="text-xs font-bold text-slate-500 uppercase">Всего</p>
-                            <p className="text-2xl font-black text-slate-800">{users.length}</p>
-                        </div>
-                        <div className="bg-green-50 rounded-2xl p-4 border border-green-200 shadow-sm">
-                            <p className="text-xs font-bold text-green-700 uppercase">Онлайн</p>
-                            <p className="text-2xl font-black text-green-800">{onlineCount}</p>
-                        </div>
+                    <div className="flex space-x-2 bg-white rounded-2xl p-1 shadow-sm">
+                        <button onClick={()=>setAdminTab('users')} className={`flex-1 py-2 rounded-xl text-sm font-bold ${adminTab==='users'?'bg-gopo text-white':'text-slate-600'}`}>Пользователи</button>
+                        <button onClick={()=>setAdminTab('music')} className={`flex-1 py-2 rounded-xl text-sm font-bold relative ${adminTab==='music'?'bg-gopo text-white':'text-slate-600'}`}>
+                            Модерация музыки
+                            {pendingTracks.length > 0 && <span className={`ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full ${adminTab==='music'?'bg-white text-gopo':'bg-gopo text-white'}`}>{pendingTracks.length}</span>}
+                        </button>
                     </div>
-                    <div className={`rounded-2xl p-4 border-2 transition ${showTyping?'bg-purple-50 border-purple-200':'bg-slate-50 border-slate-200'}`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                                <p className="font-black text-sm text-slate-800 flex items-center"><I.Eye className="mr-2 text-purple-500" />Трекинг печатающих</p>
-                                <p className="text-xs text-slate-500 font-medium mt-1">{showTyping?'Показывать, кто и кому печатает':'Скрыто'}</p>
+
+                    {adminTab === 'users' && (
+                        <>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-white/80 rounded-2xl p-4 border border-white/50 shadow-sm"><p className="text-xs font-bold text-slate-500 uppercase">Всего</p><p className="text-2xl font-black text-slate-800">{users.length}</p></div>
+                                <div className="bg-green-50 rounded-2xl p-4 border border-green-200 shadow-sm"><p className="text-xs font-bold text-green-700 uppercase">Онлайн</p><p className="text-2xl font-black text-green-800">{onlineCount}</p></div>
                             </div>
-                            <button onClick={toggleTyping} className={`relative w-12 h-6 rounded-full transition ${showTyping?'bg-purple-500':'bg-slate-300'}`}>
-                                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${showTyping?'left-6':'left-0.5'}`}></span>
-                            </button>
-                        </div>
-                        {showTyping && (
-                            <div className="mt-3 pt-3 border-t border-purple-200">
-                                <p className="text-[10px] font-bold text-purple-700 uppercase mb-2">Сейчас печатают:</p>
-                                {typingUsers.length===0 ? <p className="text-xs text-slate-400 font-bold italic">Никто не печатает</p> : (
-                                    <div className="space-y-2">
-                                        {typingUsers.map(u => {
-                                            const target = usersMap[u.typingIn];
-                                            return (
-                                                <div key={u.uid} className="flex items-center space-x-2 bg-white/80 rounded-xl p-2">
-                                                    <Avatar src={u.avatar} name={u.username} size={28} />
-                                                    <p className="text-xs font-bold text-slate-800 truncate flex-1">@{u.username} <span className="text-slate-400 font-medium">→</span> {target?`@${target.username}`:'...'}</p>
-                                                    <TypingDots className="text-purple-500" />
-                                                </div>
-                                            );
-                                        })}
+                            <div className={`rounded-2xl p-4 border-2 transition ${showTyping?'bg-purple-50 border-purple-200':'bg-slate-50 border-slate-200'}`}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-black text-sm text-slate-800 flex items-center"><I.Eye className="mr-2 text-purple-500" />Трекинг печатающих</p>
+                                        <p className="text-xs text-slate-500 font-medium mt-1">{showTyping?'Показывать, кто и кому печатает':'Скрыто'}</p>
+                                    </div>
+                                    <button onClick={toggleTyping} className={`relative w-12 h-6 rounded-full transition ${showTyping?'bg-purple-500':'bg-slate-300'}`}>
+                                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${showTyping?'left-6':'left-0.5'}`}></span>
+                                    </button>
+                                </div>
+                                {showTyping && (
+                                    <div className="mt-3 pt-3 border-t border-purple-200">
+                                        <p className="text-[10px] font-bold text-purple-700 uppercase mb-2">Сейчас печатают:</p>
+                                        {typingUsers.length===0 ? <p className="text-xs text-slate-400 font-bold italic">Никто не печатает</p> : (
+                                            <div className="space-y-2">
+                                                {typingUsers.map(u => { const target = usersMap[u.typingIn]; return (
+                                                    <div key={u.uid} className="flex items-center space-x-2 bg-white/80 rounded-xl p-2">
+                                                        <Avatar src={u.avatar} name={u.username} size={28} />
+                                                        <p className="text-xs font-bold text-slate-800 truncate flex-1">@{u.username} <span className="text-slate-400 font-medium">→</span> {target?`@${target.username}`:'...'}</p>
+                                                        <TypingDots className="text-purple-500" />
+                                                    </div>
+                                                ); })}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
-                        )}
-                    </div>
-                    <div>
-                        <p className="text-slate-500 text-sm font-medium mb-3">Управление пользователями</p>
-                        <div className="liquid-glass rounded-3xl overflow-hidden shadow-sm">
-                            {users.map(u => {
-                                const online = isReallyOnline(u);
-                                return (
-                                    <div key={u.uid} className={`p-4 border-b border-white/50 last:border-0 ${u.isBanned?'bg-red-50/50':''}`}>
-                                        <div className="flex items-center space-x-3 mb-2">
-                                            <Avatar src={u.avatar} name={u.username} size={42} showStatus isOnline={online} />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center">
-                                                    <span className="font-black text-sm truncate">{u.displayName || u.username}</span>
-                                                    {u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}
+                            <div>
+                                <p className="text-slate-500 text-sm font-medium mb-3">Управление пользователями</p>
+                                <div className="liquid-glass rounded-3xl overflow-hidden shadow-sm">
+                                    {users.map(u => {
+                                        const online = isReallyOnline(u);
+                                        return (
+                                            <div key={u.uid} className={`p-4 border-b border-white/50 last:border-0 ${u.isBanned?'bg-red-50/50':''}`}>
+                                                <div className="flex items-center space-x-3 mb-2">
+                                                    <Avatar src={u.avatar} name={u.username} size={42} showStatus isOnline={online} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center">
+                                                            <span className="font-black text-sm truncate">{u.displayName || u.username}</span>
+                                                            {u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}
+                                                        </div>
+                                                        <p className="text-xs text-slate-400 truncate">@{u.username}</p>
+                                                        <p className={`text-[10px] font-bold ${online?'text-green-600':'text-slate-400'}`}>{formatLastSeen(u)}</p>
+                                                        {u.isBanned && <p className="text-[10px] text-red-500 font-bold">ЗАБАНЕН</p>}
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-slate-400 truncate">@{u.username}</p>
-                                                <p className={`text-[10px] font-bold ${online?'text-green-600':'text-slate-400'}`}>{formatLastSeen(u)}</p>
-                                                {u.isBanned && <p className="text-[10px] text-red-500 font-bold">ЗАБАНЕН</p>}
+                                                {u.uid !== user.uid && (
+                                                    <div className="flex gap-2 mt-2">
+                                                        <button onClick={()=>toggleVerify(u.uid, u.isVerified)} className={`flex-1 text-xs font-bold py-2 rounded-lg border-2 ${u.isVerified?'border-blue-500 text-blue-500':'border-slate-200 text-slate-600 bg-white/50'}`}>{u.isVerified?'Снять галочку':'Дать галочку'}</button>
+                                                        <button onClick={()=>toggleBan(u.uid, u.isBanned)} className={`flex-1 text-xs font-bold py-2 rounded-lg border-2 ${u.isBanned?'border-green-500 text-green-600 bg-white/50':'border-red-500 text-red-500 bg-white/50'}`}>{u.isBanned?'Разбанить':'Забанить'}</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {adminTab === 'music' && (
+                        <div>
+                            <p className="text-slate-500 text-sm font-medium mb-3">Треки на проверке ({pendingTracks.length})</p>
+                            {pendingTracks.length === 0 ? (
+                                <div className="text-center p-16 bg-white rounded-3xl text-slate-400"><I.Music/><p className="mt-4 font-bold">Нет треков на модерации</p></div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {pendingTracks.map(t => (
+                                        <div key={t.id} className="bg-white rounded-2xl p-4 shadow-sm">
+                                            <div className="flex items-start space-x-3 mb-3">
+                                                {t.cover ? <img src={t.cover} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" /> : <div className="w-16 h-16 rounded-xl bg-gopo text-white flex items-center justify-center flex-shrink-0"><I.Music/></div>}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-black text-sm truncate">{t.title}</p>
+                                                    <p className="text-xs text-slate-500 truncate">{t.artist}</p>
+                                                    <p className="text-[10px] text-slate-400 mt-1">@{t.uploaderName} · {timeAgo(t.createdAt)}</p>
+                                                </div>
+                                            </div>
+                                            <button onClick={()=>playTrackPreview(t)} className="w-full flex items-center justify-center space-x-2 bg-slate-100 hover:bg-slate-200 py-2 rounded-xl font-bold text-sm mb-3">
+                                                {playingId===t.id ? <I.Pause size={16}/> : <I.Play size={16}/>}
+                                                <span>{playingId===t.id ? 'Пауза' : 'Прослушать'}</span>
+                                            </button>
+                                            <div className="flex gap-2">
+                                                <button onClick={()=>approveTrack(t)} className="flex-1 bg-green-500 text-white font-bold py-2 rounded-xl">Принять</button>
+                                                <button onClick={()=>{setRejectingTrack(t); setRejectReason('');}} className="flex-1 bg-red-500 text-white font-bold py-2 rounded-xl">Отклонить</button>
                                             </div>
                                         </div>
-                                        {u.uid !== user.uid && (
-                                            <div className="flex gap-2 mt-2">
-                                                <button onClick={()=>toggleVerify(u.uid, u.isVerified)} className={`flex-1 text-xs font-bold py-2 rounded-lg border-2 ${u.isVerified?'border-blue-500 text-blue-500':'border-slate-200 text-slate-600 bg-white/50'}`}>
-                                                    {u.isVerified?'Снять галочку':'Дать галочку'}
-                                                </button>
-                                                <button onClick={()=>toggleBan(u.uid, u.isBanned)} className={`flex-1 text-xs font-bold py-2 rounded-lg border-2 ${u.isBanned?'border-green-500 text-green-600 bg-white/50':'border-red-500 text-red-500 bg-white/50'}`}>
-                                                    {u.isBanned?'Разбанить':'Забанить'}
-                                                </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {rejectingTrack && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+                                <h3 className="font-black text-lg mb-3">Причина отклонения</h3>
+                                <p className="text-xs text-slate-500 mb-3">Трек «{rejectingTrack.title}»</p>
+                                <textarea value={rejectReason} onChange={e=>setRejectReason(e.target.value)} rows="3" placeholder="Например: плохое качество записи / нарушение авторских прав" className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium resize-none" />
+                                <div className="flex gap-2">
+                                    <button onClick={()=>{setRejectingTrack(null); setRejectReason('');}} className="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">Отмена</button>
+                                    <button onClick={confirmReject} className="flex-1 bg-red-500 text-white font-bold py-2.5 rounded-xl">Отклонить</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const MusicTab = ({ user, profile, playerTrack, playerPlaying, playTrack }) => {
+            const [tracks, setTracks] = useState([]);
+            const [tab, setTab] = useState('all');
+            const [showUpload, setShowUpload] = useState(false);
+            const [searchQuery, setSearchQuery] = useState('');
+            useEffect(() => {
+                const unsub = db.collection('tracks').onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setTracks(arr);
+                });
+                return () => unsub();
+            }, []);
+            const saved = profile.savedTracks || [];
+            const myTracks = tracks.filter(t => t.uploadedBy === user.uid);
+            const approved = tracks.filter(t => t.status === 'approved');
+            const savedTracks = approved.filter(t => saved.includes(t.id));
+            const source = tab === 'mine' ? myTracks : tab === 'saved' ? savedTracks : approved;
+            const filtered = source.filter(t => !searchQuery || (t.title||'').toLowerCase().includes(searchQuery.toLowerCase()) || (t.artist||'').toLowerCase().includes(searchQuery.toLowerCase()));
+            const toggleSave = async (track) => {
+                const myRef = db.collection('users').doc(user.uid);
+                if (saved.includes(track.id)) await myRef.update({savedTracks: firebase.firestore.FieldValue.arrayRemove(track.id)});
+                else await myRef.update({savedTracks: firebase.firestore.FieldValue.arrayUnion(track.id)});
+            };
+            const delTrack = async (track) => {
+                if (track.uploadedBy !== user.uid && user.email !== 'hvadim439@gmail.com') return;
+                if (!window.confirm('Удалить трек?')) return;
+                try { await db.collection('tracks').doc(track.id).delete(); } catch(e) { alert(e.message); }
+            };
+            const statusBadge = (status) => {
+                if (status === 'pending') return <span className="text-[10px] font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">На проверке</span>;
+                if (status === 'rejected') return <span className="text-[10px] font-black text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Отклонён</span>;
+                if (status === 'approved') return <span className="text-[10px] font-black text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Одобрен</span>;
+                return null;
+            };
+            return (
+                <div className="fade-in">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2"><I.Music/><h1 className="text-2xl font-black">Музыка</h1></div>
+                        <button onClick={()=>setShowUpload(true)} className="bg-gopo text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center space-x-2">
+                            <I.Upload/><span className="hidden sm:inline">Загрузить</span>
+                        </button>
+                    </div>
+                    <div className="relative mb-4">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><I.Search/></div>
+                        <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Поиск треков..." className="w-full p-3 pl-12 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
+                    </div>
+                    <div className="flex space-x-2 mb-4 flex-wrap gap-y-2">
+                        <button onClick={()=>setTab('all')} className={`px-4 py-2 rounded-xl text-sm font-bold ${tab==='all'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Все</button>
+                        <button onClick={()=>setTab('mine')} className={`px-4 py-2 rounded-xl text-sm font-bold ${tab==='mine'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Мои ({myTracks.length})</button>
+                        <button onClick={()=>setTab('saved')} className={`px-4 py-2 rounded-xl text-sm font-bold ${tab==='saved'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Сохранённые ({savedTracks.length})</button>
+                    </div>
+                    {filtered.length === 0 ? (
+                        <div className="text-center p-16 bg-white rounded-3xl text-slate-400"><I.Music/><p className="mt-4 font-bold">{tab==='mine'?'У вас нет треков':tab==='saved'?'Нет сохранённых':'Треков нет'}</p></div>
+                    ) : (
+                        <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
+                            {filtered.map(t => {
+                                const isCur = playerTrack?.id === t.id;
+                                const isSaved = saved.includes(t.id);
+                                const canDel = t.uploadedBy === user.uid || user.email === 'hvadim439@gmail.com';
+                                const isPending = t.status === 'pending';
+                                const isRejected = t.status === 'rejected';
+                                const playable = t.status === 'approved';
+                                return (
+                                    <div key={t.id} className={`flex items-center space-x-3 p-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 ${isCur?'bg-pink-50/60':''}`}>
+                                        <button onClick={()=>{ if (playable) playTrack(t, filtered.filter(x=>x.status==='approved')); }} disabled={!playable}
+                                            className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center shadow-sm ${isCur?'bg-gopo text-white':'bg-slate-100 text-slate-600'} ${!playable?'opacity-40 cursor-not-allowed':''}`}>
+                                            {isCur && playerPlaying ? <I.Pause/> : <I.Play/>}
+                                        </button>
+                                        {t.cover ? <img src={t.cover} className="w-11 h-11 rounded-lg object-cover flex-shrink-0" /> : <div className="w-11 h-11 rounded-lg bg-gopo text-white flex items-center justify-center flex-shrink-0"><I.Music/></div>}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center space-x-2">
+                                                <p className="font-black text-sm truncate">{t.title}</p>
+                                                {tab === 'mine' && statusBadge(t.status)}
                                             </div>
+                                            <p className="text-xs text-slate-500 truncate">{t.artist} · @{t.uploaderName}</p>
+                                            {isRejected && t.rejectionReason && (
+                                                <p className="text-[10px] text-red-500 font-bold mt-0.5">Причина: {t.rejectionReason}</p>
+                                            )}
+                                        </div>
+                                        {playable && (
+                                            <button onClick={()=>toggleSave(t)} className={`p-2 rounded-full ${isSaved?'text-gopo':'text-slate-300 hover:text-slate-500'}`} title={isSaved?'Убрать из сохранённых':'Сохранить себе'}><I.Heart filled={isSaved}/></button>
                                         )}
+                                        {canDel && <button onClick={()=>delTrack(t)} className="p-2 text-slate-300 hover:text-red-500"><I.Trash size={14}/></button>}
                                     </div>
                                 );
                             })}
                         </div>
+                    )}
+                    {showUpload && <UploadTrackModal user={user} profile={profile} onClose={()=>setShowUpload(false)} />}
+                </div>
+            );
+        };
+
+        const UploadTrackModal = ({ user, profile, onClose }) => {
+            const [title, setTitle] = useState('');
+            const [artist, setArtist] = useState('');
+            const [audioFile, setAudioFile] = useState(null);
+            const [coverFile, setCoverFile] = useState(null);
+            const [coverPreview, setCoverPreview] = useState(null);
+            const [uploading, setUploading] = useState(false);
+            const [progress, setProgress] = useState('');
+            const audioRef = useRef(null);
+            const coverRef = useRef(null);
+
+            const pickCover = async (e) => {
+                const f = e.target.files[0];
+                if (!f) return;
+                setCoverFile(f);
+                setCoverPreview(await compressImage(f, 400, 0.7));
+            };
+
+            const getAuth = async () => {
+                const r = await fetch('/api/imagekit-auth');
+                if (!r.ok) throw new Error('Не удалось получить подпись ImageKit');
+                return r.json();
+            };
+
+            const uploadFile = async (file, fileName, folder, auth, onProgress) => {
+                const form = new FormData();
+                form.append('file', file);
+                form.append('fileName', fileName);
+                form.append('folder', folder);
+                form.append('publicKey', auth.publicKey);
+                form.append('token', auth.token);
+                form.append('expire', String(auth.expire));
+                form.append('signature', auth.signature);
+                form.append('useUniqueFilename', 'true');
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', 'https://upload.imagekit.io/api/v1/files/upload');
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+                    };
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve(JSON.parse(xhr.responseText));
+                        } else {
+                            let msg = 'Upload failed';
+                            try { msg = JSON.parse(xhr.responseText).message || msg; } catch {}
+                            reject(new Error(msg));
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error('Network error'));
+                    xhr.send(form);
+                });
+            };
+
+            const submit = async () => {
+                if (!audioFile || !title.trim()) { alert('Введите название и загрузите аудио'); return; }
+                if (audioFile.size > 25 * 1024 * 1024) { alert('Файл больше 25 МБ. ImageKit не пропустит на бесплатном плане.'); return; }
+                setUploading(true);
+                setProgress('Получаем подпись...');
+                try {
+                    const auth = await getAuth();
+                    let coverUrl = '';
+                    if (coverFile) {
+                        setProgress('Загружаем обложку...');
+                        const coverRes = await uploadFile(coverFile, `cover_${Date.now()}_${coverFile.name}`, '/music/covers', auth);
+                        coverUrl = coverRes.url;
+                    }
+                    setProgress('Загружаем аудио...');
+                    const audioRes = await uploadFile(audioFile, `audio_${Date.now()}_${audioFile.name}`, '/music/audio', auth, (p) => setProgress(`Аудио: ${p}%`));
+                    await db.collection('tracks').add({
+                        title: title.trim(),
+                        artist: artist.trim() || 'Неизвестен',
+                        cover: coverUrl,
+                        audioUrl: audioRes.url,
+                        uploadedBy: user.uid,
+                        uploaderName: profile.username,
+                        status: 'pending',
+                        rejectionReason: '',
+                        plays: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    onClose();
+                } catch (e) {
+                    console.error('ImageKit upload error:', e);
+                    alert('Ошибка загрузки: ' + e.message);
+                }
+                setUploading(false);
+                setProgress('');
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-black">Загрузить трек</h2>
+                            <button onClick={onClose} className="p-2 text-slate-400"><I.X/></button>
+                        </div>
+                        <div className="flex flex-col items-center mb-4">
+                            <div onClick={()=>coverRef.current.click()} className="w-32 h-32 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200 transition">
+                                {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Image/><p className="text-xs font-bold mt-1">Обложка</p></div>}
+                            </div>
+                            <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={pickCover} />
+                        </div>
+                        <label className="text-xs font-bold text-slate-600 ml-1">Название</label>
+                        <input value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Название трека" />
+                        <label className="text-xs font-bold text-slate-600 ml-1">Исполнитель</label>
+                        <input value={artist} onChange={e=>setArtist(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Исполнитель" />
+                        <label className="text-xs font-bold text-slate-600 ml-1">Аудиофайл (до 25 МБ)</label>
+                        <div onClick={()=>audioRef.current.click()} className="w-full p-3 bg-slate-50 rounded-xl cursor-pointer mb-4 text-sm font-bold text-slate-600 hover:bg-slate-100">
+                            {audioFile ? `✓ ${audioFile.name}` : 'Выбрать MP3 / M4A / OGG'}
+                        </div>
+                        <input ref={audioRef} type="file" accept="audio/*" className="hidden" onChange={e=>setAudioFile(e.target.files[0])} />
+                        {uploading && <p className="text-sm font-bold text-gopo text-center mb-3">{progress || 'Загрузка...'}</p>}
+                        <button onClick={submit} disabled={uploading} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">
+                            {uploading ? 'Загрузка...' : 'Отправить на проверку'}
+                        </button>
+                        <p className="text-[10px] text-slate-400 font-bold text-center mt-2">Трек появится в общей ленте после одобрения админом</p>
                     </div>
                 </div>
             );
