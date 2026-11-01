@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Загрузить трек · GoPo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>body{font-family:system-ui,sans-serif}</style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4">
+<div class="max-w-sm mx-auto bg-white rounded-3xl p-6 shadow-lg mt-8">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-xl font-black">Загрузить трек</h1>
+    <button onclick="history.back()" class="text-slate-400 p-2 text-2xl">×</button>
+  </div>
+
+  <label class="text-xs font-bold text-slate-600 ml-1">Кто вы?</label>
+  <select id="who" class="w-full p-3 bg-slate-50 rounded-xl mb-3 font-medium">
+    <option value="">— выберите себя —</option>
+  </select>
+
+  <label class="text-xs font-bold text-slate-600 ml-1">Название</label>
+  <input id="title" class="w-full p-3 bg-slate-50 rounded-xl mb-3 font-medium" placeholder="Название трека">
+
+  <label class="text-xs font-bold text-slate-600 ml-1">Исполнитель</label>
+  <input id="artist" class="w-full p-3 bg-slate-50 rounded-xl mb-3 font-medium" placeholder="Исполнитель">
+
+  <label class="text-xs font-bold text-slate-600 ml-1">Аудио (до 50 МБ)</label>
+  <input id="audio" type="file" accept="audio/*" class="w-full p-3 bg-slate-50 rounded-xl mb-3 text-sm font-medium">
+
+  <label class="text-xs font-bold text-slate-600 ml-1">Обложка (опционально)</label>
+  <input id="cover" type="file" accept="image/*" class="w-full p-3 bg-slate-50 rounded-xl mb-4 text-sm font-medium">
+
+  <div id="status" class="text-sm font-bold text-center mb-2 h-5"></div>
+  <button id="go" class="w-full bg-pink-600 text-white font-bold py-3 rounded-xl">Отправить на проверку</button>
+  <p class="text-[10px] text-slate-400 text-center mt-2">Трек появится в общей ленте после одобрения админом</p>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCSqIewoV7YYhjJ6mx_jygVH4Ap4U7gAgs",
+  authDomain: "gopo-2b629.firebaseapp.com",
+  projectId: "gopo-2b629",
+  appId: "1:860909387262:web:1f55d6aed6c51b113614af"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Загружаем список пользователей, чтобы выбрать "Кто вы"
+db.collection('users').get().then(snap => {
+  const sel = document.getElementById('who');
+  snap.docs.forEach(d => {
+    const u = d.data();
+    if (u.isBanned) return;
+    const opt = document.createElement('option');
+    opt.value = u.uid + '|' + u.username;
+    opt.textContent = '@' + u.username;
+    sel.appendChild(opt);
+  });
+});
+
+const setStatus = (t) => document.getElementById('status').textContent = t;
+
+document.getElementById('go').onclick = async () => {
+  const who = document.getElementById('who').value;
+  const title = document.getElementById('title').value.trim();
+  const artist = document.getElementById('artist').value.trim() || 'Неизвестен';
+  const audioFile = document.getElementById('audio').files[0];
+  const coverFile = document.getElementById('cover').files[0];
+
+  if (!who) return setStatus('Выберите себя');
+  if (!audioFile) return setStatus('Загрузите аудио');
+  if (!title) return setStatus('Введите название');
+
+  const [uid, username] = who.split('|');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+
+  try {
+    let coverUrl = '';
+    if (coverFile) {
+      setStatus('Загружаем обложку...');
+      const r = await fetch('/api/yandex-auth', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ fileName: coverFile.name, fileType: coverFile.type, folder: 'covers' })
+      });
+      const { uploadUrl, key } = await r.json();
+      await fetch(uploadUrl, { method: 'PUT', body: coverFile, headers: { 'Content-Type': coverFile.type } });
+      coverUrl = 'https://gopo-music.storage.yandexcloud.net/' + key;
+    }
+
+    setStatus('Загружаем аудио...');
+    const r = await fetch('/api/yandex-auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ fileName: audioFile.name, fileType: audioFile.type, folder: 'audio' })
+    });
+    const { uploadUrl, key } = await r.json();
+    await fetch(uploadUrl, { method: 'PUT', body: audioFile, headers: { 'Content-Type': audioFile.type } });
+    const audioUrl = 'https://gopo-music.storage.yandexcloud.net/' + key;
+
+    setStatus('Сохраняем...');
+    await db.collection('tracks').add({
+      title, artist, cover: coverUrl, audioUrl,
+      uploadedBy: uid, uploaderName: username,
+      status: 'pending', rejectionReason: '', plays: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    setStatus('✅ Отправлено на проверку');
+    setTimeout(() => history.back(), 1500);
+  } catch (e) {
+    console.error(e);
+    setStatus('Ошибка: ' + e.message);
+    btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>
