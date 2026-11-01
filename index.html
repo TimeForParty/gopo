@@ -1853,7 +1853,7 @@
                 <div className="fade-in">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2"><I.Music/><h1 className="text-2xl font-black">Музыка</h1></div>
-                        <button onClick={()=>setShowUpload(true)} className="bg-gopo text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center space-x-2">
+                        onClick={()=>{ window.location.href = 'https://gopo-web.vercel.app/upload.html'; }}
                             <I.Upload/><span className="hidden sm:inline">Загрузить</span>
                         </button>
                     </div>
