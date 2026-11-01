@@ -2,122 +2,602 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Загрузить трек · GoPo</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<style>body{font-family:system-ui,sans-serif}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Загрузить трек · GoPo 🎃</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#FF0055">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.0/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.0/firebase-firestore-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: #f0f2f5; }
+
+  .liquid-glass {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: 0 8px 32px rgba(31,38,135,0.08);
+  }
+
+  .gopo-logo {
+    background: #FF0055;
+    padding: 10px 28px;
+    border-radius: 40px 40px 40px 10px;
+    position: relative;
+    display: inline-flex;
+    box-shadow: 0 10px 25px rgba(255,0,85,0.4);
+  }
+  .gopo-logo::after {
+    content: '';
+    position: absolute;
+    bottom: -12px; right: 20px;
+    border-left: 25px solid transparent;
+    border-top: 35px solid #FF0055;
+    border-bottom-left-radius: 10px;
+    transform: rotate(-15deg);
+  }
+  .gopo-logo span {
+    color: #fff; font-weight: 900; font-size: 1.8rem;
+    transform: rotate(-10deg);
+  }
+  .gopo-logo.halloween::before {
+    content: '🎃';
+    position: absolute;
+    top: -12px; right: -14px;
+    font-size: 26px;
+    filter: drop-shadow(0 0 8px rgba(255,107,0,0.9));
+    animation: pumpkinGlow 2.5s ease-in-out infinite;
+    z-index: 10;
+  }
+  @keyframes pumpkinGlow {
+    0%,100% { filter: drop-shadow(0 0 6px rgba(255,107,0,0.6)); transform: rotate(-6deg) scale(1); }
+    50%     { filter: drop-shadow(0 0 16px rgba(255,107,0,1)); transform: rotate(6deg) scale(1.1); }
+  }
+
+  .bg-blobs {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    background: #f0f2f5;
+  }
+  .blob {
+    position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35;
+  }
+  .b1 { width: 400px; height: 400px; background: #FF0055; top: -120px; left: -120px; }
+  .b2 { width: 350px; height: 350px; background: #7C3AED; bottom: -100px; right: -100px; opacity: 0.3; }
+  .b3 { width: 300px; height: 300px; background: #FFB800; top: 40%; left: 50%; opacity: 0.2; }
+
+  .float-bat {
+    position: fixed; font-size: 28px; pointer-events: none; z-index: 1; opacity: 0.35;
+    animation: flyBat 25s linear infinite;
+  }
+  .bats-b1 { top: 15%; animation-delay: 0s; }
+  .bats-b2 { top: 45%; animation-delay: -8s; animation-duration: 32s; }
+  .bats-b3 { top: 75%; animation-delay: -15s; animation-duration: 20s; }
+  @keyframes flyBat {
+    0%   { transform: translate(-60px, 0) rotate(-10deg); }
+    50%  { transform: translate(50vw, -30px) rotate(10deg); }
+    100% { transform: translate(calc(100vw + 60px), 0) rotate(-10deg); }
+  }
+
+  .drop-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 20px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: #FF0055;
+    background: rgba(255,0,85,0.03);
+  }
+  .drop-zone.filled {
+    border-style: solid;
+    border-color: #FF0055;
+    background: rgba(255,0,85,0.04);
+  }
+
+  .btn-gopo {
+    background: linear-gradient(135deg, #FF0055, #FF3D7F);
+    box-shadow: 0 8px 24px rgba(255,0,85,0.35);
+    transition: all 0.2s;
+  }
+  .btn-gopo:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(255,0,85,0.45);
+  }
+  .btn-gopo:active:not(:disabled) { transform: translateY(0); }
+  .btn-gopo:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .input-gopo {
+    transition: all 0.2s;
+  }
+  .input-gopo:focus {
+    outline: none;
+    border-color: #FF0055;
+    box-shadow: 0 0 0 3px rgba(255,0,85,0.12);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.3s ease-out; }
+
+  @keyframes popIn {
+    0%   { transform: scale(0.5); opacity: 0; }
+    70%  { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+  .progress-bar {
+    background: linear-gradient(90deg, #FF0055, #FFB800, #7C3AED);
+    background-size: 200% 100%;
+    animation: progressShimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes progressShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+</style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4">
-<div class="max-w-sm mx-auto bg-white rounded-3xl p-6 shadow-lg mt-8">
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="text-xl font-black">Загрузить трек</h1>
-    <button onclick="history.back()" class="text-slate-400 p-2 text-2xl">×</button>
-  </div>
+<body class="min-h-screen">
 
-  <label class="text-xs font-bold text-slate-600 ml-1">Кто вы?</label>
-  <select id="who" class="w-full p-3 bg-slate-50 rounded-xl mb-3 font-medium">
-    <option value="">— выберите себя —</option>
-  </select>
-
-  <label class="text-xs font-bold text-slate-600 ml-1">Название</label>
-  <input id="title" class="w-full p-3 bg-slate-50 rounded-xl mb-3 font-medium" placeholder="Название трека">
-
-  <label class="text-xs font-bold text-slate-600 ml-1">Исполнитель</label>
-  <input id="artist" class="w-full p-3 bg-slate-50 rounded-xl mb-3 font-medium" placeholder="Исполнитель">
-
-  <label class="text-xs font-bold text-slate-600 ml-1">Аудио (до 50 МБ)</label>
-  <input id="audio" type="file" accept="audio/*" class="w-full p-3 bg-slate-50 rounded-xl mb-3 text-sm font-medium">
-
-  <label class="text-xs font-bold text-slate-600 ml-1">Обложка (опционально)</label>
-  <input id="cover" type="file" accept="image/*" class="w-full p-3 bg-slate-50 rounded-xl mb-4 text-sm font-medium">
-
-  <div id="status" class="text-sm font-bold text-center mb-2 h-5"></div>
-  <button id="go" class="w-full bg-pink-600 text-white font-bold py-3 rounded-xl">Отправить на проверку</button>
-  <p class="text-[10px] text-slate-400 text-center mt-2">Трек появится в общей ленте после одобрения админом</p>
+<!-- Фон -->
+<div class="bg-blobs">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
 </div>
+<div class="float-bat bats-b1">🦇</div>
+<div class="float-bat bats-b2">🦇</div>
+<div class="float-bat bats-b3">🦇</div>
+
+<!-- Контент -->
+<main class="relative z-10 min-h-screen flex items-center justify-center p-4 py-8">
+  <div class="w-full max-w-md">
+
+    <!-- Шапка -->
+    <div class="flex items-center justify-between mb-6 px-2">
+      <button onclick="history.back()" class="liquid-glass w-10 h-10 rounded-2xl flex items-center justify-center text-slate-600 hover:text-slate-900 active:scale-95 transition">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <div class="gopo-logo halloween"><span>GoPo</span></div>
+      <div class="w-10"></div>
+    </div>
+
+    <!-- Заголовок -->
+    <div class="text-center mb-6 fade-in">
+      <h1 class="text-3xl font-black text-slate-900 mb-1">Загрузить трек</h1>
+      <p class="text-slate-500 text-sm font-medium">Твой трек появится в ленте после модерации</p>
+    </div>
+
+    <!-- Карточка формы -->
+    <div class="liquid-glass rounded-3xl p-5 fade-in">
+      <form id="uploadForm" class="space-y-4">
+
+        <!-- Кто вы -->
+        <div>
+          <label class="text-xs font-black text-slate-600 uppercase tracking-wider ml-1 mb-2 block">Кто ты?</label>
+          <select id="whoSelect" required
+            class="input-gopo w-full p-3.5 bg-white border border-slate-200 rounded-2xl font-bold text-slate-800">
+            <option value="">— выбери себя —</option>
+          </select>
+          <p id="whoHint" class="text-[11px] text-slate-400 font-medium mt-1 ml-1">Список пользователей GoPo</p>
+        </div>
+
+        <!-- Название -->
+        <div>
+          <label class="text-xs font-black text-slate-600 uppercase tracking-wider ml-1 mb-2 block">Название</label>
+          <input id="titleInput" type="text" placeholder="Название трека" maxlength="80" required
+            class="input-gopo w-full p-3.5 bg-white border border-slate-200 rounded-2xl font-medium text-slate-800 placeholder-slate-400">
+        </div>
+
+        <!-- Исполнитель -->
+        <div>
+          <label class="text-xs font-black text-slate-600 uppercase tracking-wider ml-1 mb-2 block">Исполнитель</label>
+          <input id="artistInput" type="text" placeholder="Исполнитель" maxlength="60"
+            class="input-gopo w-full p-3.5 bg-white border border-slate-200 rounded-2xl font-medium text-slate-800 placeholder-slate-400">
+        </div>
+
+        <!-- Аудио -->
+        <div>
+          <label class="text-xs font-black text-slate-600 uppercase tracking-wider ml-1 mb-2 block">Аудиофайл</label>
+          <div id="audioZone" class="drop-zone p-5 text-center">
+            <input id="audioInput" type="file" accept="audio/*" class="hidden">
+            <div id="audioEmpty">
+              <div class="text-4xl mb-2">🎵</div>
+              <p class="font-bold text-slate-700 text-sm">Выбрать MP3 / M4A / OGG</p>
+              <p class="text-[11px] text-slate-400 font-medium mt-1">до 50 МБ</p>
+            </div>
+            <div id="audioFilled" class="hidden">
+              <div class="text-3xl mb-1">✅</div>
+              <p id="audioName" class="font-bold text-slate-800 text-sm break-all"></p>
+              <p id="audioSize" class="text-[11px] text-slate-400 font-medium mt-1"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Обложка -->
+        <div>
+          <label class="text-xs font-black text-slate-600 uppercase tracking-wider ml-1 mb-2 block">Обложка <span class="text-slate-400 font-medium normal-case tracking-normal">(необязательно)</span></label>
+          <div id="coverZone" class="drop-zone p-4 text-center">
+            <input id="coverInput" type="file" accept="image/*" class="hidden">
+            <div id="coverEmpty">
+              <div class="text-3xl mb-1">🖼️</div>
+              <p class="font-bold text-slate-700 text-sm">Добавить обложку</p>
+            </div>
+            <div id="coverFilled" class="hidden flex items-center justify-center gap-3">
+              <img id="coverPreview" class="w-16 h-16 rounded-xl object-cover" alt="">
+              <div class="text-left">
+                <p id="coverName" class="font-bold text-slate-800 text-xs break-all"></p>
+                <p class="text-[10px] text-slate-400 font-medium">Нажми, чтобы изменить</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Прогресс -->
+        <div id="progressWrap" class="hidden">
+          <div class="flex justify-between items-center mb-2">
+            <span id="progressLabel" class="text-xs font-black text-slate-700">Загрузка...</span>
+            <span id="progressPercent" class="text-xs font-black text-gopo">0%</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+            <div id="progressBar" class="progress-bar h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Статус -->
+        <div id="statusBox" class="hidden p-3.5 rounded-2xl text-sm font-bold text-center"></div>
+
+        <!-- Кнопка -->
+        <button id="submitBtn" type="submit" disabled
+          class="btn-gopo w-full text-white font-black py-4 rounded-2xl text-base">
+          Отправить на проверку
+        </button>
+
+        <p class="text-[10px] text-slate-400 font-medium text-center pt-1">
+          Админ проверит трек и опубликует его в общей ленте
+        </p>
+      </form>
+    </div>
+
+    <!-- Футер -->
+    <p class="text-center text-[10px] text-slate-400 font-bold mt-6 tracking-wider">
+      GOPO · HALLOWEEN EDITION 🎃
+    </p>
+  </div>
+</main>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCSqIewoV7YYhjJ6mx_jygVH4Ap4U7gAgs",
-  authDomain: "gopo-2b629.firebaseapp.com",
-  projectId: "gopo-2b629",
-  appId: "1:860909387262:web:1f55d6aed6c51b113614af"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+  /* ============ КОНФИГ ============ */
+  // Вставь сюда URL своей функции подписи Yandex (Yandex Cloud Functions или VPS)
+  const API_URL = 'https://gopo-web.vercel.app/api/yandex-auth';
 
-// Загружаем список пользователей, чтобы выбрать "Кто вы"
-db.collection('users').get().then(snap => {
-  const sel = document.getElementById('who');
-  snap.docs.forEach(d => {
-    const u = d.data();
-    if (u.isBanned) return;
-    const opt = document.createElement('option');
-    opt.value = u.uid + '|' + u.username;
-    opt.textContent = '@' + u.username;
-    sel.appendChild(opt);
-  });
-});
+  const BUCKET_HOST = 'https://gopo-music.storage.yandexcloud.net';
+  const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ
 
-const setStatus = (t) => document.getElementById('status').textContent = t;
+  const firebaseConfig = {
+    apiKey: "AIzaSyCSqIewoV7YYhjJ6mx_jygVH4Ap4U7gAgs",
+    authDomain: "gopo-2b629.firebaseapp.com",
+    projectId: "gopo-2b629",
+    storageBucket: "gopo-2b629.firebasestorage.app",
+    messagingSenderId: "860909387262",
+    appId: "1:860909387262:web:1f55d6aed6c51b113614af"
+  };
 
-document.getElementById('go').onclick = async () => {
-  const who = document.getElementById('who').value;
-  const title = document.getElementById('title').value.trim();
-  const artist = document.getElementById('artist').value.trim() || 'Неизвестен';
-  const audioFile = document.getElementById('audio').files[0];
-  const coverFile = document.getElementById('cover').files[0];
+  /* ============ INIT FIREBASE ============ */
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-  if (!who) return setStatus('Выберите себя');
-  if (!audioFile) return setStatus('Загрузите аудио');
-  if (!title) return setStatus('Введите название');
+  /* ============ ELEMENTS ============ */
+  const $ = id => document.getElementById(id);
+  const form = $('uploadForm');
+  const whoSelect = $('whoSelect');
+  const whoHint = $('whoHint');
+  const titleInput = $('titleInput');
+  const artistInput = $('artistInput');
+  const audioInput = $('audioInput');
+  const audioZone = $('audioZone');
+  const audioEmpty = $('audioEmpty');
+  const audioFilled = $('audioFilled');
+  const audioName = $('audioName');
+  const audioSize = $('audioSize');
+  const coverInput = $('coverInput');
+  const coverZone = $('coverZone');
+  const coverEmpty = $('coverEmpty');
+  const coverFilled = $('coverFilled');
+  const coverPreview = $('coverPreview');
+  const coverName = $('coverName');
+  const progressWrap = $('progressWrap');
+  const progressBar = $('progressBar');
+  const progressPercent = $('progressPercent');
+  const progressLabel = $('progressLabel');
+  const statusBox = $('statusBox');
+  const submitBtn = $('submitBtn');
 
-  const [uid, username] = who.split('|');
-  const btn = document.getElementById('go');
-  btn.disabled = true;
+  let audioFile = null;
+  let coverFile = null;
+  let uploading = false;
 
-  try {
-    let coverUrl = '';
-    if (coverFile) {
-      setStatus('Загружаем обложку...');
-      const r = await fetch('/api/yandex-auth', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ fileName: coverFile.name, fileType: coverFile.type, folder: 'covers' })
+  /* ============ ЗАГРУЗКА СПИСКА ЮЗЕРОВ ============ */
+  async function loadUsers() {
+    try {
+      const snap = await db.collection('users').orderBy('username').get();
+      const users = snap.docs.map(d => d.data()).filter(u => !u.isBanned);
+      if (users.length === 0) {
+        whoHint.textContent = '⚠️ В GoPo пока нет зарегистрированных пользователей';
+        whoHint.className = 'text-[11px] text-red-500 font-bold mt-1 ml-1';
+        return;
+      }
+      whoHint.textContent = 'Список пользователей GoPo';
+      users.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = JSON.stringify({ uid: u.uid, username: u.username });
+        opt.textContent = '@' + u.username + (u.displayName ? ' · ' + u.displayName : '');
+        whoSelect.appendChild(opt);
       });
-      const { uploadUrl, key } = await r.json();
-      await fetch(uploadUrl, { method: 'PUT', body: coverFile, headers: { 'Content-Type': coverFile.type } });
-      coverUrl = 'https://gopo-music.storage.yandexcloud.net/' + key;
+      whoSelect.addEventListener('change', updateSubmitState);
+    } catch (e) {
+      console.error('loadUsers:', e);
+      whoHint.textContent = '❌ Не удалось загрузить список: ' + (e.message || 'ошибка сети');
+      whoHint.className = 'text-[11px] text-red-500 font-bold mt-1 ml-1';
+    }
+  }
+
+  /* ============ ОБРАБОТКА ФАЙЛОВ ============ */
+  audioZone.addEventListener('click', () => audioInput.click());
+  coverZone.addEventListener('click', () => coverInput.click());
+
+  ['dragover', 'dragenter'].forEach(evt => {
+    audioZone.addEventListener(evt, e => { e.preventDefault(); audioZone.classList.add('dragover'); });
+    coverZone.addEventListener(evt, e => { e.preventDefault(); coverZone.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    audioZone.addEventListener(evt, e => { e.preventDefault(); audioZone.classList.remove('dragover'); });
+    coverZone.addEventListener(evt, e => { e.preventDefault(); coverZone.classList.remove('dragover'); });
+  });
+  audioZone.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0];
+    if (f) handleAudioFile(f);
+  });
+  coverZone.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0];
+    if (f) handleCoverFile(f);
+  });
+
+  audioInput.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) handleAudioFile(f);
+  });
+  coverInput.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) handleCoverFile(f);
+  });
+
+  function handleAudioFile(file) {
+    if (!file.type.startsWith('audio/')) {
+      showStatus('error', '❌ Это не аудиофайл');
+      return;
+    }
+    if (file.size > MAX_AUDIO_SIZE) {
+      showStatus('error', '❌ Файл больше 50 МБ');
+      return;
+    }
+    audioFile = file;
+    audioName.textContent = file.name;
+    audioSize.textContent = formatSize(file.size);
+    audioEmpty.classList.add('hidden');
+    audioFilled.classList.remove('hidden');
+    audioZone.classList.add('filled');
+    hideStatus();
+    updateSubmitState();
+  }
+
+  function handleCoverFile(file) {
+    if (!file.type.startsWith('image/')) {
+      showStatus('error', '❌ Это не изображение');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showStatus('error', '❌ Обложка больше 5 МБ');
+      return;
+    }
+    coverFile = file;
+    const reader = new FileReader();
+    reader.onload = e => { coverPreview.src = e.target.result; };
+    reader.readAsDataURL(file);
+    coverName.textContent = file.name;
+    coverEmpty.classList.add('hidden');
+    coverFilled.classList.remove('hidden');
+    coverZone.classList.add('filled');
+    hideStatus();
+  }
+
+  /* ============ СОСТОЯНИЕ ФОРМЫ ============ */
+  function updateSubmitState() {
+    const ready = whoSelect.value && audioFile && titleInput.value.trim() && !uploading;
+    submitBtn.disabled = !ready;
+  }
+  titleInput.addEventListener('input', () => { hideStatus(); updateSubmitState(); });
+
+  /* ============ СЖАТИЕ ОБЛОЖКИ ============ */
+  function compressImage(file, maxSize = 400, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > h) { if (w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; } }
+          else       { if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; } }
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function dataURLToBlob(dataURL) {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bin = atob(arr[1]);
+    const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return new Blob([u8], { type: mime });
+  }
+
+  /* ============ ПОЛУЧЕНИЕ ССЫЛКИ У ФУНКЦИИ ============ */
+  async function getUploadUrl(fileName, fileType, folder) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileName, fileType, folder })
+    });
+    if (!res.ok) {
+      let err = 'HTTP ' + res.status;
+      try { const j = await res.json(); err = j.error || err; } catch {}
+      throw new Error('Подпись не получена: ' + err);
+    }
+    return res.json();
+  }
+
+  /* ============ ПРЯМАЯ ЗАГРУЗКА В YANDEX ============ */
+  function uploadToYandex(file, uploadUrl, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', uploadUrl);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error('HTTP ' + xhr.status));
+      };
+      xhr.onerror = () => reject(new Error('Сеть недоступна'));
+      xhr.ontimeout = () => reject(new Error('Таймаут'));
+      xhr.timeout = 5 * 60 * 1000;
+      xhr.send(file);
+    });
+  }
+
+  /* ============ UI-ХЕЛПЕРЫ ============ */
+  function setProgress(percent, label) {
+    progressWrap.classList.remove('hidden');
+    progressBar.style.width = percent + '%';
+    progressPercent.textContent = percent + '%';
+    if (label) progressLabel.textContent = label;
+  }
+
+  function showStatus(type, msg) {
+    statusBox.classList.remove('hidden');
+    statusBox.className = 'p-3.5 rounded-2xl text-sm font-bold text-center ' +
+      (type === 'success' ? 'bg-green-100 text-green-700' :
+       type === 'error'   ? 'bg-red-100 text-red-700' :
+                            'bg-blue-100 text-blue-700');
+    statusBox.textContent = msg;
+  }
+  function hideStatus() { statusBox.classList.add('hidden'); }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' Б';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' КБ';
+    return (bytes / 1024 / 1024).toFixed(2) + ' МБ';
+  }
+
+  /* ============ ОТПРАВКА ============ */
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (uploading) return;
+
+    const who = JSON.parse(whoSelect.value);
+    const title = titleInput.value.trim();
+    const artist = artistInput.value.trim() || 'Неизвестен';
+
+    if (!who || !audioFile || !title) {
+      showStatus('error', 'Заполни все обязательные поля');
+      return;
     }
 
-    setStatus('Загружаем аудио...');
-    const r = await fetch('/api/yandex-auth', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ fileName: audioFile.name, fileType: audioFile.type, folder: 'audio' })
-    });
-    const { uploadUrl, key } = await r.json();
-    await fetch(uploadUrl, { method: 'PUT', body: audioFile, headers: { 'Content-Type': audioFile.type } });
-    const audioUrl = 'https://gopo-music.storage.yandexcloud.net/' + key;
+    uploading = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Загрузка...';
+    hideStatus();
 
-    setStatus('Сохраняем...');
-    await db.collection('tracks').add({
-      title, artist, cover: coverUrl, audioUrl,
-      uploadedBy: uid, uploaderName: username,
-      status: 'pending', rejectionReason: '', plays: 0,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    try {
+      // 1. Обложка
+      let coverUrl = '';
+      if (coverFile) {
+        setProgress(0, 'Обработка обложки...');
+        const compressed = await compressImage(coverFile, 400, 0.75);
+        const blob = dataURLToBlob(compressed);
+        const coverName_ = `cover_${Date.now()}.jpg`;
 
-    setStatus('✅ Отправлено на проверку');
-    setTimeout(() => history.back(), 1500);
-  } catch (e) {
-    console.error(e);
-    setStatus('Ошибка: ' + e.message);
-    btn.disabled = false;
-  }
-};
+        setProgress(5, 'Загрузка обложки...');
+        const { uploadUrl: cUrl, key: cKey } = await getUploadUrl(coverName_, 'image/jpeg', 'covers');
+        await uploadToYandex(blob, cUrl, p => setProgress(5 + Math.round(p * 0.15), 'Загрузка обложки... ' + p + '%'));
+        coverUrl = BUCKET_HOST + '/' + cKey;
+      }
+
+      // 2. Аудио
+      setProgress(20, 'Получение ссылки для аудио...');
+      const audioName_ = `audio_${Date.now()}.${(audioFile.name.split('.').pop() || 'mp3').toLowerCase()}`;
+      const { uploadUrl: aUrl, key: aKey } = await getUploadUrl(audioName_, audioFile.type || 'audio/mpeg', 'audio');
+
+      setProgress(25, 'Загрузка аудио...');
+      await uploadToYandex(audioFile, aUrl, p => setProgress(25 + Math.round(p * 0.6), 'Загрузка аудио... ' + p + '%'));
+
+      const audioUrl = BUCKET_HOST + '/' + aKey;
+
+      // 3. Firestore
+      setProgress(90, 'Сохранение...');
+      await db.collection('tracks').add({
+        title,
+        artist,
+        cover: coverUrl,
+        audioUrl,
+        uploadedBy: who.uid,
+        uploaderName: who.username,
+        status: 'pending',
+        rejectionReason: '',
+        plays: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      setProgress(100, 'Готово!');
+      showStatus('success', '🎉 Трек отправлен на модерацию!');
+      submitBtn.textContent = '✓ Отправлено';
+      submitBtn.classList.remove('btn-gopo');
+      submitBtn.classList.add('bg-green-500', 'text-white');
+
+      setTimeout(() => {
+        history.back();
+      }, 2000);
+
+    } catch (err) {
+      console.error('Upload error:', err);
+      uploading = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Попробовать снова';
+      progressWrap.classList.add('hidden');
+      showStatus('error', '❌ ' + (err.message || 'Не удалось загрузить'));
+    }
+  });
+
+  /* ============ СТАРТ ============ */
+  loadUsers();
 </script>
 </body>
 </html>
