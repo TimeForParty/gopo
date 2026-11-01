@@ -62,85 +62,24 @@
         .mini-player { animation: slideUp .3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        /* ===== HALLOWEEN STYLES ===== */
-        .halloween-tint {
-            background-image:
-                radial-gradient(circle at 0% 0%, rgba(255,107,0,0.05) 0%, transparent 40%),
-                radial-gradient(circle at 100% 100%, rgba(124,58,237,0.05) 0%, transparent 40%);
-            background-attachment: fixed;
-        }
-        .gopo-logo-halloween::before {
-            content: '🎃';
-            position: absolute;
-            top: -10px; right: -14px;
-            font-size: 26px;
-            filter: drop-shadow(0 0 8px rgba(255,107,0,0.8));
-            animation: pumpkinGlow 2.5s ease-in-out infinite;
-            z-index: 10;
-        }
-        @keyframes pumpkinGlow {
-            0%, 100% { filter: drop-shadow(0 0 6px rgba(255,107,0,0.6)); transform: rotate(-6deg) scale(1); }
-            50% { filter: drop-shadow(0 0 16px rgba(255,107,0,1)); transform: rotate(6deg) scale(1.1); }
-        }
-        @keyframes flyBat {
-            0% { transform: translate(-80px, 0) rotate(-10deg); }
-            50% { transform: translate(50vw, -40px) rotate(10deg); }
-            100% { transform: translate(calc(100vw + 80px), 0) rotate(-10deg); }
-        }
-        .event-pill {
-            background: linear-gradient(90deg, #FF6B00 0%, #7C3AED 100%);
-            color: white; font-weight: 800;
-            padding: 7px 16px; border-radius: 999px;
-            display: inline-flex; align-items: center; gap: 6px;
-            font-size: 12px; text-align: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(255,107,0,0.4);
-            animation: eventPulse 2s ease-in-out infinite;
-        }
-        @keyframes eventPulse {
-            0%, 100% { box-shadow: 0 4px 15px rgba(255,107,0,0.4); }
-            50% { box-shadow: 0 4px 25px rgba(255,107,0,0.85); }
-        }
-        .clicker-pumpkin {
-            font-size: 200px; line-height: 1; cursor: pointer;
-            user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
-            filter: drop-shadow(0 0 40px rgba(255,107,0,0.6));
-            transition: transform 0.06s;
-            touch-action: manipulation;
-        }
+        .halloween-tint { background-image: radial-gradient(circle at 0% 0%, rgba(255,107,0,0.05) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(124,58,237,0.05) 0%, transparent 40%); background-attachment: fixed; }
+        .gopo-logo-halloween::before { content: '🎃'; position: absolute; top: -10px; right: -14px; font-size: 26px; filter: drop-shadow(0 0 8px rgba(255,107,0,0.8)); animation: pumpkinGlow 2.5s ease-in-out infinite; z-index: 10; }
+        @keyframes pumpkinGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(255,107,0,0.6)); transform: rotate(-6deg) scale(1); } 50% { filter: drop-shadow(0 0 16px rgba(255,107,0,1)); transform: rotate(6deg) scale(1.1); } }
+        @keyframes flyBat { 0% { transform: translate(-80px, 0) rotate(-10deg); } 50% { transform: translate(50vw, -40px) rotate(10deg); } 100% { transform: translate(calc(100vw + 80px), 0) rotate(-10deg); } }
+        .event-pill { background: linear-gradient(90deg, #FF6B00 0%, #7C3AED 100%); color: white; font-weight: 800; padding: 7px 16px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; text-align: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,107,0,0.4); animation: eventPulse 2s ease-in-out infinite; }
+        @keyframes eventPulse { 0%, 100% { box-shadow: 0 4px 15px rgba(255,107,0,0.4); } 50% { box-shadow: 0 4px 25px rgba(255,107,0,0.85); } }
+        .clicker-pumpkin { font-size: 200px; line-height: 1; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; filter: drop-shadow(0 0 40px rgba(255,107,0,0.6)); transition: transform 0.06s; touch-action: manipulation; }
         .clicker-pumpkin:active, .clicker-pumpkin.pulse { transform: scale(0.9); }
-        .float-candy {
-            position: fixed; pointer-events: none;
-            font-weight: 900; font-size: 22px;
-            color: #FFB800; text-shadow: 0 0 10px rgba(255,184,0,0.9);
-            transform: translate(-50%, 0);
-            animation: floatUp 1s ease-out forwards;
-            z-index: 100;
-        }
-        @keyframes floatUp {
-            0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
-            100% { transform: translate(-50%, -120px) scale(1.4); opacity: 0; }
-        }
+        .float-candy { position: fixed; pointer-events: none; font-weight: 900; font-size: 22px; color: #FFB800; text-shadow: 0 0 10px rgba(255,184,0,0.9); transform: translate(-50%, 0); animation: floatUp 1s ease-out forwards; z-index: 100; }
+        @keyframes floatUp { 0% { transform: translate(-50%, 0) scale(1); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(1.4); opacity: 0; } }
         .rarity-common { border-color: #94a3b8 !important; box-shadow: 0 0 10px rgba(148,163,184,0.3); }
         .rarity-rare { border-color: #3b82f6 !important; box-shadow: 0 0 12px rgba(59,130,246,0.4); }
         .rarity-epic { border-color: #a855f7 !important; box-shadow: 0 0 15px rgba(168,85,247,0.55); }
         .rarity-legendary { border-color: #f59e0b !important; box-shadow: 0 0 20px rgba(245,158,11,0.65); }
         .rarity-mythic { border-color: #ef4444 !important; box-shadow: 0 0 25px rgba(239,68,68,0.75); }
-        .post-halloween-style {
-            background: linear-gradient(135deg, #1a0a1f 0%, #2d1b3d 50%, #1a0a1f 100%) !important;
-            border-color: #FF6B00 !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .post-halloween-style::before {
-            content: '🎃';
-            position: absolute; top: 10px; right: 60px;
-            font-size: 22px; opacity: 0.8;
-            animation: pumpkinGlow 3s ease-in-out infinite;
-            pointer-events: none;
-        }
-        .post-halloween-style p,
-        .post-halloween-style span:not(.hashtag),
-        .post-halloween-style div:not(.hashtag) { color: #e8d8f0 !important; }
+        .post-halloween-style { background: linear-gradient(135deg, #1a0a1f 0%, #2d1b3d 50%, #1a0a1f 100%) !important; border-color: #FF6B00 !important; position: relative; overflow: hidden; }
+        .post-halloween-style::before { content: '🎃'; position: absolute; top: 10px; right: 60px; font-size: 22px; opacity: 0.8; animation: pumpkinGlow 3s ease-in-out infinite; pointer-events: none; }
+        .post-halloween-style p, .post-halloween-style span:not(.hashtag), .post-halloween-style div:not(.hashtag) { color: #e8d8f0 !important; }
         .post-halloween-style .hashtag { color: #FF6B00 !important; }
         .post-halloween-style img { border: 1px solid rgba(255,107,0,0.4); }
     </style>
@@ -160,7 +99,6 @@
         let auth, db;
         try { const app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e){ console.error(e); }
 
-        // ===== HALLOWEEN EVENT CONSTANTS =====
         const HALLOWEEN_END = new Date('2026-11-10T09:00:00Z').getTime();
         const SHOP_ITEMS = [
             { id: 'frame_orange', type: 'frame', name: 'Тыквенная рамка', emoji: '🎃', price: 50, rarity: 'common', color: '#FF8C00' },
@@ -285,9 +223,7 @@
         const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false, halloweenFrame }) => {
             const inner = src ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} /> : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
             const frameColor = halloweenFrame === 'frame_orange' ? '#FF8C00' : halloweenFrame === 'frame_purple' ? '#8B5CF6' : halloweenFrame === 'frame_green' ? '#22C55E' : halloweenFrame === 'frame_red' ? '#EF4444' : null;
-            const wrapped = frameColor
-                ? <div style={{ padding: 3, borderRadius: '50%', display: 'inline-block', background: `linear-gradient(135deg, ${frameColor}, #FFB800)`, boxShadow: `0 0 12px ${frameColor}80` }}>{inner}</div>
-                : inner;
+            const wrapped = frameColor ? <div style={{ padding: 3, borderRadius: '50%', display: 'inline-block', background: `linear-gradient(135deg, ${frameColor}, #FFB800)`, boxShadow: `0 0 12px ${frameColor}80` }}>{inner}</div> : inner;
             if (!showStatus) return <div className="flex-shrink-0">{wrapped}</div>;
             const dot = Math.max(10, Math.round(size*0.28));
             const extra = frameColor ? 6 : 0;
@@ -305,7 +241,6 @@
             </div>
         );
 
-        // ===== CLICKER TAB =====
         const ClickerTab = ({ user, profile }) => {
             const [candies, setCandies] = useState(profile.halloweenCandies || 0);
             const [view, setView] = useState('tap');
@@ -378,52 +313,29 @@
             const mins = Math.max(0, Math.floor((timeLeft % 3600000) / 60000));
 
             return (
-                <div className="fade-in rounded-3xl min-h-[calc(100vh-140px)] p-5 text-white relative overflow-hidden"
-                     style={{ background: 'linear-gradient(135deg, #1a0a1f 0%, #0f0714 50%, #1a0a1f 100%)' }}>
+                <div className="fade-in rounded-3xl min-h-[calc(100vh-140px)] p-5 text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a0a1f 0%, #0f0714 50%, #1a0a1f 100%)' }}>
                     <div className="absolute inset-0 pointer-events-none overflow-hidden">
                         <div className="absolute text-3xl opacity-25" style={{top:'8%', animation:'flyBat 20s linear infinite'}}>🦇</div>
                         <div className="absolute text-2xl opacity-20" style={{top:'55%', animation:'flyBat 26s linear infinite', animationDelay:'-7s'}}>🦇</div>
                     </div>
-
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <span className="text-2xl">🎃</span>
-                                <h1 className="text-2xl font-black">Ночь конфет</h1>
-                            </div>
-                            <div className="flex items-center gap-2 bg-black/50 rounded-full px-4 py-2 border border-orange-500/40">
-                                <span className="text-lg">🍬</span>
-                                <span className="font-black text-lg text-orange-300">{candies}</span>
-                            </div>
+                            <div className="flex items-center gap-2"><span className="text-2xl">🎃</span><h1 className="text-2xl font-black">Ночь конфет</h1></div>
+                            <div className="flex items-center gap-2 bg-black/50 rounded-full px-4 py-2 border border-orange-500/40"><span className="text-lg">🍬</span><span className="font-black text-lg text-orange-300">{candies}</span></div>
                         </div>
-
-                        {isActive ? (
-                            <div className="event-pill mb-4">⏰ До конца ивента: {days}д {hours}ч {mins}м</div>
-                        ) : (
-                            <div className="bg-red-500/20 border border-red-500/40 rounded-full px-4 py-2 text-sm font-bold mb-4 text-red-300 text-center">
-                                🎃 Ивент завершён
-                            </div>
-                        )}
-
+                        {isActive ? <div className="event-pill mb-4">⏰ До конца ивента: {days}д {hours}ч {mins}м</div> : <div className="bg-red-500/20 border border-red-500/40 rounded-full px-4 py-2 text-sm font-bold mb-4 text-red-300 text-center">🎃 Ивент завершён</div>}
                         <div className="flex gap-1 mb-4 bg-black/50 rounded-2xl p-1 border border-white/10">
                             <button onClick={() => setView('tap')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='tap'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🔨 Тапалка</button>
                             <button onClick={() => setView('shop')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='shop'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🛒 Магазин</button>
                             <button onClick={() => setView('inv')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='inv'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🎒 Инв. ({owned.length})</button>
                         </div>
-
                         {view === 'tap' && (
                             <div className="flex flex-col items-center justify-center py-6">
                                 <div onClick={tap} onTouchStart={tap} className={`clicker-pumpkin ${pulse ? 'pulse' : ''} ${!isActive ? 'opacity-40 cursor-not-allowed' : ''}`}>🎃</div>
-                                <p className="text-center text-sm text-slate-400 mt-6 font-bold px-4">
-                                    {isActive ? 'Тапай по тыкве, чтобы получать конфеты 🍬' : 'Ивент закончился — тыква спит'}
-                                </p>
-                                <div className="mt-6 text-center">
-                                    <div className="text-5xl font-black text-orange-300">{candies}</div>
-                                    <div className="text-xs text-slate-400 font-bold mt-1">🍬 конфет</div>
-                                </div>
+                                <p className="text-center text-sm text-slate-400 mt-6 font-bold px-4">{isActive ? 'Тапай по тыкве, чтобы получать конфеты 🍬' : 'Ивент закончился — тыква спит'}</p>
+                                <div className="mt-6 text-center"><div className="text-5xl font-black text-orange-300">{candies}</div><div className="text-xs text-slate-400 font-bold mt-1">🍬 конфет</div></div>
                             </div>
                         )}
-
                         {view === 'shop' && (
                             <div className="space-y-2">
                                 {SHOP_ITEMS.map(item => {
@@ -438,23 +350,17 @@
                                             </div>
                                             <div className="flex flex-col items-end gap-1">
                                                 <div className={`text-xs font-bold ${canAfford ? 'text-orange-300' : 'text-slate-500'}`}>🍬 {item.price}</div>
-                                                {has ? <span className="text-[10px] font-black text-green-400">✓ Куплено</span>
-                                                    : <button onClick={() => buy(item)} disabled={!canAfford || !isActive} className="bg-gradient-to-r from-orange-500 to-purple-600 text-white text-xs font-black px-3 py-1.5 rounded-lg disabled:opacity-40">Купить</button>}
+                                                {has ? <span className="text-[10px] font-black text-green-400">✓ Куплено</span> : <button onClick={() => buy(item)} disabled={!canAfford || !isActive} className="bg-gradient-to-r from-orange-500 to-purple-600 text-white text-xs font-black px-3 py-1.5 rounded-lg disabled:opacity-40">Купить</button>}
                                             </div>
                                         </div>
                                     );
                                 })}
                             </div>
                         )}
-
                         {view === 'inv' && (
                             <div>
                                 {owned.length === 0 ? (
-                                    <div className="text-center py-16 text-slate-400">
-                                        <div className="text-6xl mb-3">🎒</div>
-                                        <p className="font-bold">Инвентарь пуст</p>
-                                        <p className="text-xs mt-1">Заработай конфеты и купи что-нибудь</p>
-                                    </div>
+                                    <div className="text-center py-16 text-slate-400"><div className="text-6xl mb-3">🎒</div><p className="font-bold">Инвентарь пуст</p><p className="text-xs mt-1">Заработай конфеты и купи что-нибудь</p></div>
                                 ) : (
                                     <div className="space-y-2">
                                         {SHOP_ITEMS.filter(i => owned.includes(i.id)).map(item => {
@@ -462,10 +368,7 @@
                                             return (
                                                 <div key={item.id} className={`bg-black/50 rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
                                                     <div className="text-3xl">{item.emoji}</div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-black text-sm">{item.name}</div>
-                                                        <div className="text-[10px] text-slate-400 font-bold">{isEq ? '✓ Надето' : 'Не надето'}</div>
-                                                    </div>
+                                                    <div className="flex-1 min-w-0"><div className="font-black text-sm">{item.name}</div><div className="text-[10px] text-slate-400 font-bold">{isEq ? '✓ Надето' : 'Не надето'}</div></div>
                                                     <button onClick={() => equip(item)} className={`text-xs font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-700 text-white' : 'bg-gradient-to-r from-orange-500 to-purple-600 text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
                                                 </div>
                                             );
@@ -475,13 +378,11 @@
                             </div>
                         )}
                     </div>
-
                     {floats.map(f => <div key={f.id} className="float-candy" style={{ left: f.x, top: f.y }}>+1 🍬</div>)}
                 </div>
             );
         };
 
-        // ===== APP =====
         function App() {
             const [splashDone, setSplashDone] = useState(false);
             const [user, setUser] = useState(null);
@@ -582,9 +483,7 @@
                         <div className="max-w-2xl mx-auto">
                             <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
                             {eventActive && activeTab !== 'clicker' && (
-                                <button onClick={()=>setActiveTab('clicker')} className="event-pill mb-3 w-full">
-                                    🎃 Хэллоуин-ивент · Кликай и получай конфеты · до 10.11.26 12:00 МСК
-                                </button>
+                                <button onClick={()=>setActiveTab('clicker')} className="event-pill mb-3 w-full">🎃 Хэллоуин-ивент · Кликай и получай конфеты · до 10.11.26 12:00 МСК</button>
                             )}
                             {activeTab==='feed' && <FeedTab user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
                             {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
@@ -601,27 +500,15 @@
                     {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user} currentProfile={profile} onClose={()=>setViewingProfile(null)} />}
                     {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile} usersMap={usersMap} isAdmin={isAdmin} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} />}
                     {showNotifications && <NotificationsModal user={user} onClose={()=>setShowNotifications(false)} onUserClick={(u)=>{setShowNotifications(false); setViewingProfile(u);}} />}
-                    <audio ref={playerAudioRef} src={playerTrack?.audioUrl}
-                        onPlay={()=>setPlayerPlaying(true)} onPause={()=>setPlayerPlaying(false)}
-                        onTimeUpdate={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerProgress((a.currentTime/a.duration)*100); }}
-                        onLoadedMetadata={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerDuration(a.duration); }}
-                        onEnded={()=>{ nextTrack(); }}
-                    />
+                    <audio ref={playerAudioRef} src={playerTrack?.audioUrl} onPlay={()=>setPlayerPlaying(true)} onPause={()=>setPlayerPlaying(false)} onTimeUpdate={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerProgress((a.currentTime/a.duration)*100); }} onLoadedMetadata={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerDuration(a.duration); }} onEnded={()=>{ nextTrack(); }} />
                     {playerTrack && (
                         <div className="fixed bottom-20 left-3 right-3 md:left-auto md:right-6 md:bottom-6 md:w-96 z-[45] mini-player">
                             <div className="liquid-glass rounded-2xl p-3 shadow-2xl">
                                 <div className="flex items-center space-x-3">
-                                    {playerTrack.cover
-                                        ? <img src={playerTrack.cover} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                                        : <div className="w-12 h-12 rounded-lg bg-gopo flex items-center justify-center text-white flex-shrink-0"><I.Music/></div>}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-black text-sm truncate">{playerTrack.title}</p>
-                                        <p className="text-xs text-slate-500 truncate">{playerTrack.artist}</p>
-                                    </div>
+                                    {playerTrack.cover ? <img src={playerTrack.cover} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" /> : <div className="w-12 h-12 rounded-lg bg-gopo flex items-center justify-center text-white flex-shrink-0"><I.Music/></div>}
+                                    <div className="flex-1 min-w-0"><p className="font-black text-sm truncate">{playerTrack.title}</p><p className="text-xs text-slate-500 truncate">{playerTrack.artist}</p></div>
                                     <button onClick={prevTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Prev/></button>
-                                    <button onClick={()=>setPlayerPlaying(p=>!p)} className="p-2.5 bg-gopo text-white rounded-full shadow-md">
-                                        {playerPlaying ? <I.Pause size={18}/> : <I.Play size={18}/>}
-                                    </button>
+                                    <button onClick={()=>setPlayerPlaying(p=>!p)} className="p-2.5 bg-gopo text-white rounded-full shadow-md">{playerPlaying ? <I.Pause size={18}/> : <I.Play size={18}/>}</button>
                                     <button onClick={nextTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Next/></button>
                                     <button onClick={()=>{setPlayerPlaying(false); setPlayerTrack(null);}} className="p-2 text-slate-400 hover:text-red-500"><I.X/></button>
                                 </div>
@@ -785,14 +672,7 @@
         };
 
         const NotifItem = ({ notif, onClick }) => {
-            const typeText = {
-                resonance:'резонировал(а) с вашим пузырём',
-                comment:'прокомментировал(а) ваш пузырь',
-                follow:'подписался(-ась) на вас',
-                message:'написал(а) вам сообщение',
-                music_approved:'— ваш трек одобрен и опубликован',
-                music_rejected:'— ваш трек отклонён'
-            };
+            const typeText = { resonance:'резонировал(а) с вашим пузырём', comment:'прокомментировал(а) ваш пузырь', follow:'подписался(-ась) на вас', message:'написал(а) вам сообщение', music_approved:'— ваш трек одобрен и опубликован', music_rejected:'— ваш трек отклонён' };
             return (
                 <div onClick={onClick} className={`flex items-start space-x-3 p-3 rounded-2xl cursor-pointer transition ${notif.read?'hover:bg-slate-50':'bg-pink-50/60 hover:bg-pink-100/60'}`}>
                     <Avatar src={notif.senderAvatar} name={notif.senderName} size={40} />
@@ -1004,9 +884,7 @@
                             <div className="flex items-center space-x-1.5 flex-wrap">
                                 <button className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasResonated?'bg-white/80 shadow-sm':'hover:bg-white/40'}`}><I.Sparkles className={hasResonated?'text-gopo':'opacity-60'} /><span>{resonances.length > 0 ? resonances.length : 'Резонанс'}</span></button>
                                 <button onClick={()=>blowPost(post)} className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasBlown?'bg-blue-100 text-blue-700':'hover:bg-white/40 opacity-70'}`} title="Сдуть"><I.Wind /><span>{blows.length > 0 ? blows.length : ''}</span></button>
-                                <button onClick={()=>onCommentClick(post)} className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold hover:bg-white/40 transition">
-                                    <I.Comment /><span>{commentsCount}</span>
-                                </button>
+                                <button onClick={()=>onCommentClick(post)} className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold hover:bg-white/40 transition"><I.Comment /><span>{commentsCount}</span></button>
                             </div>
                             <span className="text-[10px] opacity-40 font-bold hidden sm:block">Зажми 1 сек</span>
                         </div>
@@ -2048,65 +1926,55 @@
                 setCoverPreview(await compressImage(f, 400, 0.7));
             };
 
-            const getAuth = async () => {
-                const r = await fetch('https://gopo-web.vercel.app/api/imagekit-auth');
-                if (!r.ok) throw new Error('Не удалось получить подпись ImageKit');
-                return r.json();
+            const getUploadUrl = async (fileName, fileType, folder) => {
+                const res = await fetch('https://gopo-web.vercel.app/api/yandex-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName, fileType, folder }),
+                });
+                if (!res.ok) throw new Error('Не удалось получить ссылку для загрузки');
+                return res.json();
             };
 
-            const uploadFile = async (file, fileName, folder, auth, onProgress) => {
-                const form = new FormData();
-                form.append('file', file);
-                form.append('fileName', fileName);
-                form.append('folder', folder);
-                form.append('publicKey', auth.publicKey);
-                form.append('token', auth.token);
-                form.append('expire', String(auth.expire));
-                form.append('signature', auth.signature);
-                form.append('useUniqueFilename', 'true');
+            const uploadFileDirect = async (file, uploadUrl, onProgress) => {
                 return new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
-                    xhr.open('POST', 'https://upload.imagekit.io/api/v1/files/upload');
-                    xhr.timeout = 30000;
+                    xhr.open('PUT', uploadUrl);
                     xhr.upload.onprogress = (e) => {
                         if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
                     };
                     xhr.onload = () => {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try { resolve(JSON.parse(xhr.responseText)); }
-                            catch { reject(new Error('Некорректный ответ ImageKit')); }
-                        } else {
-                            let msg = 'Upload failed (HTTP ' + xhr.status + ')';
-                            try { const j = JSON.parse(xhr.responseText); msg = j.message || (j.error && j.error.message) || msg; } catch {}
-                            reject(new Error(msg));
-                        }
+                        if (xhr.status >= 200 && xhr.status < 300) resolve();
+                        else reject(new Error(`Ошибка загрузки: ${xhr.status}`));
                     };
                     xhr.onerror = () => reject(new Error('Network error'));
-                    xhr.ontimeout = () => reject(new Error('Таймаут загрузки'));
-                    xhr.send(form);
+                    xhr.setRequestHeader('Content-Type', file.type);
+                    xhr.send(file);
                 });
             };
 
             const submit = async () => {
                 if (!audioFile || !title.trim()) { alert('Введите название и загрузите аудио'); return; }
-                if (audioFile.size > 25 * 1024 * 1024) { alert('Файл больше 25 МБ. ImageKit не пропустит на бесплатном плане.'); return; }
+                if (audioFile.size > 50 * 1024 * 1024) { alert('Файл больше 50 МБ. Object Storage не пропустит.'); return; }
                 setUploading(true);
-                setProgress('Получаем подпись...');
+                setProgress('Подготовка...');
                 try {
-                    const auth = await getAuth();
                     let coverUrl = '';
                     if (coverFile) {
                         setProgress('Загружаем обложку...');
-                        const coverRes = await uploadFile(coverFile, `cover_${Date.now()}_${coverFile.name}`, '/music/covers', auth);
-                        coverUrl = coverRes.url;
+                        const { uploadUrl, key } = await getUploadUrl(coverFile.name, coverFile.type, 'covers');
+                        await uploadFileDirect(coverFile, uploadUrl);
+                        coverUrl = `https://gopo-music.storage.yandexcloud.net/${key}`;
                     }
                     setProgress('Загружаем аудио...');
-                    const audioRes = await uploadFile(audioFile, `audio_${Date.now()}_${audioFile.name}`, '/music/audio', auth, (p) => setProgress(`Аудио: ${p}%`));
+                    const { uploadUrl: audioUploadUrl, key: audioKey } = await getUploadUrl(audioFile.name, audioFile.type, 'audio');
+                    await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`));
+                    const audioUrl = `https://gopo-music.storage.yandexcloud.net/${audioKey}`;
                     await db.collection('tracks').add({
                         title: title.trim(),
                         artist: artist.trim() || 'Неизвестен',
                         cover: coverUrl,
-                        audioUrl: audioRes.url,
+                        audioUrl,
                         uploadedBy: user.uid,
                         uploaderName: profile.username,
                         status: 'pending',
@@ -2116,7 +1984,7 @@
                     });
                     onClose();
                 } catch (e) {
-                    console.error('ImageKit upload error:', e);
+                    console.error('Upload error:', e);
                     alert('Ошибка загрузки: ' + e.message);
                 }
                 setUploading(false);
@@ -2140,7 +2008,7 @@
                         <input value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Название трека" />
                         <label className="text-xs font-bold text-slate-600 ml-1">Исполнитель</label>
                         <input value={artist} onChange={e=>setArtist(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Исполнитель" />
-                        <label className="text-xs font-bold text-slate-600 ml-1">Аудиофайл (до 25 МБ)</label>
+                        <label className="text-xs font-bold text-slate-600 ml-1">Аудиофайл (до 50 МБ)</label>
                         <div onClick={()=>audioRef.current.click()} className="w-full p-3 bg-slate-50 rounded-xl cursor-pointer mb-4 text-sm font-bold text-slate-600 hover:bg-slate-100">
                             {audioFile ? `✓ ${audioFile.name}` : 'Выбрать MP3 / M4A / OGG'}
                         </div>
