@@ -6,10 +6,10 @@
     <title>GoPo 🎃</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
     <meta name="theme-color" content="#FF0055">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -82,6 +82,13 @@
         .post-halloween-style p, .post-halloween-style span:not(.hashtag), .post-halloween-style div:not(.hashtag) { color: #e8d8f0 !important; }
         .post-halloween-style .hashtag { color: #FF6B00 !important; }
         .post-halloween-style img { border: 1px solid rgba(255,107,0,0.4); }
+        .post-cursed-style { background: linear-gradient(135deg, #2d0505 0%, #4a0a0a 50%, #2d0505 100%) !important; border-color: #DC2626 !important; position: relative; overflow: hidden; animation: cursedPulse 4s ease-in-out infinite; }
+        .post-cursed-style::before { content: '💀'; position: absolute; top: 10px; right: 60px; font-size: 24px; opacity: 0.85; animation: skullFloat 3s ease-in-out infinite; pointer-events: none; }
+        .post-cursed-style p, .post-cursed-style span:not(.hashtag), .post-cursed-style div:not(.hashtag) { color: #ffe0e0 !important; }
+        .post-cursed-style .hashtag { color: #DC2626 !important; }
+        .post-cursed-style img { border: 1px solid rgba(220,38,38,0.5); }
+        @keyframes cursedPulse { 0%,100% { box-shadow: 0 0 0 rgba(220,38,38,0.2); } 50% { box-shadow: 0 0 20px rgba(220,38,38,0.5); } }
+        @keyframes skullFloat { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-5px) rotate(5deg); } }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -101,18 +108,35 @@
 
         const HALLOWEEN_END = new Date('2026-11-10T09:00:00Z').getTime();
         const SHOP_ITEMS = [
-            { id: 'frame_orange', type: 'frame', name: 'Тыквенная рамка', emoji: '🎃', price: 50, rarity: 'common', color: '#FF8C00' },
-            { id: 'frame_purple', type: 'frame', name: 'Ведьминская рамка', emoji: '🔮', price: 150, rarity: 'rare', color: '#8B5CF6' },
-            { id: 'frame_green', type: 'frame', name: 'Ядовитая рамка', emoji: '🧪', price: 300, rarity: 'epic', color: '#22C55E' },
-            { id: 'frame_red', type: 'frame', name: 'Кровавая рамка', emoji: '🩸', price: 500, rarity: 'legendary', color: '#EF4444' },
-            { id: 'badge_orange', type: 'badge', name: 'Тыква', emoji: '🎃', price: 30, rarity: 'common' },
-            { id: 'badge_purple', type: 'badge', name: 'Дух', emoji: '👻', price: 100, rarity: 'rare' },
-            { id: 'badge_green', type: 'badge', name: 'Упырь', emoji: '🧟', price: 250, rarity: 'epic' },
-            { id: 'badge_red', type: 'badge', name: 'Демон', emoji: '😈', price: 400, rarity: 'legendary' },
+            { id: 'frame_orange', type: 'frame', name: 'Тыквенная рамка', emoji: '🎃', price: 75, rarity: 'common', color: '#FF8C00' },
+            { id: 'frame_purple', type: 'frame', name: 'Ведьминская рамка', emoji: '🔮', price: 225, rarity: 'rare', color: '#8B5CF6' },
+            { id: 'frame_green', type: 'frame', name: 'Ядовитая рамка', emoji: '🧪', price: 450, rarity: 'epic', color: '#22C55E' },
+            { id: 'frame_red', type: 'frame', name: 'Кровавая рамка', emoji: '🩸', price: 750, rarity: 'legendary', color: '#EF4444' },
+            { id: 'badge_orange', type: 'badge', name: 'Тыква', emoji: '🎃', price: 45, rarity: 'common' },
+            { id: 'badge_purple', type: 'badge', name: 'Дух', emoji: '👻', price: 150, rarity: 'rare' },
+            { id: 'badge_green', type: 'badge', name: 'Упырь', emoji: '🧟', price: 375, rarity: 'epic' },
+            { id: 'badge_red', type: 'badge', name: 'Демон', emoji: '😈', price: 600, rarity: 'legendary' },
             { id: 'post_halloween', type: 'post', name: 'Хэллоуин-посты', emoji: '🕸️', price: 1000, rarity: 'mythic' },
+            // 🆕 ДОРОГАЯ КОСМЕТИКА
+            { id: 'badge_bat', type: 'badge', name: 'Летучая мышь', emoji: '🦇', price: 280, rarity: 'common' },
+            { id: 'badge_skull', type: 'badge', name: 'Светящийся череп', emoji: '💀', price: 900, rarity: 'legendary' },
+            { id: 'badge_crown', type: 'badge', name: 'Корона тьмы', emoji: '👑', price: 1500, rarity: 'mythic' },
+            { id: 'frame_spider', type: 'frame', name: 'Паутинная рамка', emoji: '🕸️', price: 1100, rarity: 'epic', color: '#475569' },
+            { id: 'frame_cauldron', type: 'frame', name: 'Рамка-котёл', emoji: '🧙', price: 1600, rarity: 'legendary', color: '#84CC16' },
+            { id: 'frame_ghost', type: 'frame', name: 'Призрачная рамка', emoji: '👻', price: 2200, rarity: 'mythic', color: '#B8C2FF' },
+            { id: 'post_cursed', type: 'post', name: 'Проклятый стиль', emoji: '🔮', price: 2500, rarity: 'mythic' },
         ];
         const RARITY_LABEL = { common: 'Обычный', rare: 'Редкий', epic: 'Эпический', legendary: 'Легендарный', mythic: 'Мифический' };
         const getItemById = (id) => SHOP_ITEMS.find(i => i.id === id);
+        const FRAME_COLORS = {
+            frame_orange: '#FF8C00', frame_purple: '#8B5CF6', frame_green: '#22C55E', frame_red: '#EF4444',
+            frame_spider: '#475569', frame_cauldron: '#84CC16', frame_ghost: '#B8C2FF',
+        };
+        const getPostStyleClass = (field) => {
+            if (field === 'post_cursed') return 'post-cursed-style';
+            if (field === 'post_halloween' || field === true) return 'post-halloween-style';
+            return '';
+        };
 
         const MOODS = {
             neutral:{emoji:'💬',name:'Обычный',bg:'bg-white',border:'border-slate-200',text:'text-slate-800',anim:''},
@@ -222,7 +246,7 @@
 
         const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false, halloweenFrame }) => {
             const inner = src ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} /> : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
-            const frameColor = halloweenFrame === 'frame_orange' ? '#FF8C00' : halloweenFrame === 'frame_purple' ? '#8B5CF6' : halloweenFrame === 'frame_green' ? '#22C55E' : halloweenFrame === 'frame_red' ? '#EF4444' : null;
+            const frameColor = halloweenFrame ? (FRAME_COLORS[halloweenFrame] || null) : null;
             const wrapped = frameColor ? <div style={{ padding: 3, borderRadius: '50%', display: 'inline-block', background: `linear-gradient(135deg, ${frameColor}, #FFB800)`, boxShadow: `0 0 12px ${frameColor}80` }}>{inner}</div> : inner;
             if (!showStatus) return <div className="flex-shrink-0">{wrapped}</div>;
             const dot = Math.max(10, Math.round(size*0.28));
@@ -257,7 +281,8 @@
             const owned = profile.halloweenOwned || [];
             const activeFrame = profile.halloweenFrameId || null;
             const activeBadge = profile.halloweenBadgeId || null;
-            const activePost = !!profile.halloweenPostStyle;
+            const activePostRaw = profile.halloweenPostStyle;
+            const isPostActive = (id) => activePostRaw === id || (activePostRaw === true && id === 'post_halloween');
 
             const flush = () => {
                 if (saveTimerRef.current) { clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
@@ -303,7 +328,7 @@
                 const updates = {};
                 if (item.type === 'frame') updates.halloweenFrameId = activeFrame === item.id ? null : item.id;
                 if (item.type === 'badge') updates.halloweenBadgeId = activeBadge === item.id ? null : item.id;
-                if (item.type === 'post') updates.halloweenPostStyle = !activePost;
+                if (item.type === 'post') updates.halloweenPostStyle = isPostActive(item.id) ? null : item.id;
                 try { await db.collection('users').doc(user.uid).update(updates); } catch (e) { alert(e.message); }
             };
 
@@ -364,7 +389,7 @@
                                 ) : (
                                     <div className="space-y-2">
                                         {SHOP_ITEMS.filter(i => owned.includes(i.id)).map(item => {
-                                            const isEq = (item.type === 'frame' && activeFrame === item.id) || (item.type === 'badge' && activeBadge === item.id) || (item.type === 'post' && activePost);
+                                            const isEq = (item.type === 'frame' && activeFrame === item.id) || (item.type === 'badge' && activeBadge === item.id) || (item.type === 'post' && isPostActive(item.id));
                                             return (
                                                 <div key={item.id} className={`bg-black/50 rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
                                                     <div className="text-3xl">{item.emoji}</div>
@@ -382,7 +407,7 @@
                 </div>
             );
         };
-
+        
         function App() {
             const [splashDone, setSplashDone] = useState(false);
             const [user, setUser] = useState(null);
@@ -443,7 +468,7 @@
                 const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
                     if (doc.exists) { setProfile(doc.data()); setLoading(false); }
                     else if (user.displayName) {
-                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === 'hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === 'hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
                         await db.collection('users').doc(user.uid).set(np);
                         setProfile(np); setLoading(false);
                     }
@@ -541,7 +566,7 @@
                         if (!dup.empty) { setError('Этот никнейм уже занят'); setLoading(false); return; }
                         const cred = await auth.createUserWithEmailAndPassword(email, password);
                         await cred.user.updateProfile({ displayName: name });
-                        await db.collection('users').doc(cred.user.uid).set({ uid:cred.user.uid, email, username: uname, displayName: name, avatar:null, banner:'', bio:'', isVerified: email==='hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                        await db.collection('users').doc(cred.user.uid).set({ uid:cred.user.uid, email, username: uname, displayName: name, avatar:null, banner:'', bio:'', isVerified: email==='hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     }
                 } catch(err) {
                     const m = {'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль','auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)','auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные'};
@@ -852,10 +877,10 @@
                 const hasResonated = resonances.includes(user.uid); const hasBlown = blows.includes(user.uid);
                 const isHolding = holdingState.postId === post.id; const isPulsing = pulsingPost === post.id; const blown = isBlown(post);
                 const commentsCount = post.commentsCount || 0;
-                const authorPostStyle = author?.halloweenPostStyle;
+                const authorPostStyle = getPostStyleClass(author?.halloweenPostStyle);
                 return (
                     <article key={post.id}
-                        className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''} ${authorPostStyle?'post-halloween-style':''}`}
+                        className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''} ${authorPostStyle}`}
                         onMouseDown={e=>startHold(e, post.id)} onMouseUp={endHold} onMouseLeave={endHold} onTouchStart={e=>startHold(e, post.id)} onTouchMove={moveHold} onTouchEnd={endHold} onTouchCancel={endHold}>
                         {isHolding && <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none" style={{background:`conic-gradient(#FF0055 ${holdingState.progress}%, transparent 0)`,mask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',WebkitMask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',maskComposite:'exclude',WebkitMaskComposite:'xor',padding:'4px'}} />}
                         <div className="absolute top-4 right-4 flex flex-col items-center space-y-2 z-10">
@@ -953,8 +978,8 @@
                     {tab === 'posts' && (
                         <div className="space-y-4">
                             {filteredPosts.length === 0 && <p className="p-8 text-center text-slate-400 font-bold bg-white rounded-3xl">Постов не нашли</p>}
-                            {filteredPosts.map(post => { const author = usersMap[post.authorId] || {}; const mood = MOODS[post.mood] || MOODS.neutral; return (
-                                <div key={post.id} onClick={()=>onCommentClick(post)} className={`rounded-[2rem] p-4 border-2 cursor-pointer ${mood.bg} ${mood.border} ${author.halloweenPostStyle?'post-halloween-style':''}`}>
+                            {filteredPosts.map(post => { const author = usersMap[post.authorId] || {}; const mood = MOODS[post.mood] || MOODS.neutral; const ps = getPostStyleClass(author.halloweenPostStyle); return (
+                                <div key={post.id} onClick={()=>onCommentClick(post)} className={`rounded-[2rem] p-4 border-2 cursor-pointer ${mood.bg} ${mood.border} ${ps}`}>
                                     <div className="flex items-center mb-2">
                                         <Avatar src={author.avatar} name={author.username} size={32} />
                                         <div className="ml-2 flex-1 min-w-0"><span className={`font-bold text-xs ${mood.text}`}>@{author.username}</span><p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p></div>
@@ -1008,6 +1033,7 @@
 
             const mood = MOODS[post.mood] || MOODS.neutral;
             const author = usersMap[post.authorId];
+            const ps = getPostStyleClass(author?.halloweenPostStyle);
 
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
@@ -1016,7 +1042,7 @@
                             <h2 className="text-lg font-black">Комментарии ({comments.length})</h2>
                             <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><I.X/></button>
                         </div>
-                        <div className={`p-4 border-b ${mood.bg} ${mood.text} ${author?.halloweenPostStyle?'post-halloween-style':''}`}>
+                        <div className={`p-4 border-b ${mood.bg} ${mood.text} ${ps}`}>
                             <div className="flex items-center space-x-2 mb-1"><Avatar src={author?.avatar} name={author?.username} size={24} /><span className="font-bold text-xs">@{author?.username || 'unknown'}</span></div>
                             <p className="text-sm line-clamp-2">{renderTextWithHashtags(post.text, onHashtagClick)}</p>
                         </div>
@@ -1462,6 +1488,7 @@
                 setSaving(false);
             };
             const badge = profile.halloweenBadgeId ? getItemById(profile.halloweenBadgeId) : null;
+            const ps = getPostStyleClass(profile.halloweenPostStyle);
             return (
                 <div className="fade-in max-w-xl mx-auto">
                     <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm mb-6">
@@ -1498,7 +1525,7 @@
                         {userPosts.map(post => {
                             const mood = MOODS[post.mood] || MOODS.neutral;
                             return (
-                                <div key={post.id} className={`relative rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border} ${profile.halloweenPostStyle?'post-halloween-style':''}`}>
+                                <div key={post.id} className={`relative rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border} ${ps}`}>
                                     <button onClick={()=>deletePost(post.id)} className="absolute top-3 right-3 p-2 rounded-full bg-white/70 text-slate-400 hover:text-red-500 backdrop-blur-sm shadow-sm z-10"><I.Trash/></button>
                                     <div className="flex items-center justify-between mb-2 pr-10">
                                         <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
@@ -1570,6 +1597,7 @@
                 }
             };
             const badge = liveUser?.halloweenBadgeId ? getItemById(liveUser.halloweenBadgeId) : null;
+            const ps = getPostStyleClass(liveUser?.halloweenPostStyle);
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto relative fade-in">
@@ -1609,7 +1637,7 @@
                             {targetPosts.map(post => {
                                 const mood = MOODS[post.mood] || MOODS.neutral;
                                 return (
-                                    <div key={post.id} className={`rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border} ${liveUser.halloweenPostStyle?'post-halloween-style':''}`}>
+                                    <div key={post.id} className={`rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border} ${ps}`}>
                                         <div className="flex justify-between items-center mb-2">
                                             <p className={`text-xs opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
                                             <span className="text-xl">{mood.emoji}</span>
@@ -1851,11 +1879,11 @@
             };
             return (
                 <div className="fade-in">
-                                        <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2"><I.Music/><h1 className="text-2xl font-black">Музыка</h1></div>
                         <button onClick={()=>setShowUpload(true)} className="bg-gopo text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center space-x-2">
-    <I.Upload/><span className="hidden sm:inline">Загрузить</span>
-</button>
+                            <I.Upload/><span className="hidden sm:inline">Загрузить</span>
+                        </button>
                     </div>
                     <div className="relative mb-4">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><I.Search/></div>
@@ -1907,120 +1935,134 @@
                 </div>
             );
         };
+
         const UploadTrackModal = ({ user, profile, onClose }) => {
-    const [title, setTitle] = useState('');
-    const [artist, setArtist] = useState('');
-    const [audioFile, setAudioFile] = useState(null);
-    const [coverFile, setCoverFile] = useState(null);
-    const [coverPreview, setCoverPreview] = useState(null);
-    const [uploading, setUploading] = useState(false);
-    const [progress, setProgress] = useState('');
-    const audioRef = useRef(null);
-    const coverRef = useRef(null);
+            const [title, setTitle] = useState('');
+            const [artist, setArtist] = useState('');
+            const [audioFile, setAudioFile] = useState(null);
+            const [coverFile, setCoverFile] = useState(null);
+            const [coverPreview, setCoverPreview] = useState(null);
+            const [uploading, setUploading] = useState(false);
+            const [progress, setProgress] = useState('');
+            const audioRef = useRef(null);
+            const coverRef = useRef(null);
 
-    const pickCover = async (e) => {
-        const f = e.target.files[0];
-        if (!f) return;
-        setCoverFile(f);
-        setCoverPreview(await compressImage(f, 400, 0.7));
-    };
-
-    const getUploadUrl = async (fileName, fileType, folder) => {
-        const res = await fetch('https://gopo-web.vercel.app/api/yandex-auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName, fileType, folder }),
-        });
-        if (!res.ok) throw new Error('Не удалось получить ссылку для загрузки');
-        return res.json();
-    };
-
-    const uploadFileDirect = async (file, uploadUrl, onProgress) => {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('PUT', uploadUrl);
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+            const pickCover = async (e) => {
+                const f = e.target.files[0];
+                if (!f) return;
+                setCoverFile(f);
+                setCoverPreview(await compressImage(f, 400, 0.7));
             };
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) resolve();
-                else reject(new Error(`Ошибка загрузки: ${xhr.status}`));
+
+            const getUploadUrl = async (fileName, fileType, folder) => {
+                const res = await fetch('https://gopo-web.vercel.app/api/yandex-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName, fileType, folder }),
+                });
+                if (!res.ok) throw new Error('Не удалось получить ссылку для загрузки');
+                return res.json();
             };
-            xhr.onerror = () => reject(new Error('Network error'));
-            xhr.setRequestHeader('Content-Type', file.type);
-            xhr.send(file);
-        });
-    };
 
-    const submit = async () => {
-        if (!audioFile || !title.trim()) { alert('Введите название и загрузите аудио'); return; }
-        if (audioFile.size > 50 * 1024 * 1024) { alert('Файл больше 50 МБ'); return; }
-        setUploading(true);
-        setProgress('Подготовка...');
-        try {
-            let coverUrl = '';
-            if (coverFile) {
-                setProgress('Загружаем обложку...');
-                const { uploadUrl, key } = await getUploadUrl(coverFile.name, coverFile.type, 'covers');
-                await uploadFileDirect(coverFile, uploadUrl);
-                coverUrl = `https://gopo-music.storage.yandexcloud.net/${key}`;
-            }
-            setProgress('Загружаем аудио...');
-            const { uploadUrl: audioUploadUrl, key: audioKey } = await getUploadUrl(audioFile.name, audioFile.type, 'audio');
-            await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`));
-            const audioUrl = `https://gopo-music.storage.yandexcloud.net/${audioKey}`;
-            await db.collection('tracks').add({
-                title: title.trim(),
-                artist: artist.trim() || 'Неизвестен',
-                cover: coverUrl,
-                audioUrl,
-                uploadedBy: user.uid,
-                uploaderName: profile.username,
-                status: 'pending',
-                rejectionReason: '',
-                plays: 0,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            onClose();
-        } catch (e) {
-            console.error('Upload error:', e);
-            alert('Ошибка загрузки: ' + e.message);
-        }
-        setUploading(false);
-        setProgress('');
-    };
+            const uploadFileDirect = async (file, uploadUrl, onProgress) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                        try {
+                            const base64 = reader.result.split(',')[1];
+                            if (onProgress) onProgress(20);
+                            const res = await fetch('/api/upload-proxy', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    uploadUrl,
+                                    fileBase64: base64,
+                                    contentType: file.type || 'application/octet-stream',
+                                }),
+                            });
+                            if (!res.ok) {
+                                const j = await res.json().catch(() => ({}));
+                                reject(new Error(j.error || 'HTTP ' + res.status));
+                                return;
+                            }
+                            if (onProgress) onProgress(100);
+                            resolve();
+                        } catch (e) { reject(e); }
+                    };
+                    reader.onerror = () => reject(new Error('read error'));
+                    reader.readAsDataURL(file);
+                });
+            };
 
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-black">Загрузить трек</h2>
-                    <button onClick={onClose} className="p-2 text-slate-400"><I.X/></button>
-                </div>
-                <div className="flex flex-col items-center mb-4">
-                    <div onClick={()=>coverRef.current.click()} className="w-32 h-32 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200 transition">
-                        {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Image/><p className="text-xs font-bold mt-1">Обложка</p></div>}
+            const submit = async () => {
+                if (!audioFile || !title.trim()) { alert('Введите название и загрузите аудио'); return; }
+                if (audioFile.size > 4 * 1024 * 1024) { alert('Файл больше 4 МБ (ограничение прокси).'); return; }
+                setUploading(true);
+                setProgress('Подготовка...');
+                try {
+                    let coverUrl = '';
+                    if (coverFile) {
+                        setProgress('Загружаем обложку...');
+                        const { uploadUrl, key } = await getUploadUrl(coverFile.name, coverFile.type, 'covers');
+                        await uploadFileDirect(coverFile, uploadUrl);
+                        coverUrl = `https://gopo-music.storage.yandexcloud.net/${key}`;
+                    }
+                    setProgress('Загружаем аудио...');
+                    const { uploadUrl: audioUploadUrl, key: audioKey } = await getUploadUrl(audioFile.name, audioFile.type, 'audio');
+                    await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`));
+                    const audioUrl = `https://gopo-music.storage.yandexcloud.net/${audioKey}`;
+                    await db.collection('tracks').add({
+                        title: title.trim(),
+                        artist: artist.trim() || 'Неизвестен',
+                        cover: coverUrl,
+                        audioUrl,
+                        uploadedBy: user.uid,
+                        uploaderName: profile.username,
+                        status: 'pending',
+                        rejectionReason: '',
+                        plays: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    onClose();
+                } catch (e) {
+                    console.error('Upload error:', e);
+                    alert('Ошибка загрузки: ' + e.message);
+                }
+                setUploading(false);
+                setProgress('');
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-black">Загрузить трек</h2>
+                            <button onClick={onClose} className="p-2 text-slate-400"><I.X/></button>
+                        </div>
+                        <div className="flex flex-col items-center mb-4">
+                            <div onClick={()=>coverRef.current.click()} className="w-32 h-32 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200 transition">
+                                {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Image/><p className="text-xs font-bold mt-1">Обложка</p></div>}
+                            </div>
+                            <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={pickCover} />
+                        </div>
+                        <label className="text-xs font-bold text-slate-600 ml-1">Название</label>
+                        <input value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Название трека" />
+                        <label className="text-xs font-bold text-slate-600 ml-1">Исполнитель</label>
+                        <input value={artist} onChange={e=>setArtist(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Исполнитель" />
+                        <label className="text-xs font-bold text-slate-600 ml-1">Аудиофайл (до 4 МБ)</label>
+                        <div onClick={()=>audioRef.current.click()} className="w-full p-3 bg-slate-50 rounded-xl cursor-pointer mb-4 text-sm font-bold text-slate-600 hover:bg-slate-100">
+                            {audioFile ? `✓ ${audioFile.name}` : 'Выбрать MP3 / M4A / OGG'}
+                        </div>
+                        <input ref={audioRef} type="file" accept="audio/*" className="hidden" onChange={e=>setAudioFile(e.target.files[0])} />
+                        {uploading && <p className="text-sm font-bold text-gopo text-center mb-3">{progress || 'Загрузка...'}</p>}
+                        <button onClick={submit} disabled={uploading} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">
+                            {uploading ? 'Загрузка...' : 'Отправить на проверку'}
+                        </button>
+                        <p className="text-[10px] text-slate-400 font-bold text-center mt-2">Трек появится в общей ленте после одобрения админом</p>
                     </div>
-                    <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={pickCover} />
                 </div>
-                <label className="text-xs font-bold text-slate-600 ml-1">Название</label>
-                <input value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Название трека" />
-                <label className="text-xs font-bold text-slate-600 ml-1">Исполнитель</label>
-                <input value={artist} onChange={e=>setArtist(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Исполнитель" />
-                <label className="text-xs font-bold text-slate-600 ml-1">Аудиофайл (до 50 МБ)</label>
-                <div onClick={()=>audioRef.current.click()} className="w-full p-3 bg-slate-50 rounded-xl cursor-pointer mb-4 text-sm font-bold text-slate-600 hover:bg-slate-100">
-                    {audioFile ? `✓ ${audioFile.name}` : 'Выбрать MP3 / M4A / OGG'}
-                </div>
-                <input ref={audioRef} type="file" accept="audio/*" className="hidden" onChange={e=>setAudioFile(e.target.files[0])} />
-                {uploading && <p className="text-sm font-bold text-gopo text-center mb-3">{progress || 'Загрузка...'}</p>}
-                <button onClick={submit} disabled={uploading} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">
-                    {uploading ? 'Загрузка...' : 'Отправить на проверку'}
-                </button>
-                <p className="text-[10px] text-slate-400 font-bold text-center mt-2">Трек появится в общей ленте после одобрения админом</p>
-            </div>
-        </div>
-    );
-};
+            );
+        };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
