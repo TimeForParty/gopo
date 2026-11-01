@@ -1851,9 +1851,9 @@
             };
             return (
                 <div className="fade-in">
-                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2"><I.Music/><h1 className="text-2xl font-black">Музыка</h1></div>
-                        onClick={()=>{ window.location.href = 'https://gopo-web.vercel.app/upload.html'; }}
+                        <button onClick={()=>{ window.location.href = 'https://gopo-web.vercel.app/upload.html'; }} className="bg-gopo text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center space-x-2">
                             <I.Upload/><span className="hidden sm:inline">Загрузить</span>
                         </button>
                     </div>
@@ -1907,121 +1907,7 @@
                 </div>
             );
         };
-
-        const UploadTrackModal = ({ user, profile, onClose }) => {
-            const [title, setTitle] = useState('');
-            const [artist, setArtist] = useState('');
-            const [audioFile, setAudioFile] = useState(null);
-            const [coverFile, setCoverFile] = useState(null);
-            const [coverPreview, setCoverPreview] = useState(null);
-            const [uploading, setUploading] = useState(false);
-            const [progress, setProgress] = useState('');
-            const audioRef = useRef(null);
-            const coverRef = useRef(null);
-
-            const pickCover = async (e) => {
-                const f = e.target.files[0];
-                if (!f) return;
-                setCoverFile(f);
-                setCoverPreview(await compressImage(f, 400, 0.7));
-            };
-
-            const getUploadUrl = async (fileName, fileType, folder) => {
-                const res = await fetch('https://gopo-web.vercel.app/api/yandex-auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fileName, fileType, folder }),
-                });
-                if (!res.ok) throw new Error('Не удалось получить ссылку для загрузки');
-                return res.json();
-            };
-
-            const uploadFileDirect = async (file, uploadUrl, onProgress) => {
-                return new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('PUT', uploadUrl);
-                    xhr.upload.onprogress = (e) => {
-                        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
-                    };
-                    xhr.onload = () => {
-                        if (xhr.status >= 200 && xhr.status < 300) resolve();
-                        else reject(new Error(`Ошибка загрузки: ${xhr.status}`));
-                    };
-                    xhr.onerror = () => reject(new Error('Network error'));
-                    xhr.setRequestHeader('Content-Type', file.type);
-                    xhr.send(file);
-                });
-            };
-
-            const submit = async () => {
-                if (!audioFile || !title.trim()) { alert('Введите название и загрузите аудио'); return; }
-                if (audioFile.size > 50 * 1024 * 1024) { alert('Файл больше 50 МБ. Object Storage не пропустит.'); return; }
-                setUploading(true);
-                setProgress('Подготовка...');
-                try {
-                    let coverUrl = '';
-                    if (coverFile) {
-                        setProgress('Загружаем обложку...');
-                        const { uploadUrl, key } = await getUploadUrl(coverFile.name, coverFile.type, 'covers');
-                        await uploadFileDirect(coverFile, uploadUrl);
-                        coverUrl = `https://gopo-music.storage.yandexcloud.net/${key}`;
-                    }
-                    setProgress('Загружаем аудио...');
-                    const { uploadUrl: audioUploadUrl, key: audioKey } = await getUploadUrl(audioFile.name, audioFile.type, 'audio');
-                    await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`));
-                    const audioUrl = `https://gopo-music.storage.yandexcloud.net/${audioKey}`;
-                    await db.collection('tracks').add({
-                        title: title.trim(),
-                        artist: artist.trim() || 'Неизвестен',
-                        cover: coverUrl,
-                        audioUrl,
-                        uploadedBy: user.uid,
-                        uploaderName: profile.username,
-                        status: 'pending',
-                        rejectionReason: '',
-                        plays: 0,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    onClose();
-                } catch (e) {
-                    console.error('Upload error:', e);
-                    alert('Ошибка загрузки: ' + e.message);
-                }
-                setUploading(false);
-                setProgress('');
-            };
-
-            return (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-black">Загрузить трек</h2>
-                            <button onClick={onClose} className="p-2 text-slate-400"><I.X/></button>
-                        </div>
-                        <div className="flex flex-col items-center mb-4">
-                            <div onClick={()=>coverRef.current.click()} className="w-32 h-32 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200 transition">
-                                {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Image/><p className="text-xs font-bold mt-1">Обложка</p></div>}
-                            </div>
-                            <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={pickCover} />
-                        </div>
-                        <label className="text-xs font-bold text-slate-600 ml-1">Название</label>
-                        <input value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Название трека" />
-                        <label className="text-xs font-bold text-slate-600 ml-1">Исполнитель</label>
-                        <input value={artist} onChange={e=>setArtist(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium" placeholder="Исполнитель" />
-                        <label className="text-xs font-bold text-slate-600 ml-1">Аудиофайл (до 50 МБ)</label>
-                        <div onClick={()=>audioRef.current.click()} className="w-full p-3 bg-slate-50 rounded-xl cursor-pointer mb-4 text-sm font-bold text-slate-600 hover:bg-slate-100">
-                            {audioFile ? `✓ ${audioFile.name}` : 'Выбрать MP3 / M4A / OGG'}
-                        </div>
-                        <input ref={audioRef} type="file" accept="audio/*" className="hidden" onChange={e=>setAudioFile(e.target.files[0])} />
-                        {uploading && <p className="text-sm font-bold text-gopo text-center mb-3">{progress || 'Загрузка...'}</p>}
-                        <button onClick={submit} disabled={uploading} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">
-                            {uploading ? 'Загрузка...' : 'Отправить на проверку'}
-                        </button>
-                        <p className="text-[10px] text-slate-400 font-bold text-center mt-2">Трек появится в общей ленте после одобрения админом</p>
-                    </div>
-                </div>
-            );
-        };
+        const UploadTrackModal = () => null;
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
