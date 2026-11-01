@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GoPo</title>
+    <title>GoPo 🎃</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
     <meta name="theme-color" content="#FF0055">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -61,6 +61,88 @@
         .splash-bubble span { color:#2C2C2C; font-weight:900; font-size:3.5rem; letter-spacing:-2px; transform:rotate(-8deg); display:inline-block; }
         .mini-player { animation: slideUp .3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* ===== HALLOWEEN STYLES ===== */
+        .halloween-tint {
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(255,107,0,0.05) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(124,58,237,0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+        .gopo-logo-halloween::before {
+            content: '🎃';
+            position: absolute;
+            top: -10px; right: -14px;
+            font-size: 26px;
+            filter: drop-shadow(0 0 8px rgba(255,107,0,0.8));
+            animation: pumpkinGlow 2.5s ease-in-out infinite;
+            z-index: 10;
+        }
+        @keyframes pumpkinGlow {
+            0%, 100% { filter: drop-shadow(0 0 6px rgba(255,107,0,0.6)); transform: rotate(-6deg) scale(1); }
+            50% { filter: drop-shadow(0 0 16px rgba(255,107,0,1)); transform: rotate(6deg) scale(1.1); }
+        }
+        @keyframes flyBat {
+            0% { transform: translate(-80px, 0) rotate(-10deg); }
+            50% { transform: translate(50vw, -40px) rotate(10deg); }
+            100% { transform: translate(calc(100vw + 80px), 0) rotate(-10deg); }
+        }
+        .event-pill {
+            background: linear-gradient(90deg, #FF6B00 0%, #7C3AED 100%);
+            color: white; font-weight: 800;
+            padding: 7px 16px; border-radius: 999px;
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px; text-align: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(255,107,0,0.4);
+            animation: eventPulse 2s ease-in-out infinite;
+        }
+        @keyframes eventPulse {
+            0%, 100% { box-shadow: 0 4px 15px rgba(255,107,0,0.4); }
+            50% { box-shadow: 0 4px 25px rgba(255,107,0,0.85); }
+        }
+        .clicker-pumpkin {
+            font-size: 200px; line-height: 1; cursor: pointer;
+            user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+            filter: drop-shadow(0 0 40px rgba(255,107,0,0.6));
+            transition: transform 0.06s;
+            touch-action: manipulation;
+        }
+        .clicker-pumpkin:active, .clicker-pumpkin.pulse { transform: scale(0.9); }
+        .float-candy {
+            position: fixed; pointer-events: none;
+            font-weight: 900; font-size: 22px;
+            color: #FFB800; text-shadow: 0 0 10px rgba(255,184,0,0.9);
+            transform: translate(-50%, 0);
+            animation: floatUp 1s ease-out forwards;
+            z-index: 100;
+        }
+        @keyframes floatUp {
+            0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -120px) scale(1.4); opacity: 0; }
+        }
+        .rarity-common { border-color: #94a3b8 !important; box-shadow: 0 0 10px rgba(148,163,184,0.3); }
+        .rarity-rare { border-color: #3b82f6 !important; box-shadow: 0 0 12px rgba(59,130,246,0.4); }
+        .rarity-epic { border-color: #a855f7 !important; box-shadow: 0 0 15px rgba(168,85,247,0.55); }
+        .rarity-legendary { border-color: #f59e0b !important; box-shadow: 0 0 20px rgba(245,158,11,0.65); }
+        .rarity-mythic { border-color: #ef4444 !important; box-shadow: 0 0 25px rgba(239,68,68,0.75); }
+        .post-halloween-style {
+            background: linear-gradient(135deg, #1a0a1f 0%, #2d1b3d 50%, #1a0a1f 100%) !important;
+            border-color: #FF6B00 !important;
+            position: relative;
+            overflow: hidden;
+        }
+        .post-halloween-style::before {
+            content: '🎃';
+            position: absolute; top: 10px; right: 60px;
+            font-size: 22px; opacity: 0.8;
+            animation: pumpkinGlow 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .post-halloween-style p,
+        .post-halloween-style span:not(.hashtag),
+        .post-halloween-style div:not(.hashtag) { color: #e8d8f0 !important; }
+        .post-halloween-style .hashtag { color: #FF6B00 !important; }
+        .post-halloween-style img { border: 1px solid rgba(255,107,0,0.4); }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -77,6 +159,22 @@
         };
         let auth, db;
         try { const app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e){ console.error(e); }
+
+        // ===== HALLOWEEN EVENT CONSTANTS =====
+        const HALLOWEEN_END = new Date('2026-11-10T09:00:00Z').getTime();
+        const SHOP_ITEMS = [
+            { id: 'frame_orange', type: 'frame', name: 'Тыквенная рамка', emoji: '🎃', price: 50, rarity: 'common', color: '#FF8C00' },
+            { id: 'frame_purple', type: 'frame', name: 'Ведьминская рамка', emoji: '🔮', price: 150, rarity: 'rare', color: '#8B5CF6' },
+            { id: 'frame_green', type: 'frame', name: 'Ядовитая рамка', emoji: '🧪', price: 300, rarity: 'epic', color: '#22C55E' },
+            { id: 'frame_red', type: 'frame', name: 'Кровавая рамка', emoji: '🩸', price: 500, rarity: 'legendary', color: '#EF4444' },
+            { id: 'badge_orange', type: 'badge', name: 'Тыква', emoji: '🎃', price: 30, rarity: 'common' },
+            { id: 'badge_purple', type: 'badge', name: 'Дух', emoji: '👻', price: 100, rarity: 'rare' },
+            { id: 'badge_green', type: 'badge', name: 'Упырь', emoji: '🧟', price: 250, rarity: 'epic' },
+            { id: 'badge_red', type: 'badge', name: 'Демон', emoji: '😈', price: 400, rarity: 'legendary' },
+            { id: 'post_halloween', type: 'post', name: 'Хэллоуин-посты', emoji: '🕸️', price: 1000, rarity: 'mythic' },
+        ];
+        const RARITY_LABEL = { common: 'Обычный', rare: 'Редкий', epic: 'Эпический', legendary: 'Легендарный', mythic: 'Мифический' };
+        const getItemById = (id) => SHOP_ITEMS.find(i => i.id === id);
 
         const MOODS = {
             neutral:{emoji:'💬',name:'Обычный',bg:'bg-white',border:'border-slate-200',text:'text-slate-800',anim:''},
@@ -184,16 +282,206 @@
             </div>
         );
 
-        const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false }) => {
+        const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false, halloweenFrame }) => {
             const inner = src ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} /> : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
-            if (!showStatus) return <div className="flex-shrink-0">{inner}</div>;
+            const frameColor = halloweenFrame === 'frame_orange' ? '#FF8C00' : halloweenFrame === 'frame_purple' ? '#8B5CF6' : halloweenFrame === 'frame_green' ? '#22C55E' : halloweenFrame === 'frame_red' ? '#EF4444' : null;
+            const wrapped = frameColor
+                ? <div style={{ padding: 3, borderRadius: '50%', display: 'inline-block', background: `linear-gradient(135deg, ${frameColor}, #FFB800)`, boxShadow: `0 0 12px ${frameColor}80` }}>{inner}</div>
+                : inner;
+            if (!showStatus) return <div className="flex-shrink-0">{wrapped}</div>;
             const dot = Math.max(10, Math.round(size*0.28));
-            return (<div className="relative flex-shrink-0" style={{width:size, height:size}}>{inner}<span className={`absolute bottom-0 right-0 rounded-full border-2 border-white shadow-sm ${isOnline?'bg-green-500':'bg-slate-300'}`} style={{width:dot, height:dot}} /></div>);
+            const extra = frameColor ? 6 : 0;
+            return (<div className="relative flex-shrink-0" style={{width:size+extra, height:size+extra}}>{wrapped}<span className={`absolute bottom-0 right-0 rounded-full border-2 border-white shadow-sm ${isOnline?'bg-green-500':'bg-slate-300'}`} style={{width:dot, height:dot}} /></div>);
         });
 
         const TypingDots = ({ className="" }) => (<span className={`inline-flex items-center space-x-1 ${className}`}><span className="typing-dot"></span><span className="typing-dot"></span><span className="typing-dot"></span></span>);
-        const Logo = ({ small }) => <div className={`gopo-logo ${small?'scale-75 origin-left':''}`}><span>GoPo</span></div>;
+        const Logo = ({ small }) => <div className={`gopo-logo gopo-logo-halloween ${small?'scale-75 origin-left':''}`}><span>GoPo</span></div>;
 
+        const HalloweenBats = () => (
+            <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
+                <div className="absolute text-3xl opacity-25" style={{top:'12%', animation:'flyBat 22s linear infinite'}}>🦇</div>
+                <div className="absolute text-2xl opacity-20" style={{top:'42%', animation:'flyBat 28s linear infinite', animationDelay:'-8s'}}>🦇</div>
+                <div className="absolute text-xl opacity-25" style={{top:'72%', animation:'flyBat 19s linear infinite', animationDelay:'-12s'}}>🦇</div>
+            </div>
+        );
+
+        // ===== CLICKER TAB =====
+        const ClickerTab = ({ user, profile }) => {
+            const [candies, setCandies] = useState(profile.halloweenCandies || 0);
+            const [view, setView] = useState('tap');
+            const [pulse, setPulse] = useState(false);
+            const [floats, setFloats] = useState([]);
+            const [now, setNow] = useState(Date.now());
+            const pendingRef = useRef(0);
+            const saveTimerRef = useRef(null);
+
+            useEffect(() => { setCandies(profile.halloweenCandies || 0); }, [profile.halloweenCandies]);
+            useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+
+            const isActive = now < HALLOWEEN_END;
+            const owned = profile.halloweenOwned || [];
+            const activeFrame = profile.halloweenFrameId || null;
+            const activeBadge = profile.halloweenBadgeId || null;
+            const activePost = !!profile.halloweenPostStyle;
+
+            const flush = () => {
+                if (saveTimerRef.current) { clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
+                const amt = pendingRef.current;
+                if (amt === 0) return;
+                pendingRef.current = 0;
+                db.collection('users').doc(user.uid).update({ halloweenCandies: firebase.firestore.FieldValue.increment(amt) }).catch(() => {});
+            };
+
+            const tap = (e) => {
+                if (!isActive) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX || (e.touches && e.touches[0]?.clientX) || (rect.left + rect.width / 2);
+                const y = e.clientY || (e.touches && e.touches[0]?.clientY) || (rect.top + rect.height / 2);
+                setCandies(c => c + 1);
+                pendingRef.current += 1;
+                setPulse(true);
+                setTimeout(() => setPulse(false), 100);
+                const fid = Date.now() + Math.random();
+                setFloats(f => [...f, { id: fid, x, y }]);
+                setTimeout(() => setFloats(f => f.filter(v => v.id !== fid)), 1000);
+                if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+                saveTimerRef.current = setTimeout(flush, 2000);
+            };
+
+            useEffect(() => () => flush(), []);
+
+            const buy = async (item) => {
+                if (!isActive) { alert('Ивент завершён 🎃'); return; }
+                if (owned.includes(item.id)) return;
+                if (candies < item.price) { alert('Недостаточно конфет 🍬'); return; }
+                if (saveTimerRef.current) { clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
+                const addBack = pendingRef.current; pendingRef.current = 0;
+                try {
+                    await db.collection('users').doc(user.uid).update({
+                        halloweenCandies: firebase.firestore.FieldValue.increment(addBack - item.price),
+                        halloweenOwned: firebase.firestore.FieldValue.arrayUnion(item.id)
+                    });
+                } catch (e) { alert(e.message); }
+            };
+
+            const equip = async (item) => {
+                const updates = {};
+                if (item.type === 'frame') updates.halloweenFrameId = activeFrame === item.id ? null : item.id;
+                if (item.type === 'badge') updates.halloweenBadgeId = activeBadge === item.id ? null : item.id;
+                if (item.type === 'post') updates.halloweenPostStyle = !activePost;
+                try { await db.collection('users').doc(user.uid).update(updates); } catch (e) { alert(e.message); }
+            };
+
+            const timeLeft = HALLOWEEN_END - now;
+            const days = Math.max(0, Math.floor(timeLeft / 86400000));
+            const hours = Math.max(0, Math.floor((timeLeft % 86400000) / 3600000));
+            const mins = Math.max(0, Math.floor((timeLeft % 3600000) / 60000));
+
+            return (
+                <div className="fade-in rounded-3xl min-h-[calc(100vh-140px)] p-5 text-white relative overflow-hidden"
+                     style={{ background: 'linear-gradient(135deg, #1a0a1f 0%, #0f0714 50%, #1a0a1f 100%)' }}>
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                        <div className="absolute text-3xl opacity-25" style={{top:'8%', animation:'flyBat 20s linear infinite'}}>🦇</div>
+                        <div className="absolute text-2xl opacity-20" style={{top:'55%', animation:'flyBat 26s linear infinite', animationDelay:'-7s'}}>🦇</div>
+                    </div>
+
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-2xl">🎃</span>
+                                <h1 className="text-2xl font-black">Ночь конфет</h1>
+                            </div>
+                            <div className="flex items-center gap-2 bg-black/50 rounded-full px-4 py-2 border border-orange-500/40">
+                                <span className="text-lg">🍬</span>
+                                <span className="font-black text-lg text-orange-300">{candies}</span>
+                            </div>
+                        </div>
+
+                        {isActive ? (
+                            <div className="event-pill mb-4">⏰ До конца ивента: {days}д {hours}ч {mins}м</div>
+                        ) : (
+                            <div className="bg-red-500/20 border border-red-500/40 rounded-full px-4 py-2 text-sm font-bold mb-4 text-red-300 text-center">
+                                🎃 Ивент завершён
+                            </div>
+                        )}
+
+                        <div className="flex gap-1 mb-4 bg-black/50 rounded-2xl p-1 border border-white/10">
+                            <button onClick={() => setView('tap')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='tap'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🔨 Тапалка</button>
+                            <button onClick={() => setView('shop')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='shop'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🛒 Магазин</button>
+                            <button onClick={() => setView('inv')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='inv'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🎒 Инв. ({owned.length})</button>
+                        </div>
+
+                        {view === 'tap' && (
+                            <div className="flex flex-col items-center justify-center py-6">
+                                <div onClick={tap} onTouchStart={tap} className={`clicker-pumpkin ${pulse ? 'pulse' : ''} ${!isActive ? 'opacity-40 cursor-not-allowed' : ''}`}>🎃</div>
+                                <p className="text-center text-sm text-slate-400 mt-6 font-bold px-4">
+                                    {isActive ? 'Тапай по тыкве, чтобы получать конфеты 🍬' : 'Ивент закончился — тыква спит'}
+                                </p>
+                                <div className="mt-6 text-center">
+                                    <div className="text-5xl font-black text-orange-300">{candies}</div>
+                                    <div className="text-xs text-slate-400 font-bold mt-1">🍬 конфет</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'shop' && (
+                            <div className="space-y-2">
+                                {SHOP_ITEMS.map(item => {
+                                    const has = owned.includes(item.id);
+                                    const canAfford = candies >= item.price;
+                                    return (
+                                        <div key={item.id} className={`bg-black/50 rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
+                                            <div className="text-3xl">{item.emoji}</div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-black text-sm">{item.name}</div>
+                                                <div className="text-[10px] text-slate-400 font-bold uppercase">{RARITY_LABEL[item.rarity]} · {item.type === 'frame' ? 'Рамка' : item.type === 'badge' ? 'Бейдж' : 'Стиль постов'}</div>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1">
+                                                <div className={`text-xs font-bold ${canAfford ? 'text-orange-300' : 'text-slate-500'}`}>🍬 {item.price}</div>
+                                                {has ? <span className="text-[10px] font-black text-green-400">✓ Куплено</span>
+                                                    : <button onClick={() => buy(item)} disabled={!canAfford || !isActive} className="bg-gradient-to-r from-orange-500 to-purple-600 text-white text-xs font-black px-3 py-1.5 rounded-lg disabled:opacity-40">Купить</button>}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {view === 'inv' && (
+                            <div>
+                                {owned.length === 0 ? (
+                                    <div className="text-center py-16 text-slate-400">
+                                        <div className="text-6xl mb-3">🎒</div>
+                                        <p className="font-bold">Инвентарь пуст</p>
+                                        <p className="text-xs mt-1">Заработай конфеты и купи что-нибудь</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {SHOP_ITEMS.filter(i => owned.includes(i.id)).map(item => {
+                                            const isEq = (item.type === 'frame' && activeFrame === item.id) || (item.type === 'badge' && activeBadge === item.id) || (item.type === 'post' && activePost);
+                                            return (
+                                                <div key={item.id} className={`bg-black/50 rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
+                                                    <div className="text-3xl">{item.emoji}</div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-black text-sm">{item.name}</div>
+                                                        <div className="text-[10px] text-slate-400 font-bold">{isEq ? '✓ Надето' : 'Не надето'}</div>
+                                                    </div>
+                                                    <button onClick={() => equip(item)} className={`text-xs font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-700 text-white' : 'bg-gradient-to-r from-orange-500 to-purple-600 text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {floats.map(f => <div key={f.id} className="float-candy" style={{ left: f.x, top: f.y }}>+1 🍬</div>)}
+                </div>
+            );
+        };
+
+        // ===== APP =====
         function App() {
             const [splashDone, setSplashDone] = useState(false);
             const [user, setUser] = useState(null);
@@ -207,6 +495,7 @@
             const [showNotifications, setShowNotifications] = useState(false);
             const [unreadNotifs, setUnreadNotifs] = useState(0);
             const [searchHashtag, setSearchHashtag] = useState(null);
+            const [eventActive, setEventActive] = useState(Date.now() < HALLOWEEN_END);
             const isAdmin = user?.email === 'hvadim439@gmail.com';
 
             const [playerTrack, setPlayerTrack] = useState(null);
@@ -221,6 +510,8 @@
                 if (playerPlaying) playerAudioRef.current.play().catch(()=>setPlayerPlaying(false));
                 else playerAudioRef.current.pause();
             }, [playerTrack, playerPlaying]);
+
+            useEffect(() => { const t = setInterval(() => setEventActive(Date.now() < HALLOWEEN_END), 60000); return () => clearInterval(t); }, []);
 
             const playTrack = (track, queue) => {
                 if (playerTrack?.id === track.id) { setPlayerPlaying(p => !p); return; }
@@ -251,7 +542,7 @@
                 const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
                     if (doc.exists) { setProfile(doc.data()); setLoading(false); }
                     else if (user.displayName) {
-                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === 'hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === 'hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
                         await db.collection('users').doc(user.uid).set(np);
                         setProfile(np); setLoading(false);
                     }
@@ -284,11 +575,17 @@
             const goToHashtag = (tag) => { setActiveTab('search'); setSearchHashtag(tag); };
 
             return (
-                <div className="flex h-screen bg-[#f0f2f5] relative overflow-hidden">
+                <div className={`flex h-screen relative overflow-hidden ${eventActive ? 'halloween-tint bg-[#f0f2f5]' : 'bg-[#f0f2f5]'}`}>
+                    {eventActive && <HalloweenBats />}
                     <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={unreadNotifs} />
                     <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${playerTrack ? 'pb-56 md:pb-40' : 'pb-24 md:pb-8'}`}>
                         <div className="max-w-2xl mx-auto">
                             <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
+                            {eventActive && activeTab !== 'clicker' && (
+                                <button onClick={()=>setActiveTab('clicker')} className="event-pill mb-3 w-full">
+                                    🎃 Хэллоуин-ивент · Кликай и получай конфеты · до 10.11.26 12:00 МСК
+                                </button>
+                            )}
                             {activeTab==='feed' && <FeedTab user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
                             {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
                             {activeTab==='dm' && <MessengerTab user={user} profile={profile} usersMap={usersMap} />}
@@ -296,6 +593,7 @@
                             {activeTab==='profile' && <ProfileTab user={user} profile={profile} usersMap={usersMap} />}
                             {activeTab==='admin' && isAdmin && <AdminTab user={user} usersMap={usersMap} />}
                             {activeTab==='music' && <MusicTab user={user} profile={profile} playerTrack={playerTrack} playerPlaying={playerPlaying} playTrack={playTrack} />}
+                            {activeTab==='clicker' && <ClickerTab user={user} profile={profile} />}
                         </div>
                     </main>
                     <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} unread={unreadNotifs} />
@@ -356,7 +654,7 @@
                         if (!dup.empty) { setError('Этот никнейм уже занят'); setLoading(false); return; }
                         const cred = await auth.createUserWithEmailAndPassword(email, password);
                         await cred.user.updateProfile({ displayName: name });
-                        await db.collection('users').doc(cred.user.uid).set({ uid:cred.user.uid, email, username: uname, displayName: name, avatar:null, banner:'', bio:'', isVerified: email==='hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                        await db.collection('users').doc(cred.user.uid).set({ uid:cred.user.uid, email, username: uname, displayName: name, avatar:null, banner:'', bio:'', isVerified: email==='hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     }
                 } catch(err) {
                     const m = {'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль','auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)','auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные'};
@@ -370,7 +668,7 @@
                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80')] bg-cover opacity-20 filter blur-xl"></div>
                     <div className="liquid-glass p-8 rounded-3xl w-full max-w-md relative z-10">
                         <div className="flex justify-center mb-8"><Logo /></div>
-                        <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo':'Создать аккаунт'}</h2>
+                        <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo 🎃':'Создать аккаунт 🎃'}</h2>
                         {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 text-sm font-bold">{error}</div>}
                         <form onSubmit={submit} className="space-y-4">
                             {!isLogin && <>
@@ -399,6 +697,7 @@
                     <NavItem active={activeTab==='search'} onClick={()=>setActiveTab('search')} icon={<I.Search/>} label="Поиск" />
                     <NavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} label="Профиль" />
                     <NavItem active={activeTab==='music'} onClick={()=>setActiveTab('music')} icon={<I.Music/>} label="Музыка" />
+                    <NavItem active={activeTab==='clicker'} onClick={()=>setActiveTab('clicker')} icon={<span className="text-xl leading-none">🎃</span>} label="Кликер" />
                     {isAdmin && <NavItem active={activeTab==='admin'} onClick={()=>setActiveTab('admin')} icon={<I.Shield/>} label="Админ" color="text-red-500" />}
                 </div>
                 <button onClick={onCreate} className="w-full bg-gopo text-white font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 hover:bg-pink-600 transition mb-2"><I.Plus/><span className="ml-2">Создать</span></button>
@@ -425,6 +724,7 @@
                         <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-56 fade-in">
                             <button onClick={()=>{ setActiveTab('search'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"><span className="text-slate-500"><I.Search /></span><span>Поиск</span></button>
                             <button onClick={()=>{ setActiveTab('music'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700 border-t border-slate-100"><span className="text-slate-500"><I.Music /></span><span>Музыка</span></button>
+                            <button onClick={()=>{ setActiveTab('clicker'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-orange-50 font-bold text-sm text-orange-600 border-t border-slate-100"><span className="text-xl leading-none">🎃</span><span>Кликер</span></button>
                             {isAdmin && <button onClick={()=>{ setActiveTab('admin'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"><span><I.Shield /></span><span>Админ</span></button>}
                         </div>
                     )}
@@ -437,7 +737,7 @@
                 <MobileNavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} />
                 <MobileNavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} />
                 <button onClick={onCreate} className="bg-gopo text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-pink-300 -mt-8 border-4 border-white"><I.Plus/></button>
-                <MobileNavItem active={activeTab==='notifications'} onClick={()=>setActiveTab('notifications')} icon={<I.Bell/>} badge={unread} />
+                <MobileNavItem active={activeTab==='clicker'} onClick={()=>setActiveTab('clicker')} icon={<span className="text-xl">🎃</span>} />
                 <MobileNavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} />
             </nav>
         );
@@ -672,9 +972,10 @@
                 const hasResonated = resonances.includes(user.uid); const hasBlown = blows.includes(user.uid);
                 const isHolding = holdingState.postId === post.id; const isPulsing = pulsingPost === post.id; const blown = isBlown(post);
                 const commentsCount = post.commentsCount || 0;
+                const authorPostStyle = author?.halloweenPostStyle;
                 return (
                     <article key={post.id}
-                        className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''}`}
+                        className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''} ${authorPostStyle?'post-halloween-style':''}`}
                         onMouseDown={e=>startHold(e, post.id)} onMouseUp={endHold} onMouseLeave={endHold} onTouchStart={e=>startHold(e, post.id)} onTouchMove={moveHold} onTouchEnd={endHold} onTouchCancel={endHold}>
                         {isHolding && <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none" style={{background:`conic-gradient(#FF0055 ${holdingState.progress}%, transparent 0)`,mask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',WebkitMask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',maskComposite:'exclude',WebkitMaskComposite:'xor',padding:'4px'}} />}
                         <div className="absolute top-4 right-4 flex flex-col items-center space-y-2 z-10">
@@ -684,11 +985,12 @@
                         {isBubbleOfDay && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black text-[10px] px-3 py-1 rounded-full flex items-center shadow-lg z-10"><I.Crown/><span className="ml-1">ПУЗЫРЬ ДНЯ</span></div>}
                         {ripples.filter(r => r.postId === post.id).map(r => <div key={r.id} className="absolute w-20 h-20 bg-gopo/30 rounded-full animate-ripple pointer-events-none" style={{left:r.x-40, top:r.y-40}}></div>)}
                         <div className="flex items-center space-x-3 mb-3 pr-12">
-                            <div onClick={()=>onUserClick(author)} className="cursor-pointer"><Avatar src={author.avatar} name={author.username} size={42} showStatus isOnline={isReallyOnline(author)} /></div>
+                            <div onClick={()=>onUserClick(author)} className="cursor-pointer"><Avatar src={author.avatar} name={author.username} size={42} showStatus isOnline={isReallyOnline(author)} halloweenFrame={author.halloweenFrameId} /></div>
                             <div className="flex-1 min-w-0">
                                 <div onClick={()=>onUserClick(author)} className="flex items-center cursor-pointer">
                                     <span className={`font-black text-sm truncate hover:underline ${mood.text}`}>{author.displayName || author.username}</span>
                                     {author.isVerified && <I.Check className="text-blue-500 ml-1"/>}
+                                    {author.halloweenBadgeId && <span className="ml-1 text-sm" title={getItemById(author.halloweenBadgeId)?.name}>{getItemById(author.halloweenBadgeId)?.emoji}</span>}
                                 </div>
                                 <p className={`text-xs opacity-70 ${mood.text}`}>@{author.username} • {timeAgo(post.createdAt)}</p>
                             </div>
@@ -761,9 +1063,9 @@
                             {filteredUsers.length===0 && <p className="p-8 text-center text-slate-400 font-bold">Никого не нашли</p>}
                             {filteredUsers.map(u => (
                                 <button key={u.uid} onClick={()=>onUserClick(u)} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 transition text-left border-b border-slate-50 last:border-0">
-                                    <Avatar src={u.avatar} name={u.username} size={48} showStatus isOnline={isReallyOnline(u)} />
+                                    <Avatar src={u.avatar} name={u.username} size={48} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} />
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center"><span className="font-black text-sm truncate">{u.displayName || u.username}</span>{u.isVerified && <I.Check className="text-blue-500 ml-1"/>}</div>
+                                        <div className="flex items-center"><span className="font-black text-sm truncate">{u.displayName || u.username}</span>{u.isVerified && <I.Check className="text-blue-500 ml-1"/>}{u.halloweenBadgeId && <span className="ml-1">{getItemById(u.halloweenBadgeId)?.emoji}</span>}</div>
                                         <p className="text-xs text-slate-500">@{u.username} • {u.followers?.length||0} подписчиков</p>
                                     </div>
                                 </button>
@@ -774,7 +1076,7 @@
                         <div className="space-y-4">
                             {filteredPosts.length === 0 && <p className="p-8 text-center text-slate-400 font-bold bg-white rounded-3xl">Постов не нашли</p>}
                             {filteredPosts.map(post => { const author = usersMap[post.authorId] || {}; const mood = MOODS[post.mood] || MOODS.neutral; return (
-                                <div key={post.id} onClick={()=>onCommentClick(post)} className={`rounded-[2rem] p-4 border-2 cursor-pointer ${mood.bg} ${mood.border}`}>
+                                <div key={post.id} onClick={()=>onCommentClick(post)} className={`rounded-[2rem] p-4 border-2 cursor-pointer ${mood.bg} ${mood.border} ${author.halloweenPostStyle?'post-halloween-style':''}`}>
                                     <div className="flex items-center mb-2">
                                         <Avatar src={author.avatar} name={author.username} size={32} />
                                         <div className="ml-2 flex-1 min-w-0"><span className={`font-bold text-xs ${mood.text}`}>@{author.username}</span><p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p></div>
@@ -789,6 +1091,7 @@
                 </div>
             );
         };
+
         const CommentsModal = ({ post, user, profile, usersMap, isAdmin, onClose, onHashtagClick }) => {
             const [comments, setComments] = useState([]);
             const [text, setText] = useState('');
@@ -835,7 +1138,7 @@
                             <h2 className="text-lg font-black">Комментарии ({comments.length})</h2>
                             <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><I.X/></button>
                         </div>
-                        <div className={`p-4 border-b ${mood.bg} ${mood.text}`}>
+                        <div className={`p-4 border-b ${mood.bg} ${mood.text} ${author?.halloweenPostStyle?'post-halloween-style':''}`}>
                             <div className="flex items-center space-x-2 mb-1"><Avatar src={author?.avatar} name={author?.username} size={24} /><span className="font-bold text-xs">@{author?.username || 'unknown'}</span></div>
                             <p className="text-sm line-clamp-2">{renderTextWithHashtags(post.text, onHashtagClick)}</p>
                         </div>
@@ -846,10 +1149,10 @@
                                 const canDel = c.authorId === user.uid || post.authorId === user.uid || isAdmin;
                                 return (
                                     <div key={c.id} className="flex space-x-3 group">
-                                        <Avatar src={ca.avatar} name={ca.username} size={32} showStatus isOnline={isReallyOnline(ca)} />
+                                        <Avatar src={ca.avatar} name={ca.username} size={32} showStatus isOnline={isReallyOnline(ca)} halloweenFrame={ca.halloweenFrameId} />
                                         <div className="flex-1 bg-slate-50 p-3 rounded-2xl rounded-tl-sm relative">
                                             <div className="flex justify-between items-center mb-1 pr-6">
-                                                <span className="font-bold text-xs text-slate-800">@{ca.username}</span>
+                                                <span className="font-bold text-xs text-slate-800">@{ca.username}{ca.halloweenBadgeId && <span className="ml-1">{getItemById(ca.halloweenBadgeId)?.emoji}</span>}</span>
                                                 <span className="text-[10px] text-slate-400">{timeAgo(c.createdAt)}</span>
                                             </div>
                                             <p className="text-sm text-slate-700">{renderTextWithHashtags(c.text, onHashtagClick)}</p>
@@ -954,7 +1257,7 @@
                                 const typing = isTypingNow(u, user.uid);
                                 return (
                                     <button key={u.uid} onClick={()=>setSelectedUser(u)} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedUser?.uid===u.uid?'bg-white/60':''}`}>
-                                        <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} />
+                                        <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center">
                                                 <span className="font-bold text-sm truncate">{u.displayName || u.username}</span>
@@ -1117,11 +1420,12 @@
                 <div className="flex-1 flex flex-col h-full bg-white/40">
                     <div className="p-3 border-b border-white/50 flex items-center space-x-3 bg-white/50 backdrop-blur-md">
                         <button onClick={onBack} className="p-2 text-slate-600 hover:bg-white rounded-full md:hidden"><I.Back/></button>
-                        <Avatar src={otherUser.avatar} name={otherUser.username} size={40} showStatus isOnline={isOtherOnline} />
+                        <Avatar src={otherUser.avatar} name={otherUser.username} size={40} showStatus isOnline={isOtherOnline} halloweenFrame={otherUser.halloweenFrameId} />
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center">
                                 <span className="font-black text-sm truncate">{otherUser.displayName || otherUser.username}</span>
                                 {otherUser.isVerified && <I.Check className="text-blue-500 ml-1"/>}
+                                {otherUser.halloweenBadgeId && <span className="ml-1">{getItemById(otherUser.halloweenBadgeId)?.emoji}</span>}
                             </div>
                             {isOtherTyping ? <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
                                 : <p className={`text-xs font-bold ${isOtherOnline?'text-green-600':'text-slate-500'}`}>{formatLastSeen(otherUser)}</p>}
@@ -1279,6 +1583,7 @@
                 } catch(err) { alert(err.message); }
                 setSaving(false);
             };
+            const badge = profile.halloweenBadgeId ? getItemById(profile.halloweenBadgeId) : null;
             return (
                 <div className="fade-in max-w-xl mx-auto">
                     <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm mb-6">
@@ -1287,17 +1592,19 @@
                         </div>
                         <div className="px-6 pb-6 relative">
                             <div className="-mt-14 mb-3 inline-block p-1 bg-white rounded-full shadow-lg">
-                                <Avatar src={profile.avatar} name={profile.username} size={100} showStatus isOnline={isReallyOnline(profile)} />
+                                <Avatar src={profile.avatar} name={profile.username} size={100} showStatus isOnline={isReallyOnline(profile)} halloweenFrame={profile.halloweenFrameId} />
                             </div>
                             <div className="flex items-start justify-between">
                                 <div>
                                     <div className="flex items-center">
                                         <h1 className="text-2xl font-black mr-2">{profile.displayName || profile.username}</h1>
                                         {profile.isVerified && <I.Check className="text-blue-500"/>}
+                                        {badge && <span className="ml-1 text-xl" title={badge.name}>{badge.emoji}</span>}
                                     </div>
                                     <p className="text-slate-500 font-medium">@{profile.username}</p>
                                     <p className={`text-xs font-bold mt-1 ${isReallyOnline(profile)?'text-green-600':'text-slate-400'}`}>{formatLastSeen(profile)}</p>
                                     {profile.bio && <p className="text-slate-700 mt-2 text-sm">{profile.bio}</p>}
+                                    {profile.halloweenCandies > 0 && <p className="text-xs font-black text-orange-500 mt-1">🍬 {profile.halloweenCandies} конфет</p>}
                                 </div>
                                 <button onClick={()=>setEditing(true)} className="border-2 border-slate-200 hover:border-slate-300 font-bold px-4 py-2 rounded-xl text-sm transition">Изменить</button>
                             </div>
@@ -1313,7 +1620,7 @@
                         {userPosts.map(post => {
                             const mood = MOODS[post.mood] || MOODS.neutral;
                             return (
-                                <div key={post.id} className={`relative rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border}`}>
+                                <div key={post.id} className={`relative rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border} ${profile.halloweenPostStyle?'post-halloween-style':''}`}>
                                     <button onClick={()=>deletePost(post.id)} className="absolute top-3 right-3 p-2 rounded-full bg-white/70 text-slate-400 hover:text-red-500 backdrop-blur-sm shadow-sm z-10"><I.Trash/></button>
                                     <div className="flex items-center justify-between mb-2 pr-10">
                                         <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
@@ -1384,6 +1691,7 @@
                     sendNotification(targetUser.uid, {uid:currentUser.uid, username:currentProfile.username, avatar:currentProfile.avatar}, 'follow', '');
                 }
             };
+            const badge = liveUser?.halloweenBadgeId ? getItemById(liveUser.halloweenBadgeId) : null;
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto relative fade-in">
@@ -1393,17 +1701,19 @@
                         </div>
                         <div className="px-6 pb-6 relative">
                             <div className="-mt-14 mb-3 inline-block p-1 bg-white rounded-full shadow-lg">
-                                <Avatar src={liveUser.avatar} name={liveUser.username} size={100} showStatus isOnline={isReallyOnline(liveUser)} />
+                                <Avatar src={liveUser.avatar} name={liveUser.username} size={100} showStatus isOnline={isReallyOnline(liveUser)} halloweenFrame={liveUser.halloweenFrameId} />
                             </div>
                             <div className="flex items-start justify-between">
                                 <div>
                                     <div className="flex items-center">
                                         <h1 className="text-2xl font-black mr-2">{liveUser.displayName || liveUser.username}</h1>
                                         {liveUser.isVerified && <I.Check className="text-blue-500"/>}
+                                        {badge && <span className="ml-1 text-xl" title={badge.name}>{badge.emoji}</span>}
                                     </div>
                                     <p className="text-slate-500 font-medium">@{liveUser.username}</p>
                                     <p className={`text-xs font-bold mt-1 ${isReallyOnline(liveUser)?'text-green-600':'text-slate-400'}`}>{formatLastSeen(liveUser)}</p>
                                     {liveUser.bio && <p className="text-slate-700 mt-2 text-sm">{liveUser.bio}</p>}
+                                    {liveUser.halloweenCandies > 0 && <p className="text-xs font-black text-orange-500 mt-1">🍬 {liveUser.halloweenCandies} конфет</p>}
                                 </div>
                                 {!isSelf && (
                                     <button onClick={toggleFollow} className={`font-bold px-6 py-2 rounded-xl text-sm transition ${isFollowing?'bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-500':'bg-gopo text-white shadow-md'}`}>
@@ -1421,7 +1731,7 @@
                             {targetPosts.map(post => {
                                 const mood = MOODS[post.mood] || MOODS.neutral;
                                 return (
-                                    <div key={post.id} className={`rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border}`}>
+                                    <div key={post.id} className={`rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border} ${liveUser.halloweenPostStyle?'post-halloween-style':''}`}>
                                         <div className="flex justify-between items-center mb-2">
                                             <p className={`text-xs opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
                                             <span className="text-xl">{mood.emoji}</span>
@@ -1552,7 +1862,7 @@
                                         return (
                                             <div key={u.uid} className={`p-4 border-b border-white/50 last:border-0 ${u.isBanned?'bg-red-50/50':''}`}>
                                                 <div className="flex items-center space-x-3 mb-2">
-                                                    <Avatar src={u.avatar} name={u.username} size={42} showStatus isOnline={online} />
+                                                    <Avatar src={u.avatar} name={u.username} size={42} showStatus isOnline={online} halloweenFrame={u.halloweenFrameId} />
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center">
                                                             <span className="font-black text-sm truncate">{u.displayName || u.username}</span>
@@ -1757,19 +2067,22 @@
                 return new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
                     xhr.open('POST', 'https://upload.imagekit.io/api/v1/files/upload');
+                    xhr.timeout = 30000;
                     xhr.upload.onprogress = (e) => {
                         if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
                     };
                     xhr.onload = () => {
                         if (xhr.status >= 200 && xhr.status < 300) {
-                            resolve(JSON.parse(xhr.responseText));
+                            try { resolve(JSON.parse(xhr.responseText)); }
+                            catch { reject(new Error('Некорректный ответ ImageKit')); }
                         } else {
-                            let msg = 'Upload failed';
-                            try { msg = JSON.parse(xhr.responseText).message || msg; } catch {}
+                            let msg = 'Upload failed (HTTP ' + xhr.status + ')';
+                            try { const j = JSON.parse(xhr.responseText); msg = j.message || (j.error && j.error.message) || msg; } catch {}
                             reject(new Error(msg));
                         }
                     };
                     xhr.onerror = () => reject(new Error('Network error'));
+                    xhr.ontimeout = () => reject(new Error('Таймаут загрузки'));
                     xhr.send(form);
                 });
             };
