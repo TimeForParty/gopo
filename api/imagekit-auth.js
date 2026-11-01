@@ -1,17 +1,14 @@
-import crypto from 'crypto';
+const crypto = require('crypto');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
   const publicKey = process.env.IMAGEKIT_PUBLIC_KEY;
-
   if (!privateKey || !publicKey) {
     return res.status(500).json({ error: 'ImageKit keys not configured' });
   }
@@ -24,4 +21,4 @@ export default async function handler(req, res) {
     .digest('hex');
 
   res.status(200).json({ token, expire, signature, publicKey });
-}
+};
