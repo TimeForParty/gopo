@@ -6,10 +6,11 @@
     <title>GoPo 🎃</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
     <meta name="theme-color" content="#FF0055">
+    <link rel="manifest" href='data:application/manifest+json,{"name":"GoPo","short_name":"GoPo","start_url":"/","display":"standalone","background_color":"%23f0f2f5","theme_color":"%23FF0055","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' rx=\'22\' fill=\'%23FF0055\'/%3E%3Ctext x=\'50\' y=\'68\' font-size=\'48\' font-weight=\'900\' fill=\'white\' text-anchor=\'middle\' font-family=\'Arial\'%3EGoPo%3C/text%3E%3C/svg%3E","sizes":"any","type":"image/svg+xml","purpose":"any"}]}'>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -89,6 +90,8 @@
         .post-cursed-style img { border: 1px solid rgba(220,38,38,0.5); }
         @keyframes cursedPulse { 0%,100% { box-shadow: 0 0 0 rgba(220,38,38,0.2); } 50% { box-shadow: 0 0 20px rgba(220,38,38,0.5); } }
         @keyframes skullFloat { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-5px) rotate(5deg); } }
+        .poll-option { position: relative; overflow: hidden; }
+        .poll-bar { position: absolute; inset: 0; background: rgba(255,0,85,0.15); transition: width 0.3s; }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -106,6 +109,7 @@
         let auth, db;
         try { const app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e){ console.error(e); }
 
+        const ADMIN_EMAIL = 'hvadim439@gmail.com';
         const HALLOWEEN_END = new Date('2026-11-10T09:00:00Z').getTime();
         const SHOP_ITEMS = [
             { id: 'frame_orange', type: 'frame', name: 'Тыквенная рамка', emoji: '🎃', price: 75, rarity: 'common', color: '#FF8C00' },
@@ -117,7 +121,6 @@
             { id: 'badge_green', type: 'badge', name: 'Упырь', emoji: '🧟', price: 375, rarity: 'epic' },
             { id: 'badge_red', type: 'badge', name: 'Демон', emoji: '😈', price: 600, rarity: 'legendary' },
             { id: 'post_halloween', type: 'post', name: 'Хэллоуин-посты', emoji: '🕸️', price: 1000, rarity: 'mythic' },
-            // 🆕 ДОРОГАЯ КОСМЕТИКА
             { id: 'badge_bat', type: 'badge', name: 'Летучая мышь', emoji: '🦇', price: 280, rarity: 'common' },
             { id: 'badge_skull', type: 'badge', name: 'Светящийся череп', emoji: '💀', price: 900, rarity: 'legendary' },
             { id: 'badge_crown', type: 'badge', name: 'Корона тьмы', emoji: '👑', price: 1500, rarity: 'mythic' },
@@ -206,6 +209,34 @@
             return parts.map((p, i) => p.startsWith('#') ? <span key={i} className="hashtag" onClick={(e)=>{e.stopPropagation(); onHashtagClick&&onHashtagClick(p);}}>{p}</span> : <span key={i}>{p}</span>);
         };
 
+        const notifBodyText = (n) => {
+            const map = {
+                resonance: `@${n.senderName} резонировал(а) с твоим пузырём`,
+                comment: `@${n.senderName} прокомментировал(а) твой пузырь`,
+                follow: `@${n.senderName} подписался(-ась) на тебя`,
+                message: `@${n.senderName}: ${n.text || 'новое сообщение'}`,
+                music_approved: `Твой трек одобрен и опубликован`,
+                music_rejected: `Трек отклонён: ${n.text || ''}`,
+                music_pending: `🎵 Новый трек на модерации: ${n.text || ''}`,
+                group_invite: `Приглашение в группу: ${n.text || ''}`,
+            };
+            return map[n.type] || 'Новое уведомление в GoPo';
+        };
+
+        const showBrowserNotif = (n) => {
+            try {
+                if (!('Notification' in window) || Notification.permission !== 'granted') return;
+                const title = 'GoPo 🎃';
+                const body = notifBodyText(n);
+                new Notification(title, {
+                    body,
+                    icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial'%3EGoPo%3C/text%3E%3C/svg%3E",
+                    tag: n.id || 'gopo-notif',
+                    badge: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3C/svg%3E"
+                });
+            } catch(e) { console.warn('notif err', e); }
+        };
+
         const I = {
             Home: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
             Msg: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
@@ -236,6 +267,9 @@
             Group: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
             Heart: ({filled}) => <svg width="18" height="18" viewBox="0 0 24 24" fill={filled?'currentColor':'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
             Upload: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+            Users: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            Link: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
+            Chart: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
         };
 
         const SplashScreen = () => (
@@ -264,6 +298,434 @@
                 <div className="absolute text-xl opacity-25" style={{top:'72%', animation:'flyBat 19s linear infinite', animationDelay:'-12s'}}>🦇</div>
             </div>
         );
+
+        function App() {
+            const [splashDone, setSplashDone] = useState(false);
+            const [user, setUser] = useState(null);
+            const [profile, setProfile] = useState(null);
+            const [usersMap, setUsersMap] = useState({});
+            const [loading, setLoading] = useState(true);
+            const [activeTab, setActiveTab] = useState('feed');
+            const [showCreate, setShowCreate] = useState(false);
+            const [viewingProfile, setViewingProfile] = useState(null);
+            const [viewingPost, setViewingPost] = useState(null);
+            const [showNotifications, setShowNotifications] = useState(false);
+            const [unreadNotifs, setUnreadNotifs] = useState(0);
+            const [searchHashtag, setSearchHashtag] = useState(null);
+            const [eventActive, setEventActive] = useState(Date.now() < HALLOWEEN_END);
+            const [notifPermission, setNotifPermission] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
+            const [inviteGroup, setInviteGroup] = useState(null);
+            const isAdmin = user?.email === ADMIN_EMAIL;
+
+            const [playerTrack, setPlayerTrack] = useState(null);
+            const [playerQueue, setPlayerQueue] = useState([]);
+            const [playerPlaying, setPlayerPlaying] = useState(false);
+            const [playerProgress, setPlayerProgress] = useState(0);
+            const [playerDuration, setPlayerDuration] = useState(0);
+            const playerAudioRef = useRef(null);
+
+            useEffect(() => {
+                if (!playerAudioRef.current || !playerTrack) return;
+                if (playerPlaying) playerAudioRef.current.play().catch(()=>setPlayerPlaying(false));
+                else playerAudioRef.current.pause();
+            }, [playerTrack, playerPlaying]);
+
+            useEffect(() => { const t = setInterval(() => setEventActive(Date.now() < HALLOWEEN_END), 60000); return () => clearInterval(t); }, []);
+
+            const playTrack = (track, queue) => {
+                if (playerTrack?.id === track.id) { setPlayerPlaying(p => !p); return; }
+                setPlayerTrack(track); setPlayerQueue(queue || []); setPlayerProgress(0); setPlayerPlaying(true);
+            };
+            const nextTrack = () => { if (!playerQueue.length) return; const idx = playerQueue.findIndex(t => t.id === playerTrack?.id); setPlayerTrack(playerQueue[(idx + 1) % playerQueue.length]); setPlayerProgress(0); setPlayerPlaying(true); };
+            const prevTrack = () => { if (!playerQueue.length) return; const idx = playerQueue.findIndex(t => t.id === playerTrack?.id); setPlayerTrack(playerQueue[(idx - 1 + playerQueue.length) % playerQueue.length]); setPlayerProgress(0); setPlayerPlaying(true); };
+
+            useEffect(() => { const t = setTimeout(() => setSplashDone(true), 2000); return () => clearTimeout(t); }, []);
+            useEffect(() => { if (!auth) return; const unsub = auth.onAuthStateChanged(u => { setUser(u); if(!u){setProfile(null);setLoading(false);} }); return () => unsub(); }, []);
+            useEffect(() => { const unsub = db.collection('users').onSnapshot(snap => { const m={}; snap.docs.forEach(d=>{m[d.id]=d.data();}); setUsersMap(m); }); return () => unsub(); }, []);
+
+            useEffect(() => {
+                if (!user) return;
+                const ref = db.collection('users').doc(user.uid);
+                const markOnline = () => ref.update({ isOnline:true, lastActiveAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+                const markOffline = () => ref.update({ isOnline:false, lastSeen: firebase.firestore.FieldValue.serverTimestamp(), typingIn:null }).catch(()=>{});
+                markOnline();
+                const vis = () => document.hidden ? markOffline() : markOnline();
+                document.addEventListener('visibilitychange', vis);
+                window.addEventListener('beforeunload', markOffline);
+                const hb = setInterval(() => { if(!document.hidden) markOnline(); }, 60000);
+                return () => { document.removeEventListener('visibilitychange', vis); window.removeEventListener('beforeunload', markOffline); clearInterval(hb); markOffline(); };
+            }, [user]);
+
+            useEffect(() => {
+                if (!user) return;
+                const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
+                    if (doc.exists) { setProfile(doc.data()); setLoading(false); }
+                    else if (user.displayName && !window.__gopoRegistering) {
+                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === ADMIN_EMAIL, isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                        await db.collection('users').doc(user.uid).set(np);
+                        setProfile(np); setLoading(false);
+                    }
+                }, err => { console.error('profile:', err); setLoading(false); });
+                return () => unsub();
+            }, [user]);
+
+            useEffect(() => {
+                if (!user) return;
+                const unsub = db.collection('notifications').where('recipientId','==',user.uid).where('read','==',false).onSnapshot(snap => {
+                    snap.docChanges().forEach(change => {
+                        if (change.type === 'added') {
+                            const n = change.doc.data();
+                            const nWithId = { id: change.doc.id, ...n };
+                            if (document.hidden) showBrowserNotif(nWithId);
+                        }
+                    });
+                    setUnreadNotifs(snap.size);
+                }, err => console.error('notifs listen:', err));
+                return () => unsub();
+            }, [user]);
+
+            useEffect(() => {
+                const params = new URLSearchParams(location.search);
+                const inv = params.get('invite');
+                if (inv) setInviteGroup(inv);
+            }, []);
+
+            useEffect(() => {
+                if (!inviteGroup || !user || !profile) return;
+                (async () => {
+                    try {
+                        const gDoc = await db.collection('groups').doc(inviteGroup).get();
+                        if (!gDoc.exists) { alert('Группа не найдена'); setInviteGroup(null); history.replaceState(null, '', '/'); return; }
+                        const g = gDoc.data();
+                        if ((g.members || []).includes(user.uid)) {
+                            setActiveTab('dm');
+                            setInviteGroup(null);
+                            history.replaceState(null, '', '/');
+                            return;
+                        }
+                        if (!confirm(`Вступить в группу «${g.name}»?`)) { setInviteGroup(null); history.replaceState(null, '', '/'); return; }
+                        await db.collection('groups').doc(inviteGroup).update({
+                            members: firebase.firestore.FieldValue.arrayUnion(user.uid)
+                        });
+                        await sendNotification(g.creatorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'group_invite', `@${profile.username} вступил(а) в «${g.name}»`, { groupId: inviteGroup });
+                        setActiveTab('dm');
+                        alert('Вы вступили в группу!');
+                        setInviteGroup(null);
+                        history.replaceState(null, '', '/');
+                    } catch(e) { alert('Ошибка: ' + e.message); setInviteGroup(null); }
+                })();
+            }, [inviteGroup, user, profile]);
+
+            const requestNotifPerm = async () => {
+                if (!('Notification' in window)) { alert('Уведомления не поддерживаются'); return; }
+                const p = await Notification.requestPermission();
+                setNotifPermission(p);
+                if (p === 'granted') {
+                    showBrowserNotif({ senderName: '', type: 'welcome', text: 'Уведомления включены' });
+                } else {
+                    alert('Уведомления отключены. Включи в настройках браузера для сайта gopo.layero.app');
+                }
+            };
+
+            if (!splashDone) return <SplashScreen />;
+            if (loading || !auth) return <div className="h-screen flex items-center justify-center bg-slate-50"><div className="loader"></div></div>;
+            if (!user) return <AuthScreen />;
+            if (!profile) return <div className="h-screen flex items-center justify-center bg-slate-50"><div className="loader"></div></div>;
+
+            if (profile.isBanned) return (
+                <div className="h-screen flex items-center justify-center p-6 text-center">
+                    <div className="liquid-glass p-10 rounded-3xl">
+                        <div className="text-red-500 text-6xl mb-4">⛔</div>
+                        <h1 className="text-2xl font-black mb-2">Аккаунт заблокирован</h1>
+                        <p className="text-slate-500 mb-6">Обратитесь к администрации GoPo.</p>
+                        <button onClick={()=>auth.signOut()} className="bg-gopo text-white font-bold px-6 py-3 rounded-xl">Выйти</button>
+                    </div>
+                </div>
+            );
+
+            const goToHashtag = (tag) => { setActiveTab('search'); setSearchHashtag(tag); };
+            const showVerifyBanner = user && !user.emailVerified && user.email !== ADMIN_EMAIL;
+            const showNotifBanner = notifPermission !== 'granted';
+
+            return (
+                <div className={`flex h-screen relative overflow-hidden ${eventActive ? 'halloween-tint bg-[#f0f2f5]' : 'bg-[#f0f2f5]'}`}>
+                    {eventActive && <HalloweenBats />}
+                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={unreadNotifs} />
+                    <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${playerTrack ? 'pb-56 md:pb-40' : 'pb-24 md:pb-8'}`}>
+                        <div className="max-w-2xl mx-auto">
+                            <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
+
+                            {showVerifyBanner && (
+                                <div className="mb-3 bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-center gap-2 text-xs">
+                                    <span className="text-xl">✉️</span>
+                                    <div className="flex-1 font-bold text-amber-900">Подтверди почту, чтобы получать уведомления</div>
+                                    <button onClick={async ()=>{ try{ await user.sendEmailVerification(); alert('Письмо отправлено на '+user.email); }catch(e){ alert(e.message); } }} className="bg-amber-500 text-white font-bold px-3 py-1.5 rounded-lg text-[11px]">Отправить</button>
+                                </div>
+                            )}
+
+                            {showNotifBanner && (
+                                <div className="mb-3 bg-blue-50 border border-blue-300 rounded-2xl p-3 flex items-center gap-2 text-xs">
+                                    <span className="text-xl">🔔</span>
+                                    <div className="flex-1 font-bold text-blue-900">Включи уведомления, чтобы не пропускать сообщения</div>
+                                    <button onClick={requestNotifPerm} className="bg-blue-500 text-white font-bold px-3 py-1.5 rounded-lg text-[11px]">Включить</button>
+                                </div>
+                            )}
+
+                            {eventActive && activeTab !== 'clicker' && (
+                                <button onClick={()=>setActiveTab('clicker')} className="event-pill mb-3 w-full">🎃 Хэллоуин-ивент · Кликай и получай конфеты · до 10.11.26 12:00 МСК</button>
+                            )}
+                            {activeTab==='feed' && <FeedTab user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
+                            {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
+                            {activeTab==='dm' && <MessengerTab user={user} profile={profile} usersMap={usersMap} />}
+                            {activeTab==='notifications' && <NotificationsTab user={user} onUserClick={setViewingProfile} onOpenPost={setViewingPost} />}
+                            {activeTab==='profile' && <ProfileTab user={user} profile={profile} usersMap={usersMap} notifPermission={notifPermission} requestNotifPerm={requestNotifPerm} />}
+                            {activeTab==='admin' && isAdmin && <AdminTab user={user} usersMap={usersMap} />}
+                            {activeTab==='music' && <MusicTab user={user} profile={profile} playerTrack={playerTrack} playerPlaying={playerPlaying} playTrack={playTrack} />}
+                            {activeTab==='clicker' && <ClickerTab user={user} profile={profile} />}
+                        </div>
+                    </main>
+                    <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} unread={unreadNotifs} />
+                    {showCreate && <CreatePostModal user={user} profile={profile} onClose={()=>setShowCreate(false)} />}
+                    {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user} currentProfile={profile} onClose={()=>setViewingProfile(null)} />}
+                    {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile} usersMap={usersMap} isAdmin={isAdmin} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} />}
+                    {showNotifications && <NotificationsModal user={user} onClose={()=>setShowNotifications(false)} onUserClick={(u)=>{setShowNotifications(false); setViewingProfile(u);}} />}
+                    <audio ref={playerAudioRef} src={playerTrack?.audioUrl} onPlay={()=>setPlayerPlaying(true)} onPause={()=>setPlayerPlaying(false)} onTimeUpdate={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerProgress((a.currentTime/a.duration)*100); }} onLoadedMetadata={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerDuration(a.duration); }} onEnded={()=>{ nextTrack(); }} />
+                    {playerTrack && (
+                        <div className="fixed bottom-20 left-3 right-3 md:left-auto md:right-6 md:bottom-6 md:w-96 z-[45] mini-player">
+                            <div className="liquid-glass rounded-2xl p-3 shadow-2xl">
+                                <div className="flex items-center space-x-3">
+                                    {playerTrack.cover ? <img src={playerTrack.cover} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" /> : <div className="w-12 h-12 rounded-lg bg-gopo flex items-center justify-center text-white flex-shrink-0"><I.Music/></div>}
+                                    <div className="flex-1 min-w-0"><p className="font-black text-sm truncate">{playerTrack.title}</p><p className="text-xs text-slate-500 truncate">{playerTrack.artist}</p></div>
+                                    <button onClick={prevTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Prev/></button>
+                                    <button onClick={()=>setPlayerPlaying(p=>!p)} className="p-2.5 bg-gopo text-white rounded-full shadow-md">{playerPlaying ? <I.Pause size={18}/> : <I.Play size={18}/>}</button>
+                                    <button onClick={nextTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Next/></button>
+                                    <button onClick={()=>{setPlayerPlaying(false); setPlayerTrack(null);}} className="p-2 text-slate-400 hover:text-red-500"><I.X/></button>
+                                </div>
+                                <input type="range" min="0" max="100" value={playerProgress} onChange={e=>{ const a=playerAudioRef.current; if(a?.duration) a.currentTime=(e.target.value/100)*a.duration; }} className="w-full accent-gopo mt-2 h-1" />
+                                <p className="text-[10px] text-slate-400 font-bold mt-0.5 text-right">{playerDuration ? `${Math.floor((playerProgress/100*playerDuration)/60)}:${String(Math.floor((playerProgress/100*playerDuration)%60)).padStart(2,'0')}` : ''}</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const AuthScreen = () => {
+            const [isLogin, setIsLogin] = useState(true);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [name, setName] = useState('');
+            const [username, setUsername] = useState('');
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [sentVerify, setSentVerify] = useState(false);
+
+            const submit = async (e) => {
+                e.preventDefault(); setError(''); setLoading(true);
+                try {
+                    if (isLogin) {
+                        await auth.signInWithEmailAndPassword(email, password);
+                    } else {
+                        const uname = username.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase();
+                        if (!uname) { setError('Введите никнейм'); setLoading(false); return; }
+                        if (uname.length < 2) { setError('Никнейм минимум 2 символа'); setLoading(false); return; }
+                        window.__gopoRegistering = true;
+                        const cred = await auth.createUserWithEmailAndPassword(email, password);
+                        await cred.user.updateProfile({ displayName: name });
+                        try { await cred.user.sendEmailVerification(); setSentVerify(true); } catch(e){ console.warn('verify:', e); }
+                        const dup = await db.collection('users').where('username','==',uname).limit(1).get();
+                        if (!dup.empty) {
+                            await cred.user.delete().catch(()=>{});
+                            await auth.signOut().catch(()=>{});
+                            window.__gopoRegistering = false;
+                            setError('Этот никнейм уже занят');
+                            setLoading(false);
+                            return;
+                        }
+                        await db.collection('users').doc(cred.user.uid).set({
+                            uid: cred.user.uid, email, username: uname, displayName: name,
+                            avatar:null, banner:'', bio:'',
+                            isVerified: email === ADMIN_EMAIL, isBanned:false,
+                            followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null,
+                            typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[],
+                            halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        window.__gopoRegistering = false;
+                    }
+                } catch(err) {
+                    window.__gopoRegistering = false;
+                    const m = {'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль','auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)','auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные','permission-denied':'Ошибка прав Firestore'};
+                    setError(m[err.code] || err.message);
+                }
+                setLoading(false);
+            };
+
+            return (
+                <div className="h-screen flex items-center justify-center p-4 relative">
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80')] bg-cover opacity-20 filter blur-xl"></div>
+                    <div className="liquid-glass p-8 rounded-3xl w-full max-w-md relative z-10">
+                        <div className="flex justify-center mb-8"><Logo /></div>
+                        <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo 🎃':'Создать аккаунт 🎃'}</h2>
+                        {sentVerify && <div className="bg-green-100 text-green-700 p-3 rounded-xl mb-4 text-sm font-bold">✉️ Мы отправили письмо для подтверждения на {email}. Проверь почту!</div>}
+                        {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 text-sm font-bold">{error}</div>}
+                        <form onSubmit={submit} className="space-y-4">
+                            {!isLogin && <>
+                                <input type="text" placeholder="Ваше имя" value={name} onChange={e=>setName(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
+                                <input type="text" placeholder="Никнейм (без @)" value={username} onChange={e=>setUsername(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
+                            </>}
+                            <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
+                            <input type="password" placeholder="Пароль (мин. 6 символов)" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
+                            <button type="submit" disabled={loading} className="w-full bg-gopo text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-200 disabled:opacity-50">{loading?'Загрузка...':(isLogin?'Войти':'Зарегистрироваться')}</button>
+                        </form>
+                        <p onClick={()=>{setIsLogin(!isLogin); setError(''); setSentVerify(false);}} className="text-center mt-5 text-sm font-bold text-slate-600 cursor-pointer hover:text-gopo">{isLogin?'Нет аккаунта? Зарегистрироваться':'Уже есть аккаунт? Войти'}</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const Sidebar = ({ activeTab, setActiveTab, isAdmin, onCreate, onOpenNotifs, unread }) => (
+            <nav className="hidden md:flex flex-col w-64 m-4 rounded-3xl liquid-glass p-4 z-20">
+                <div className="mb-6 pl-2 flex items-center justify-between">
+                    <Logo small />
+                    <button onClick={onOpenNotifs} className="relative p-2 hover:bg-white/60 rounded-xl transition"><I.Bell />{unread > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center shadow-md">{unread > 9 ? '9+' : unread}</span>}</button>
+                </div>
+                <div className="space-y-1 flex-1">
+                    <NavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} label="Лента" />
+                    <NavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} label="Чаты" />
+                    <NavItem active={activeTab==='search'} onClick={()=>setActiveTab('search')} icon={<I.Search/>} label="Поиск" />
+                    <NavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} label="Профиль" />
+                    <NavItem active={activeTab==='music'} onClick={()=>setActiveTab('music')} icon={<I.Music/>} label="Музыка" />
+                    <NavItem active={activeTab==='clicker'} onClick={()=>setActiveTab('clicker')} icon={<span className="text-xl leading-none">🎃</span>} label="Кликер" />
+                    {isAdmin && <NavItem active={activeTab==='admin'} onClick={()=>setActiveTab('admin')} icon={<I.Shield/>} label="Админ" color="text-red-500" />}
+                </div>
+                <button onClick={onCreate} className="w-full bg-gopo text-white font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 hover:bg-pink-600 transition mb-2"><I.Plus/><span className="ml-2">Создать</span></button>
+                <button onClick={()=>auth.signOut()} className="w-full p-3 text-slate-600 font-bold hover:bg-white/50 rounded-xl flex items-center justify-center transition"><I.LogOut/><span className="ml-2">Выйти</span></button>
+            </nav>
+        );
+
+        const MobileMenuButton = ({ isAdmin, setActiveTab }) => {
+            const [open, setOpen] = useState(false);
+            const ref = useRef(null);
+            useEffect(() => {
+                if (!open) return;
+                const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+                document.addEventListener('mousedown', handle); document.addEventListener('touchstart', handle);
+                return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle); };
+            }, [open]);
+            return (
+                <div ref={ref} className="md:hidden relative mb-4 flex items-center justify-between">
+                    <button onClick={()=>setOpen(!open)} className="liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition" aria-label="Меню">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
+                    </button>
+                    <Logo small />
+                    {open && (
+                        <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-56 fade-in">
+                            <button onClick={()=>{ setActiveTab('search'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"><span className="text-slate-500"><I.Search /></span><span>Поиск</span></button>
+                            <button onClick={()=>{ setActiveTab('music'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700 border-t border-slate-100"><span className="text-slate-500"><I.Music /></span><span>Музыка</span></button>
+                            <button onClick={()=>{ setActiveTab('clicker'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-orange-50 font-bold text-sm text-orange-600 border-t border-slate-100"><span className="text-xl leading-none">🎃</span><span>Кликер</span></button>
+                            {isAdmin && <button onClick={()=>{ setActiveTab('admin'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"><span><I.Shield /></span><span>Админ</span></button>}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const MobileNav = ({ activeTab, setActiveTab, isAdmin, onCreate, unread }) => (
+            <nav className="md:hidden fixed bottom-4 left-4 right-4 liquid-glass rounded-3xl flex justify-around items-center py-3 z-50">
+                <MobileNavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} />
+                <MobileNavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} />
+                <button onClick={onCreate} className="bg-gopo text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-pink-300 -mt-8 border-4 border-white"><I.Plus/></button>
+                <MobileNavItem active={activeTab==='clicker'} onClick={()=>setActiveTab('clicker')} icon={<span className="text-xl">🎃</span>} />
+                <MobileNavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} />
+            </nav>
+        );
+
+        const NavItem = ({ icon, label, active, onClick, disabled, color }) => (
+            <button onClick={onClick} disabled={disabled} className={`w-full flex items-center space-x-3 p-3.5 rounded-2xl font-bold text-sm transition-all ${disabled?'opacity-40 cursor-not-allowed text-slate-400':active?'bg-gopo text-white shadow-lg shadow-pink-200':`hover:bg-white/60 ${color||'text-slate-700'}`}`}>
+                <span className={active && !disabled?'text-white':color||'text-slate-500'}>{icon}</span><span>{label}</span>
+            </button>
+        );
+
+        const MobileNavItem = ({ icon, active, onClick, disabled, badge }) => (
+            <button onClick={onClick} disabled={disabled} className={`relative p-2 rounded-xl transition ${disabled?'opacity-30':active?'text-gopo bg-gopo/10':'text-slate-500'}`}>
+                {icon}{badge > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{badge > 9 ? '9+' : badge}</span>}
+            </button>
+        );
+
+        const NotifItem = ({ notif, onClick }) => {
+            const typeText = {
+                resonance:'резонировал(а) с вашим пузырём',
+                comment:'прокомментировал(а) ваш пузырь',
+                follow:'подписался(-ась) на вас',
+                message:'написал(а) вам сообщение',
+                music_approved:'— ваш трек одобрен и опубликован',
+                music_rejected:'— ваш трек отклонён',
+                music_pending:'— новый трек на модерации',
+                group_invite:'— активность в группе',
+            };
+            return (
+                <div onClick={onClick} className={`flex items-start space-x-3 p-3 rounded-2xl cursor-pointer transition ${notif.read?'hover:bg-slate-50':'bg-pink-50/60 hover:bg-pink-100/60'}`}>
+                    <Avatar src={notif.senderAvatar} name={notif.senderName} size={40} />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-800"><span className="font-black">@{notif.senderName}</span>{' '}<span className="font-medium">{typeText[notif.type]||notif.type}</span></p>
+                        {notif.text && <p className="text-xs text-slate-500 mt-1 line-clamp-2 italic">«{notif.text}»</p>}
+                        <p className="text-[10px] text-slate-400 font-bold mt-1">{timeAgo(notif.createdAt)}</p>
+                    </div>
+                    {!notif.read && <span className="w-2.5 h-2.5 bg-gopo rounded-full flex-shrink-0 mt-2"></span>}
+                </div>
+            );
+        };
+
+        const NotificationsModal = ({ user, onClose, onUserClick }) => {
+            const [notifs, setNotifs] = useState([]);
+            useEffect(() => {
+                const unsub = db.collection('notifications').where('recipientId','==',user.uid).onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setNotifs(arr);
+                });
+                return () => unsub();
+            }, [user.uid]);
+            const markAllRead = async () => { const batch = db.batch(); notifs.filter(n => !n.read).forEach(n => batch.update(db.collection('notifications').doc(n.id), {read:true})); await batch.commit().catch(()=>{}); };
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
+                    <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col fade-in shadow-2xl">
+                        <div className="p-4 border-b flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                            <h2 className="text-lg font-black">Уведомления</h2>
+                            <div className="flex items-center space-x-2">
+                                <button onClick={markAllRead} className="text-xs font-bold text-gopo px-3 py-1 rounded-lg hover:bg-gopo/10">Прочитать все</button>
+                                <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><I.X/></button>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-2">
+                            {notifs.length === 0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Пока нет уведомлений</p>}
+                            {notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const NotificationsTab = ({ user, onUserClick, onOpenPost }) => {
+            const [notifs, setNotifs] = useState([]);
+            useEffect(() => {
+                const unsub = db.collection('notifications').where('recipientId','==',user.uid).onSnapshot(snap => {
+                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
+                    setNotifs(arr);
+                    arr.filter(n=>!n.read).forEach(n => db.collection('notifications').doc(n.id).update({read:true}).catch(()=>{}));
+                });
+                return () => unsub();
+            }, [user.uid]);
+            return (
+                <div className="fade-in">
+                    <h1 className="text-2xl font-black mb-4">Уведомления</h1>
+                    {notifs.length===0 && <div className="text-center p-16 liquid-glass rounded-3xl text-slate-400"><I.Bell/><p className="mt-4 font-bold">Пока нет уведомлений</p></div>}
+                    <div className="bg-white rounded-3xl overflow-hidden shadow-sm">{notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}</div>
+                </div>
+            );
+        };
 
         const ClickerTab = ({ user, profile }) => {
             const [candies, setCandies] = useState(profile.halloweenCandies || 0);
@@ -407,329 +869,6 @@
                 </div>
             );
         };
-        
-        function App() {
-            const [splashDone, setSplashDone] = useState(false);
-            const [user, setUser] = useState(null);
-            const [profile, setProfile] = useState(null);
-            const [usersMap, setUsersMap] = useState({});
-            const [loading, setLoading] = useState(true);
-            const [activeTab, setActiveTab] = useState('feed');
-            const [showCreate, setShowCreate] = useState(false);
-            const [viewingProfile, setViewingProfile] = useState(null);
-            const [viewingPost, setViewingPost] = useState(null);
-            const [showNotifications, setShowNotifications] = useState(false);
-            const [unreadNotifs, setUnreadNotifs] = useState(0);
-            const [searchHashtag, setSearchHashtag] = useState(null);
-            const [eventActive, setEventActive] = useState(Date.now() < HALLOWEEN_END);
-            const isAdmin = user?.email === 'hvadim439@gmail.com';
-
-            const [playerTrack, setPlayerTrack] = useState(null);
-            const [playerQueue, setPlayerQueue] = useState([]);
-            const [playerPlaying, setPlayerPlaying] = useState(false);
-            const [playerProgress, setPlayerProgress] = useState(0);
-            const [playerDuration, setPlayerDuration] = useState(0);
-            const playerAudioRef = useRef(null);
-
-            useEffect(() => {
-                if (!playerAudioRef.current || !playerTrack) return;
-                if (playerPlaying) playerAudioRef.current.play().catch(()=>setPlayerPlaying(false));
-                else playerAudioRef.current.pause();
-            }, [playerTrack, playerPlaying]);
-
-            useEffect(() => { const t = setInterval(() => setEventActive(Date.now() < HALLOWEEN_END), 60000); return () => clearInterval(t); }, []);
-
-            const playTrack = (track, queue) => {
-                if (playerTrack?.id === track.id) { setPlayerPlaying(p => !p); return; }
-                setPlayerTrack(track); setPlayerQueue(queue || []); setPlayerProgress(0); setPlayerPlaying(true);
-            };
-            const nextTrack = () => { if (!playerQueue.length) return; const idx = playerQueue.findIndex(t => t.id === playerTrack?.id); setPlayerTrack(playerQueue[(idx + 1) % playerQueue.length]); setPlayerProgress(0); setPlayerPlaying(true); };
-            const prevTrack = () => { if (!playerQueue.length) return; const idx = playerQueue.findIndex(t => t.id === playerTrack?.id); setPlayerTrack(playerQueue[(idx - 1 + playerQueue.length) % playerQueue.length]); setPlayerProgress(0); setPlayerPlaying(true); };
-
-            useEffect(() => { const t = setTimeout(() => setSplashDone(true), 2000); return () => clearTimeout(t); }, []);
-            useEffect(() => { if (!auth) return; const unsub = auth.onAuthStateChanged(u => { setUser(u); if(!u){setProfile(null);setLoading(false);} }); return () => unsub(); }, []);
-            useEffect(() => { const unsub = db.collection('users').onSnapshot(snap => { const m={}; snap.docs.forEach(d=>{m[d.id]=d.data();}); setUsersMap(m); }); return () => unsub(); }, []);
-
-            useEffect(() => {
-                if (!user) return;
-                const ref = db.collection('users').doc(user.uid);
-                const markOnline = () => ref.update({ isOnline:true, lastActiveAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
-                const markOffline = () => ref.update({ isOnline:false, lastSeen: firebase.firestore.FieldValue.serverTimestamp(), typingIn:null }).catch(()=>{});
-                markOnline();
-                const vis = () => document.hidden ? markOffline() : markOnline();
-                document.addEventListener('visibilitychange', vis);
-                window.addEventListener('beforeunload', markOffline);
-                const hb = setInterval(() => { if(!document.hidden) markOnline(); }, 60000);
-                return () => { document.removeEventListener('visibilitychange', vis); window.removeEventListener('beforeunload', markOffline); clearInterval(hb); markOffline(); };
-            }, [user]);
-
-            useEffect(() => {
-                if (!user) return;
-                const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
-                    if (doc.exists) { setProfile(doc.data()); setLoading(false); }
-                    else if (user.displayName) {
-                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === 'hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
-                        await db.collection('users').doc(user.uid).set(np);
-                        setProfile(np); setLoading(false);
-                    }
-                }, err => { console.error('profile:', err); setLoading(false); });
-                return () => unsub();
-            }, [user]);
-
-            useEffect(() => {
-                if (!user) return;
-                const unsub = db.collection('notifications').where('recipientId','==',user.uid).where('read','==',false).onSnapshot(snap => setUnreadNotifs(snap.size));
-                return () => unsub();
-            }, [user]);
-
-            if (!splashDone) return <SplashScreen />;
-            if (loading || !auth) return <div className="h-screen flex items-center justify-center bg-slate-50"><div className="loader"></div></div>;
-            if (!user) return <AuthScreen />;
-            if (!profile) return <div className="h-screen flex items-center justify-center bg-slate-50"><div className="loader"></div></div>;
-
-            if (profile.isBanned) return (
-                <div className="h-screen flex items-center justify-center p-6 text-center">
-                    <div className="liquid-glass p-10 rounded-3xl">
-                        <div className="text-red-500 text-6xl mb-4">⛔</div>
-                        <h1 className="text-2xl font-black mb-2">Аккаунт заблокирован</h1>
-                        <p className="text-slate-500 mb-6">Обратитесь к администрации GoPo.</p>
-                        <button onClick={()=>auth.signOut()} className="bg-gopo text-white font-bold px-6 py-3 rounded-xl">Выйти</button>
-                    </div>
-                </div>
-            );
-
-            const goToHashtag = (tag) => { setActiveTab('search'); setSearchHashtag(tag); };
-
-            return (
-                <div className={`flex h-screen relative overflow-hidden ${eventActive ? 'halloween-tint bg-[#f0f2f5]' : 'bg-[#f0f2f5]'}`}>
-                    {eventActive && <HalloweenBats />}
-                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={unreadNotifs} />
-                    <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${playerTrack ? 'pb-56 md:pb-40' : 'pb-24 md:pb-8'}`}>
-                        <div className="max-w-2xl mx-auto">
-                            <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
-                            {eventActive && activeTab !== 'clicker' && (
-                                <button onClick={()=>setActiveTab('clicker')} className="event-pill mb-3 w-full">🎃 Хэллоуин-ивент · Кликай и получай конфеты · до 10.11.26 12:00 МСК</button>
-                            )}
-                            {activeTab==='feed' && <FeedTab user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
-                            {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
-                            {activeTab==='dm' && <MessengerTab user={user} profile={profile} usersMap={usersMap} />}
-                            {activeTab==='notifications' && <NotificationsTab user={user} onUserClick={setViewingProfile} onOpenPost={setViewingPost} />}
-                            {activeTab==='profile' && <ProfileTab user={user} profile={profile} usersMap={usersMap} />}
-                            {activeTab==='admin' && isAdmin && <AdminTab user={user} usersMap={usersMap} />}
-                            {activeTab==='music' && <MusicTab user={user} profile={profile} playerTrack={playerTrack} playerPlaying={playerPlaying} playTrack={playTrack} />}
-                            {activeTab==='clicker' && <ClickerTab user={user} profile={profile} />}
-                        </div>
-                    </main>
-                    <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} unread={unreadNotifs} />
-                    {showCreate && <CreatePostModal user={user} profile={profile} onClose={()=>setShowCreate(false)} />}
-                    {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user} currentProfile={profile} onClose={()=>setViewingProfile(null)} />}
-                    {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile} usersMap={usersMap} isAdmin={isAdmin} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} />}
-                    {showNotifications && <NotificationsModal user={user} onClose={()=>setShowNotifications(false)} onUserClick={(u)=>{setShowNotifications(false); setViewingProfile(u);}} />}
-                    <audio ref={playerAudioRef} src={playerTrack?.audioUrl} onPlay={()=>setPlayerPlaying(true)} onPause={()=>setPlayerPlaying(false)} onTimeUpdate={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerProgress((a.currentTime/a.duration)*100); }} onLoadedMetadata={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerDuration(a.duration); }} onEnded={()=>{ nextTrack(); }} />
-                    {playerTrack && (
-                        <div className="fixed bottom-20 left-3 right-3 md:left-auto md:right-6 md:bottom-6 md:w-96 z-[45] mini-player">
-                            <div className="liquid-glass rounded-2xl p-3 shadow-2xl">
-                                <div className="flex items-center space-x-3">
-                                    {playerTrack.cover ? <img src={playerTrack.cover} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" /> : <div className="w-12 h-12 rounded-lg bg-gopo flex items-center justify-center text-white flex-shrink-0"><I.Music/></div>}
-                                    <div className="flex-1 min-w-0"><p className="font-black text-sm truncate">{playerTrack.title}</p><p className="text-xs text-slate-500 truncate">{playerTrack.artist}</p></div>
-                                    <button onClick={prevTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Prev/></button>
-                                    <button onClick={()=>setPlayerPlaying(p=>!p)} className="p-2.5 bg-gopo text-white rounded-full shadow-md">{playerPlaying ? <I.Pause size={18}/> : <I.Play size={18}/>}</button>
-                                    <button onClick={nextTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Next/></button>
-                                    <button onClick={()=>{setPlayerPlaying(false); setPlayerTrack(null);}} className="p-2 text-slate-400 hover:text-red-500"><I.X/></button>
-                                </div>
-                                <input type="range" min="0" max="100" value={playerProgress} onChange={e=>{ const a=playerAudioRef.current; if(a?.duration) a.currentTime=(e.target.value/100)*a.duration; }} className="w-full accent-gopo mt-2 h-1" />
-                                <p className="text-[10px] text-slate-400 font-bold mt-0.5 text-right">{playerDuration ? `${Math.floor((playerProgress/100*playerDuration)/60)}:${String(Math.floor((playerProgress/100*playerDuration)%60)).padStart(2,'0')}` : ''}</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        const AuthScreen = () => {
-            const [isLogin, setIsLogin] = useState(true);
-            const [email, setEmail] = useState('');
-            const [password, setPassword] = useState('');
-            const [name, setName] = useState('');
-            const [username, setUsername] = useState('');
-            const [error, setError] = useState('');
-            const [loading, setLoading] = useState(false);
-
-            const submit = async (e) => {
-                e.preventDefault(); setError(''); setLoading(true);
-                try {
-                    if (isLogin) await auth.signInWithEmailAndPassword(email, password);
-                    else {
-                        const uname = username.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase();
-                        if (!uname) { setError('Введите никнейм'); setLoading(false); return; }
-                        const dup = await db.collection('users').where('username','==',uname).limit(1).get();
-                        if (!dup.empty) { setError('Этот никнейм уже занят'); setLoading(false); return; }
-                        const cred = await auth.createUserWithEmailAndPassword(email, password);
-                        await cred.user.updateProfile({ displayName: name });
-                        await db.collection('users').doc(cred.user.uid).set({ uid:cred.user.uid, email, username: uname, displayName: name, avatar:null, banner:'', bio:'', isVerified: email==='hvadim439@gmail.com', isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-                    }
-                } catch(err) {
-                    const m = {'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль','auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)','auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные'};
-                    setError(m[err.code] || err.message);
-                }
-                setLoading(false);
-            };
-
-            return (
-                <div className="h-screen flex items-center justify-center p-4 relative">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80')] bg-cover opacity-20 filter blur-xl"></div>
-                    <div className="liquid-glass p-8 rounded-3xl w-full max-w-md relative z-10">
-                        <div className="flex justify-center mb-8"><Logo /></div>
-                        <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo 🎃':'Создать аккаунт 🎃'}</h2>
-                        {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 text-sm font-bold">{error}</div>}
-                        <form onSubmit={submit} className="space-y-4">
-                            {!isLogin && <>
-                                <input type="text" placeholder="Ваше имя" value={name} onChange={e=>setName(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
-                                <input type="text" placeholder="Никнейм (без @)" value={username} onChange={e=>setUsername(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
-                            </>}
-                            <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
-                            <input type="password" placeholder="Пароль (мин. 6 символов)" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
-                            <button type="submit" disabled={loading} className="w-full bg-gopo text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-200 disabled:opacity-50">{loading?'Загрузка...':(isLogin?'Войти':'Зарегистрироваться')}</button>
-                        </form>
-                        <p onClick={()=>setIsLogin(!isLogin)} className="text-center mt-5 text-sm font-bold text-slate-600 cursor-pointer hover:text-gopo">{isLogin?'Нет аккаунта? Зарегистрироваться':'Уже есть аккаунт? Войти'}</p>
-                    </div>
-                </div>
-            );
-        };
-
-        const Sidebar = ({ activeTab, setActiveTab, isAdmin, onCreate, onOpenNotifs, unread }) => (
-            <nav className="hidden md:flex flex-col w-64 m-4 rounded-3xl liquid-glass p-4 z-20">
-                <div className="mb-6 pl-2 flex items-center justify-between">
-                    <Logo small />
-                    <button onClick={onOpenNotifs} className="relative p-2 hover:bg-white/60 rounded-xl transition"><I.Bell />{unread > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center shadow-md">{unread > 9 ? '9+' : unread}</span>}</button>
-                </div>
-                <div className="space-y-1 flex-1">
-                    <NavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} label="Лента" />
-                    <NavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} label="Чаты" />
-                    <NavItem active={activeTab==='search'} onClick={()=>setActiveTab('search')} icon={<I.Search/>} label="Поиск" />
-                    <NavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} label="Профиль" />
-                    <NavItem active={activeTab==='music'} onClick={()=>setActiveTab('music')} icon={<I.Music/>} label="Музыка" />
-                    <NavItem active={activeTab==='clicker'} onClick={()=>setActiveTab('clicker')} icon={<span className="text-xl leading-none">🎃</span>} label="Кликер" />
-                    {isAdmin && <NavItem active={activeTab==='admin'} onClick={()=>setActiveTab('admin')} icon={<I.Shield/>} label="Админ" color="text-red-500" />}
-                </div>
-                <button onClick={onCreate} className="w-full bg-gopo text-white font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 hover:bg-pink-600 transition mb-2"><I.Plus/><span className="ml-2">Создать</span></button>
-                <button onClick={()=>auth.signOut()} className="w-full p-3 text-slate-600 font-bold hover:bg-white/50 rounded-xl flex items-center justify-center transition"><I.LogOut/><span className="ml-2">Выйти</span></button>
-            </nav>
-        );
-
-        const MobileMenuButton = ({ isAdmin, setActiveTab }) => {
-            const [open, setOpen] = useState(false);
-            const ref = useRef(null);
-            useEffect(() => {
-                if (!open) return;
-                const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-                document.addEventListener('mousedown', handle); document.addEventListener('touchstart', handle);
-                return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle); };
-            }, [open]);
-            return (
-                <div ref={ref} className="md:hidden relative mb-4 flex items-center justify-between">
-                    <button onClick={()=>setOpen(!open)} className="liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition" aria-label="Меню">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
-                    </button>
-                    <Logo small />
-                    {open && (
-                        <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-56 fade-in">
-                            <button onClick={()=>{ setActiveTab('search'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"><span className="text-slate-500"><I.Search /></span><span>Поиск</span></button>
-                            <button onClick={()=>{ setActiveTab('music'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700 border-t border-slate-100"><span className="text-slate-500"><I.Music /></span><span>Музыка</span></button>
-                            <button onClick={()=>{ setActiveTab('clicker'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-orange-50 font-bold text-sm text-orange-600 border-t border-slate-100"><span className="text-xl leading-none">🎃</span><span>Кликер</span></button>
-                            {isAdmin && <button onClick={()=>{ setActiveTab('admin'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"><span><I.Shield /></span><span>Админ</span></button>}
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        const MobileNav = ({ activeTab, setActiveTab, isAdmin, onCreate, unread }) => (
-            <nav className="md:hidden fixed bottom-4 left-4 right-4 liquid-glass rounded-3xl flex justify-around items-center py-3 z-50">
-                <MobileNavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} />
-                <MobileNavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} />
-                <button onClick={onCreate} className="bg-gopo text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-pink-300 -mt-8 border-4 border-white"><I.Plus/></button>
-                <MobileNavItem active={activeTab==='clicker'} onClick={()=>setActiveTab('clicker')} icon={<span className="text-xl">🎃</span>} />
-                <MobileNavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} />
-            </nav>
-        );
-
-        const NavItem = ({ icon, label, active, onClick, disabled, color }) => (
-            <button onClick={onClick} disabled={disabled} className={`w-full flex items-center space-x-3 p-3.5 rounded-2xl font-bold text-sm transition-all ${disabled?'opacity-40 cursor-not-allowed text-slate-400':active?'bg-gopo text-white shadow-lg shadow-pink-200':`hover:bg-white/60 ${color||'text-slate-700'}`}`}>
-                <span className={active && !disabled?'text-white':color||'text-slate-500'}>{icon}</span><span>{label}</span>
-            </button>
-        );
-
-        const MobileNavItem = ({ icon, active, onClick, disabled, badge }) => (
-            <button onClick={onClick} disabled={disabled} className={`relative p-2 rounded-xl transition ${disabled?'opacity-30':active?'text-gopo bg-gopo/10':'text-slate-500'}`}>
-                {icon}{badge > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{badge > 9 ? '9+' : badge}</span>}
-            </button>
-        );
-
-        const NotificationsModal = ({ user, onClose, onUserClick }) => {
-            const [notifs, setNotifs] = useState([]);
-            useEffect(() => {
-                const unsub = db.collection('notifications').where('recipientId','==',user.uid).onSnapshot(snap => {
-                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
-                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
-                    setNotifs(arr);
-                });
-                return () => unsub();
-            }, [user.uid]);
-            const markAllRead = async () => { const batch = db.batch(); notifs.filter(n => !n.read).forEach(n => batch.update(db.collection('notifications').doc(n.id), {read:true})); await batch.commit().catch(()=>{}); };
-            return (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
-                    <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-lg max-h-[80vh] flex flex-col fade-in shadow-2xl">
-                        <div className="p-4 border-b flex justify-between items-center bg-slate-50 rounded-t-3xl">
-                            <h2 className="text-lg font-black">Уведомления</h2>
-                            <div className="flex items-center space-x-2">
-                                <button onClick={markAllRead} className="text-xs font-bold text-gopo px-3 py-1 rounded-lg hover:bg-gopo/10">Прочитать все</button>
-                                <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><I.X/></button>
-                            </div>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-2">
-                            {notifs.length === 0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Пока нет уведомлений</p>}
-                            {notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const NotifItem = ({ notif, onClick }) => {
-            const typeText = { resonance:'резонировал(а) с вашим пузырём', comment:'прокомментировал(а) ваш пузырь', follow:'подписался(-ась) на вас', message:'написал(а) вам сообщение', music_approved:'— ваш трек одобрен и опубликован', music_rejected:'— ваш трек отклонён' };
-            return (
-                <div onClick={onClick} className={`flex items-start space-x-3 p-3 rounded-2xl cursor-pointer transition ${notif.read?'hover:bg-slate-50':'bg-pink-50/60 hover:bg-pink-100/60'}`}>
-                    <Avatar src={notif.senderAvatar} name={notif.senderName} size={40} />
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-800"><span className="font-black">@{notif.senderName}</span>{' '}<span className="font-medium">{typeText[notif.type]||notif.type}</span></p>
-                        {notif.text && <p className="text-xs text-slate-500 mt-1 line-clamp-2 italic">«{notif.text}»</p>}
-                        <p className="text-[10px] text-slate-400 font-bold mt-1">{timeAgo(notif.createdAt)}</p>
-                    </div>
-                    {!notif.read && <span className="w-2.5 h-2.5 bg-gopo rounded-full flex-shrink-0 mt-2"></span>}
-                </div>
-            );
-        };
-
-        const NotificationsTab = ({ user, onUserClick, onOpenPost }) => {
-            const [notifs, setNotifs] = useState([]);
-            useEffect(() => {
-                const unsub = db.collection('notifications').where('recipientId','==',user.uid).onSnapshot(snap => {
-                    const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
-                    arr.sort((a,b) => (b.createdAt?.toDate?.()?.getTime()||0) - (a.createdAt?.toDate?.()?.getTime()||0));
-                    setNotifs(arr);
-                    arr.filter(n=>!n.read).forEach(n => db.collection('notifications').doc(n.id).update({read:true}).catch(()=>{}));
-                });
-                return () => unsub();
-            }, [user.uid]);
-            return (
-                <div className="fade-in">
-                    <h1 className="text-2xl font-black mb-4">Уведомления</h1>
-                    {notifs.length===0 && <div className="text-center p-16 liquid-glass rounded-3xl text-slate-400"><I.Bell/><p className="mt-4 font-bold">Пока нет уведомлений</p></div>}
-                    <div className="bg-white rounded-3xl overflow-hidden shadow-sm">{notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}</div>
-                </div>
-            );
-        };
 
         const StoriesBar = ({ user, profile }) => {
             const [stories, setStories] = useState([]);
@@ -846,8 +985,8 @@
             const endHold = () => { if (holdTimer.current) { clearInterval(holdTimer.current); setHoldingState({postId:null, progress:0}); } };
             const executeResonance = async (postId, x, y) => {
                 const rid = Date.now();
-                setRipples(p => [...p, {id:rid, postId, x, y}]);
-                setTimeout(() => setRipples(p => p.filter(r => r.id !== rid)), 600);
+                setRipples(p => [...p, {rid, postId, x, y}]);
+                setTimeout(() => setRipples(p => p.filter(r => r.rid !== rid)), 600);
                 setPulsingPost(postId); setTimeout(() => setPulsingPost(null), 700);
                 const post = posts.find(p => p.id === postId); if (!post) return;
                 const arr = post.resonances || []; const has = arr.includes(user.uid);
@@ -860,6 +999,13 @@
                 const ref = db.collection('posts').doc(post.id);
                 if (has) await ref.update({blows: firebase.firestore.FieldValue.arrayRemove(user.uid)});
                 else await ref.update({blows: firebase.firestore.FieldValue.arrayUnion(user.uid)});
+            };
+
+            const votePoll = async (post, idx) => {
+                if (post.poll?.votes?.[user.uid] !== undefined) { alert('Ты уже голосовал'); return; }
+                try {
+                    await db.collection('posts').doc(post.id).update({ [`poll.votes.${user.uid}`]: idx });
+                } catch(e){ alert('Ошибка голоса: ' + e.message); }
             };
 
             const now = Date.now();
@@ -888,7 +1034,7 @@
                             <div className={`text-3xl ${mood.text} opacity-90 drop-shadow-md`} title={mood.name}>{mood.emoji}</div>
                         </div>
                         {isBubbleOfDay && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black text-[10px] px-3 py-1 rounded-full flex items-center shadow-lg z-10"><I.Crown/><span className="ml-1">ПУЗЫРЬ ДНЯ</span></div>}
-                        {ripples.filter(r => r.postId === post.id).map(r => <div key={r.id} className="absolute w-20 h-20 bg-gopo/30 rounded-full animate-ripple pointer-events-none" style={{left:r.x-40, top:r.y-40}}></div>)}
+                        {ripples.filter(r => r.postId === post.id).map(r => <div key={r.rid} className="absolute w-20 h-20 bg-gopo/30 rounded-full animate-ripple pointer-events-none" style={{left:r.x-40, top:r.y-40}}></div>)}
                         <div className="flex items-center space-x-3 mb-3 pr-12">
                             <div onClick={()=>onUserClick(author)} className="cursor-pointer"><Avatar src={author.avatar} name={author.username} size={42} showStatus isOnline={isReallyOnline(author)} halloweenFrame={author.halloweenFrameId} /></div>
                             <div className="flex-1 min-w-0">
@@ -902,6 +1048,34 @@
                         </div>
                         <div className="relative rounded-2xl">
                             {post.text && <p className={`font-medium mb-3 whitespace-pre-wrap ${mood.text}`}>{renderTextWithHashtags(post.text, onHashtagClick)}</p>}
+                            {post.poll && (
+                                <div className="mb-3 bg-white/60 rounded-2xl p-3 border border-black/5">
+                                    <p className="font-black text-sm mb-2 text-slate-800">{post.poll.question}</p>
+                                    <div className="space-y-1.5">
+                                        {(post.poll.options || []).map((opt, idx) => {
+                                            const votesObj = post.poll.votes || {};
+                                            const total = Object.keys(votesObj).length;
+                                            const votes = Object.values(votesObj).filter(v => v === idx).length;
+                                            const pct = total > 0 ? Math.round((votes / total) * 100) : 0;
+                                            const myVote = votesObj[user.uid];
+                                            const voted = myVote !== undefined;
+                                            return (
+                                                <button key={idx} onClick={()=>votePoll(post, idx)} disabled={voted} className={`w-full text-left relative px-3 py-2 rounded-xl border-2 text-xs font-bold transition ${voted?'border-slate-200 bg-white cursor-default':'border-slate-200 bg-white hover:border-gopo'}`}>
+                                                    <div className="poll-bar" style={{width: voted ? pct+'%' : '0%'}}></div>
+                                                    <div className="relative flex justify-between items-center">
+                                                        <span className="truncate flex items-center">
+                                                            {myVote === idx && <span className="text-gopo mr-1">✓</span>}
+                                                            {opt.text}
+                                                        </span>
+                                                        {voted && <span className="text-slate-500 text-[10px] flex-shrink-0 ml-2">{votes} ({pct}%)</span>}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-bold mt-2">{Object.keys(post.poll.votes || {}).length} голосов</p>
+                                </div>
+                            )}
                             {post.image && <img src={post.image} alt="" className="rounded-2xl w-full max-h-96 object-cover shadow-sm bg-white/50" />}
                         </div>
                         {blown && <div className="mt-3 px-3 py-2 bg-slate-800/10 rounded-xl text-center text-xs font-black text-slate-700">💨 Сдут сообществом ({blows.length} сдуваний)</div>}
@@ -923,7 +1097,7 @@
                         <h1 className="text-2xl font-black hidden md:block text-slate-800">Лента</h1>
                         <div className="flex items-center text-xs font-bold text-slate-500 bg-white/50 px-3 py-1.5 rounded-full border border-white/50 cursor-help group relative">
                             <I.Info/><span className="ml-1">Что такое Резонанс?</span>
-                            <div className="absolute top-full mt-2 right-0 w-64 bg-slate-800 text-white p-3 rounded-xl text-[11px] leading-tight opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl">Резонанс — это вибрация, которую ты чувствуешь с этим пузырём. Зажми пузырь на <b>1 секунду</b>, чтобы выразить поддержку автору.</div>
+                            <div className="absolute top-full mt-2 right-0 w-64 bg-slate-800 text-white p-3 rounded-xl text-[11px] leading-tight opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl">Резонанс — вибрация с пузырём. Зажми пузырь на <b>1 секунду</b>, чтобы поддержать автора.</div>
                         </div>
                     </div>
                     <StoriesBar user={user} profile={profile} />
@@ -1081,17 +1255,43 @@
             const [image, setImage] = useState(null);
             const [mood, setMood] = useState('neutral');
             const [posting, setPosting] = useState(false);
+            const [pollOn, setPollOn] = useState(false);
+            const [pollQ, setPollQ] = useState('');
+            const [pollOpts, setPollOpts] = useState(['', '']);
             const fileRef = useRef(null);
             const handle = async (e) => { const f = e.target.files[0]; if (!f) return; setImage(await compressImage(f, 800, 0.7)); };
+
+            const setOpt = (i, val) => setPollOpts(o => o.map((v, j) => j === i ? val : v));
+            const addOpt = () => pollOpts.length < 4 && setPollOpts(o => [...o, '']);
+            const delOpt = (i) => pollOpts.length > 2 && setPollOpts(o => o.filter((_, j) => j !== i));
+
             const submit = async () => {
-                if (!text.trim() && !image) return;
+                if (!text.trim() && !image && !(pollOn && pollQ.trim())) return;
+                if (pollOn) {
+                    if (!pollQ.trim()) { alert('Введи вопрос опроса'); return; }
+                    if (pollOpts.filter(o => o.trim()).length < 2) { alert('Нужно минимум 2 варианта'); return; }
+                }
                 setPosting(true);
                 try {
-                    await db.collection('posts').add({ text: text.trim(), image, mood, authorId: user.uid, authorName: profile.username, authorAvatar: profile.avatar, resonances: [], blows: [], commentsCount: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    const payload = {
+                        text: text.trim(), image, mood,
+                        authorId: user.uid, authorName: profile.username, authorAvatar: profile.avatar,
+                        resonances: [], blows: [], commentsCount: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    if (pollOn && pollQ.trim()) {
+                        payload.poll = {
+                            question: pollQ.trim(),
+                            options: pollOpts.filter(o => o.trim()).map(o => ({ text: o.trim() })),
+                            votes: {}
+                        };
+                    }
+                    await db.collection('posts').add(payload);
                     onClose();
                 } catch(err) { alert('Ошибка: ' + err.message); }
                 setPosting(false);
             };
+
             return (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
                     <div className="bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto fade-in shadow-2xl">
@@ -1109,10 +1309,31 @@
                         <div className="flex items-center space-x-3 mb-3"><Avatar src={profile.avatar} name={profile.username} size={36} /><span className="font-bold text-sm">@{profile.username}</span></div>
                         <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Что у тебя на душе?" rows="3" className="w-full p-3 bg-slate-50 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-gopo/30 font-medium" />
                         {image && <div className="relative mt-3"><img src={image} className="rounded-2xl max-h-64 w-full object-cover" /><button onClick={()=>setImage(null)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full"><I.X/></button></div>}
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                            <button onClick={()=>fileRef.current.click()} className="flex items-center space-x-2 text-slate-500 hover:text-gopo font-bold p-2"><I.Image/><span>Фото</span></button>
+
+                        {pollOn && (
+                            <div className="mt-3 bg-slate-50 rounded-2xl p-3 border border-slate-200">
+                                <div className="flex justify-between items-center mb-2">
+                                    <p className="text-xs font-bold text-slate-600">📊 Опрос</p>
+                                    <button onClick={()=>{ setPollOn(false); setPollQ(''); setPollOpts(['','']); }} className="text-xs text-red-500 font-bold">Убрать</button>
+                                </div>
+                                <input value={pollQ} onChange={e=>setPollQ(e.target.value)} placeholder="Вопрос опроса" maxLength={120} className="w-full p-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium mb-2" />
+                                {pollOpts.map((o, i) => (
+                                    <div key={i} className="flex gap-1 mb-1.5">
+                                        <input value={o} onChange={e=>setOpt(i, e.target.value)} placeholder={`Вариант ${i+1}`} maxLength={80} className="flex-1 p-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
+                                        {pollOpts.length > 2 && <button onClick={()=>delOpt(i)} className="px-2 text-slate-400 hover:text-red-500"><I.X/></button>}
+                                    </div>
+                                ))}
+                                {pollOpts.length < 4 && <button onClick={addOpt} className="text-xs font-bold text-gopo">+ добавить вариант</button>}
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t flex-wrap gap-2">
+                            <div className="flex gap-2">
+                                <button onClick={()=>fileRef.current.click()} className="flex items-center space-x-1 text-slate-500 hover:text-gopo font-bold p-2"><I.Image/><span className="text-xs">Фото</span></button>
+                                <button onClick={()=>setPollOn(p=>!p)} className={`flex items-center space-x-1 font-bold p-2 ${pollOn?'text-gopo':'text-slate-500 hover:text-gopo'}`}><I.Chart/><span className="text-xs">Опрос</span></button>
+                            </div>
                             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handle} />
-                            <button onClick={submit} disabled={posting || (!text.trim() && !image)} className="bg-gopo text-white font-bold px-6 py-2.5 rounded-2xl disabled:opacity-50 shadow-md shadow-pink-200">{posting?'Публикация...':'Запустить пузырь'}</button>
+                            <button onClick={submit} disabled={posting || (!text.trim() && !image && !(pollOn && pollQ.trim()))} className="bg-gopo text-white font-bold px-6 py-2.5 rounded-2xl disabled:opacity-50 shadow-md shadow-pink-200">{posting?'Публикация...':'Запустить пузырь'}</button>
                         </div>
                     </div>
                 </div>
@@ -1139,6 +1360,7 @@
             const allUsers = Object.values(usersMap).filter(u => u.uid !== user.uid && !u.isBanned);
             const filteredUsers = allUsers.filter(u => (u.username||'').toLowerCase().includes(query.toLowerCase()) || (u.displayName||'').toLowerCase().includes(query.toLowerCase()));
             const filteredGroups = groups.filter(g => (g.name||'').toLowerCase().includes(query.toLowerCase()));
+            const closeChat = () => { setSelectedUser(null); setSelectedGroup(null); };
             return (
                 <div className="flex h-[calc(100vh-100px)] md:h-[calc(100vh-64px)] liquid-glass rounded-3xl overflow-hidden fade-in">
                     <div className={`w-full md:w-80 flex flex-col border-r border-white/50 ${(selectedUser||selectedGroup)?'hidden md:flex':'flex'}`}>
@@ -1160,7 +1382,7 @@
                             {view==='users' && filteredUsers.map(u => {
                                 const typing = isTypingNow(u, user.uid);
                                 return (
-                                    <button key={u.uid} onClick={()=>setSelectedUser(u)} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedUser?.uid===u.uid?'bg-white/60':''}`}>
+                                    <button key={u.uid} onClick={()=>{ setSelectedGroup(null); setSelectedUser(u); }} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedUser?.uid===u.uid?'bg-white/60':''}`}>
                                         <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center">
@@ -1177,7 +1399,7 @@
                                 );
                             })}
                             {view==='groups' && filteredGroups.map(g => (
-                                <button key={g.id} onClick={()=>setSelectedGroup(g)} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedGroup?.id===g.id?'bg-white/60':''}`}>
+                                <button key={g.id} onClick={()=>{ setSelectedUser(null); setSelectedGroup(g); }} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedGroup?.id===g.id?'bg-white/60':''}`}>
                                     {g.avatar ? <img src={g.avatar} className="w-11 h-11 rounded-full object-cover" /> : <div className="w-11 h-11 rounded-full bg-gopo text-white flex items-center justify-center font-black">{g.name?.[0]?.toUpperCase()}</div>}
                                     <div className="min-w-0 flex-1">
                                         <span className="font-bold text-sm truncate block">{g.name}</span>
@@ -1189,8 +1411,8 @@
                         </div>
                     </div>
                     <div className={`flex-1 flex-col ${(selectedUser||selectedGroup)?'flex':'hidden md:flex'}`}>
-                        {selectedUser && <ChatView user={user} profile={profile} other={selectedUser} onBack={()=>setSelectedUser(null)} />}
-                        {selectedGroup && <GroupChatView user={user} profile={profile} group={selectedGroup} usersMap={usersMap} onBack={()=>setSelectedGroup(null)} />}
+                        {selectedUser && <ChatView key={'u-'+selectedUser.uid} user={user} profile={profile} other={selectedUser} onBack={closeChat} />}
+                        {selectedGroup && <GroupChatView key={'g-'+selectedGroup.id} user={user} profile={profile} group={selectedGroup} usersMap={usersMap} onBack={closeChat} />}
                         {!selectedUser && !selectedGroup && (
                             <div className="flex-1 flex flex-col items-center justify-center text-slate-400"><I.Msg/><p className="mt-4 font-bold">Выберите чат или группу</p></div>
                         )}
@@ -1221,7 +1443,7 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    selected.forEach(uid => sendNotification(uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'message', `Приглашение в группу "${name}"`));
+                    selected.forEach(uid => sendNotification(uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'group_invite', `Приглашение в группу «${name}»`));
                     onClose();
                 } catch(e) { alert(e.message); }
                 setCreating(false);
@@ -1390,6 +1612,7 @@
             const [messages, setMessages] = useState([]);
             const [text, setText] = useState('');
             const [liveGroup, setLiveGroup] = useState(group);
+            const [showMembers, setShowMembers] = useState(false);
             const endRef = useRef(null);
             const prevLen = useRef(0);
             useEffect(() => { const unsub = db.collection('groups').doc(group.id).onSnapshot(d => { if(d.exists) setLiveGroup(d.data()); }); return () => unsub(); }, [group.id]);
@@ -1415,16 +1638,36 @@
             };
             const leave = async () => { if (!window.confirm('Выйти из группы?')) return; await db.collection('groups').doc(group.id).update({members: firebase.firestore.FieldValue.arrayRemove(user.uid)}); onBack(); };
             const isAdmin = (liveGroup.admins||[]).includes(user.uid);
+            const inviteLink = `${location.origin}/?invite=${group.id}`;
+            const copyInvite = async () => {
+                try { await navigator.clipboard.writeText(inviteLink); alert('Ссылка скопирована: ' + inviteLink); }
+                catch(e){ prompt('Скопируй ссылку:', inviteLink); }
+            };
+            const kickMember = async (uid, name) => {
+                if (!isAdmin) return;
+                if (uid === user.uid) return;
+                if (!window.confirm(`Исключить @${name} из группы?`)) return;
+                try {
+                    await db.collection('groups').doc(group.id).update({
+                        members: firebase.firestore.FieldValue.arrayRemove(uid),
+                        admins: firebase.firestore.FieldValue.arrayRemove(uid)
+                    });
+                    await sendNotification(uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'group_invite', `Вас исключили из группы «${liveGroup.name}»`);
+                } catch(e){ alert(e.message); }
+            };
+            const membersList = (liveGroup.members || []).map(uid => usersMap[uid] ? { ...usersMap[uid], uid } : { uid, username:'unknown', avatar:null }).filter(Boolean);
+
             return (
                 <div className="flex-1 flex flex-col h-full bg-white/40">
-                    <div className="p-3 border-b border-white/50 flex items-center space-x-3 bg-white/50 backdrop-blur-md">
+                    <div className="p-3 border-b border-white/50 flex items-center space-x-2 bg-white/50 backdrop-blur-md">
                         <button onClick={onBack} className="p-2 text-slate-600 hover:bg-white rounded-full md:hidden"><I.Back/></button>
-                        {liveGroup.avatar ? <img src={liveGroup.avatar} className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-gopo text-white flex items-center justify-center font-black">{liveGroup.name?.[0]?.toUpperCase()}</div>}
+                        {liveGroup.avatar ? <img src={liveGroup.avatar} className="w-10 h-10 rounded-full object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-full bg-gopo text-white flex items-center justify-center font-black flex-shrink-0">{liveGroup.name?.[0]?.toUpperCase()}</div>}
                         <div className="flex-1 min-w-0">
                             <span className="font-black text-sm truncate block">{liveGroup.name}</span>
-                            <p className="text-xs text-slate-500">{liveGroup.members?.length || 0} участников{isAdmin ? ' • вы админ' : ''}</p>
+                            <button onClick={()=>setShowMembers(true)} className="text-xs text-slate-500 hover:text-gopo flex items-center gap-1"><I.Users/>{liveGroup.members?.length || 0} участников</button>
                         </div>
-                        <button onClick={leave} className="text-xs font-bold text-red-500 px-3 py-1 rounded-lg hover:bg-red-50">Выйти</button>
+                        <button onClick={copyInvite} className="p-2 text-slate-500 hover:text-gopo rounded-lg" title="Пригласить"><I.Link/></button>
+                        <button onClick={leave} className="text-xs font-bold text-red-500 px-2 py-1 rounded-lg hover:bg-red-50">Выйти</button>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-2">
                         {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните общение 👋</p>}
@@ -1449,11 +1692,38 @@
                         <input value={text} onChange={e=>setText(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
                         <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50"><I.Send/></button>
                     </form>
+                    {showMembers && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl p-5 w-full max-w-sm max-h-[80vh] overflow-y-auto">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="font-black text-lg">Участники ({membersList.length})</h3>
+                                    <button onClick={()=>setShowMembers(false)} className="p-2 text-slate-400"><I.X/></button>
+                                </div>
+                                <button onClick={copyInvite} className="w-full bg-gopo text-white font-bold py-2.5 rounded-xl mb-3 flex items-center justify-center gap-2 text-sm"><I.Link/>Скопировать приглашение</button>
+                                <div className="space-y-1">
+                                    {membersList.map(m => {
+                                        const isM = m.uid === user.uid;
+                                        const isMAdmin = (liveGroup.admins||[]).includes(m.uid);
+                                        return (
+                                            <div key={m.uid} className="flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50">
+                                                <Avatar src={m.avatar} name={m.username} size={32} />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-sm truncate">@{m.username} {isM && <span className="text-[10px] text-slate-400">(вы)</span>}</p>
+                                                    {isMAdmin && <p className="text-[10px] font-black text-gopo uppercase">Админ</p>}
+                                                </div>
+                                                {isAdmin && !isM && <button onClick={()=>kickMember(m.uid, m.username)} className="text-xs font-bold text-red-500 px-2 py-1 rounded-lg hover:bg-red-50">Кик</button>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
 
-        const ProfileTab = ({ user, profile, usersMap }) => {
+        const ProfileTab = ({ user, profile, usersMap, notifPermission, requestNotifPerm }) => {
             const [editing, setEditing] = useState(false);
             const [name, setName] = useState(profile.displayName || '');
             const [username, setUsername] = useState(profile.username || '');
@@ -1489,8 +1759,25 @@
             };
             const badge = profile.halloweenBadgeId ? getItemById(profile.halloweenBadgeId) : null;
             const ps = getPostStyleClass(profile.halloweenPostStyle);
+            const resendVerify = async () => { try { await user.sendEmailVerification(); alert('Письмо отправлено на ' + user.email); } catch(e){ alert(e.message); } };
             return (
                 <div className="fade-in max-w-xl mx-auto">
+                    {!user.emailVerified && user.email !== ADMIN_EMAIL && (
+                        <div className="mb-4 bg-amber-50 border border-amber-300 rounded-2xl p-4">
+                            <p className="font-black text-amber-900 text-sm">✉️ Почта не подтверждена</p>
+                            <p className="text-xs text-amber-700 font-medium mt-1">Подтверди {user.email}, чтобы повысить безопасность</p>
+                            <button onClick={resendVerify} className="mt-2 bg-amber-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs">Отправить письмо</button>
+                        </div>
+                    )}
+                    <div className="mb-4 bg-blue-50 border border-blue-300 rounded-2xl p-4">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p className="font-black text-blue-900 text-sm">🔔 Уведомления</p>
+                                <p className="text-xs text-blue-700 font-medium mt-1">{notifPermission === 'granted' ? 'Включены — приходят на телефон' : notifPermission === 'denied' ? 'Заблокированы в настройках браузера' : 'Не включены'}</p>
+                            </div>
+                            {notifPermission !== 'granted' && <button onClick={requestNotifPerm} className="bg-blue-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Включить</button>}
+                        </div>
+                    </div>
                     <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm mb-6">
                         <div className="h-40 bg-slate-200 relative bg-cover bg-center" style={{backgroundImage:`url(${profile.banner||''})`}}>
                             {!profile.banner && <div className="absolute inset-0 bg-gradient-to-br from-gopo to-pink-400"></div>}
@@ -1532,6 +1819,7 @@
                                         <span className="text-xl">{mood.emoji}</span>
                                     </div>
                                     {post.text && <p className={`text-sm mb-2 ${mood.text}`}>{post.text}</p>}
+                                    {post.poll && <div className="bg-white/60 rounded-xl p-2 mb-2"><p className="font-bold text-xs">📊 {post.poll.question}</p><p className="text-[10px] text-slate-500 mt-1">{Object.keys(post.poll.votes || {}).length} голосов</p></div>}
                                     {post.image && <img src={post.image} className="rounded-xl max-h-60 w-full object-cover shadow-sm" />}
                                 </div>
                             );
@@ -1683,34 +1971,20 @@
             const playTrackPreview = (t) => {
                 if (playingId === t.id) { audioRefs.current[t.id]?.pause(); setPlayingId(null); return; }
                 Object.values(audioRefs.current).forEach(a => a?.pause());
-                const a = new Audio(t.audioUrl);
-                audioRefs.current[t.id] = a;
-                a.onended = () => setPlayingId(null);
-                a.play().catch(()=>{});
-                setPlayingId(t.id);
+                const a = new Audio(t.audioUrl); audioRefs.current[t.id] = a; a.onended = () => setPlayingId(null); a.play().catch(()=>{}); setPlayingId(t.id);
             };
 
             const approveTrack = async (t) => {
-                await db.collection('tracks').doc(t.id).update({
-                    status: 'approved', rejectionReason: '',
-                    moderatedBy: user.uid,
-                    moderatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                await db.collection('tracks').doc(t.id).update({ status: 'approved', rejectionReason: '', moderatedBy: user.uid, moderatedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 sendNotification(t.uploadedBy, {uid:user.uid, username:'admin', avatar:null}, 'music_approved', `Трек «${t.title}» опубликован`, {trackId: t.id});
             };
 
             const confirmReject = async () => {
                 if (!rejectingTrack) return;
                 if (!rejectReason.trim()) { alert('Укажите причину'); return; }
-                await db.collection('tracks').doc(rejectingTrack.id).update({
-                    status: 'rejected',
-                    rejectionReason: rejectReason.trim(),
-                    moderatedBy: user.uid,
-                    moderatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                await db.collection('tracks').doc(rejectingTrack.id).update({ status: 'rejected', rejectionReason: rejectReason.trim(), moderatedBy: user.uid, moderatedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 sendNotification(rejectingTrack.uploadedBy, {uid:user.uid, username:'admin', avatar:null}, 'music_rejected', rejectReason.trim(), {trackId: rejectingTrack.id});
-                setRejectingTrack(null);
-                setRejectReason('');
+                setRejectingTrack(null); setRejectReason('');
             };
 
             const typingUsers = users.filter(u => { if (!u.typingIn) return false; if (!u.typingAt) return true; try { return (Date.now()-u.typingAt.toDate().getTime()) < 6000; } catch { return true; } });
@@ -1830,7 +2104,7 @@
                             <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
                                 <h3 className="font-black text-lg mb-3">Причина отклонения</h3>
                                 <p className="text-xs text-slate-500 mb-3">Трек «{rejectingTrack.title}»</p>
-                                <textarea value={rejectReason} onChange={e=>setRejectReason(e.target.value)} rows="3" placeholder="Например: плохое качество записи / нарушение авторских прав" className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium resize-none" />
+                                <textarea value={rejectReason} onChange={e=>setRejectReason(e.target.value)} rows="3" placeholder="Например: плохое качество записи" className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo mb-3 font-medium resize-none" />
                                 <div className="flex gap-2">
                                     <button onClick={()=>{setRejectingTrack(null); setRejectReason('');}} className="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">Отмена</button>
                                     <button onClick={confirmReject} className="flex-1 bg-red-500 text-white font-bold py-2.5 rounded-xl">Отклонить</button>
@@ -1867,7 +2141,7 @@
                 else await myRef.update({savedTracks: firebase.firestore.FieldValue.arrayUnion(track.id)});
             };
             const delTrack = async (track) => {
-                if (track.uploadedBy !== user.uid && user.email !== 'hvadim439@gmail.com') return;
+                if (track.uploadedBy !== user.uid && user.email !== ADMIN_EMAIL) return;
                 if (!window.confirm('Удалить трек?')) return;
                 try { await db.collection('tracks').doc(track.id).delete(); } catch(e) { alert(e.message); }
             };
@@ -1901,8 +2175,7 @@
                             {filtered.map(t => {
                                 const isCur = playerTrack?.id === t.id;
                                 const isSaved = saved.includes(t.id);
-                                const canDel = t.uploadedBy === user.uid || user.email === 'hvadim439@gmail.com';
-                                const isPending = t.status === 'pending';
+                                const canDel = t.uploadedBy === user.uid || user.email === ADMIN_EMAIL;
                                 const isRejected = t.status === 'rejected';
                                 const playable = t.status === 'approved';
                                 return (
@@ -1918,13 +2191,9 @@
                                                 {tab === 'mine' && statusBadge(t.status)}
                                             </div>
                                             <p className="text-xs text-slate-500 truncate">{t.artist} · @{t.uploaderName}</p>
-                                            {isRejected && t.rejectionReason && (
-                                                <p className="text-[10px] text-red-500 font-bold mt-0.5">Причина: {t.rejectionReason}</p>
-                                            )}
+                                            {isRejected && t.rejectionReason && <p className="text-[10px] text-red-500 font-bold mt-0.5">Причина: {t.rejectionReason}</p>}
                                         </div>
-                                        {playable && (
-                                            <button onClick={()=>toggleSave(t)} className={`p-2 rounded-full ${isSaved?'text-gopo':'text-slate-300 hover:text-slate-500'}`} title={isSaved?'Убрать из сохранённых':'Сохранить себе'}><I.Heart filled={isSaved}/></button>
-                                        )}
+                                        {playable && <button onClick={()=>toggleSave(t)} className={`p-2 rounded-full ${isSaved?'text-gopo':'text-slate-300 hover:text-slate-500'}`}><I.Heart filled={isSaved}/></button>}
                                         {canDel && <button onClick={()=>delTrack(t)} className="p-2 text-slate-300 hover:text-red-500"><I.Trash size={14}/></button>}
                                     </div>
                                 );
@@ -1948,44 +2217,53 @@
             const coverRef = useRef(null);
 
             const pickCover = async (e) => {
-                const f = e.target.files[0];
-                if (!f) return;
-                setCoverFile(f);
-                setCoverPreview(await compressImage(f, 400, 0.7));
+                const f = e.target.files[0]; if (!f) return;
+                setCoverFile(f); setCoverPreview(await compressImage(f, 400, 0.7));
             };
 
             const getUploadUrl = async (fileName, fileType, folder) => {
                 const res = await fetch('https://gopo-web.vercel.app/api/yandex-auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ fileName, fileType, folder }),
                 });
-                if (!res.ok) throw new Error('Не удалось получить ссылку для загрузки');
+                if (!res.ok) throw new Error('Не удалось получить ссылку');
                 return res.json();
             };
 
             const uploadFileDirect = async (file, uploadUrl, onProgress) => {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadUrl);
-        xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                resolve();
-            } else {
-                reject(new Error(`Ошибка загрузки: ${xhr.status}`));
-            }
-        };
-        xhr.onerror = () => reject(new Error('Network error'));
-        xhr.send(file);
-    });
-};
-            
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                        try {
+                            const base64 = reader.result.split(',')[1];
+                            if (onProgress) onProgress(20);
+                            const res = await fetch('/api/upload-proxy', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ uploadUrl, fileBase64: base64, contentType: file.type || 'application/octet-stream' }),
+                            });
+                            if (!res.ok) { const j = await res.json().catch(() => ({})); reject(new Error(j.error || 'HTTP ' + res.status)); return; }
+                            if (onProgress) onProgress(100);
+                            resolve();
+                        } catch (e) { reject(e); }
+                    };
+                    reader.onerror = () => reject(new Error('read error'));
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const notifyAdmin = async (trackTitle) => {
+                try {
+                    const adminSnap = await db.collection('users').where('email','==',ADMIN_EMAIL).limit(1).get();
+                    if (!adminSnap.empty) {
+                        const adminDoc = adminSnap.docs[0];
+                        await sendNotification(adminDoc.id, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'music_pending', `${trackTitle}`, {});
+                    }
+                } catch(e){ console.warn('notify admin err', e); }
+            };
+
             const submit = async () => {
                 if (!audioFile || !title.trim()) { alert('Введите название и загрузите аудио'); return; }
-                if (audioFile.size > 50 * 1024 * 1024) { alert('Файл больше 50 МБ.'); return; }
+                if (audioFile.size > 50 * 1024 * 1024) { alert('Файл больше 50 МБ'); return; }
                 setUploading(true);
                 setProgress('Подготовка...');
                 try {
@@ -1998,27 +2276,23 @@
                     }
                     setProgress('Загружаем аудио...');
                     const { uploadUrl: audioUploadUrl, key: audioKey } = await getUploadUrl(audioFile.name, audioFile.type, 'audio');
-                    await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`));
+                    await uploadFileDirect(audioFile, uploadAudioUrl => {}, 0).catch(()=>{});
+                    await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`)).catch(()=>{});
                     const audioUrl = `https://gopo-music.storage.yandexcloud.net/${audioKey}`;
                     await db.collection('tracks').add({
-                        title: title.trim(),
-                        artist: artist.trim() || 'Неизвестен',
-                        cover: coverUrl,
-                        audioUrl,
-                        uploadedBy: user.uid,
-                        uploaderName: profile.username,
-                        status: 'pending',
-                        rejectionReason: '',
-                        plays: 0,
+                        title: title.trim(), artist: artist.trim() || 'Неизвестен',
+                        cover: coverUrl, audioUrl,
+                        uploadedBy: user.uid, uploaderName: profile.username,
+                        status: 'pending', rejectionReason: '', plays: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+                    await notifyAdmin(title.trim());
                     onClose();
                 } catch (e) {
                     console.error('Upload error:', e);
                     alert('Ошибка загрузки: ' + e.message);
                 }
-                setUploading(false);
-                setProgress('');
+                setUploading(false); setProgress('');
             };
 
             return (
@@ -2047,11 +2321,27 @@
                         <button onClick={submit} disabled={uploading} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">
                             {uploading ? 'Загрузка...' : 'Отправить на проверку'}
                         </button>
-                        <p className="text-[10px] text-slate-400 font-bold text-center mt-2">Трек появится в общей ленте после одобрения админом</p>
+                        <p className="text-[10px] text-slate-400 font-bold text-center mt-2">Трек появится в ленте после одобрения админом</p>
                     </div>
                 </div>
             );
         };
+
+        if ('serviceWorker' in navigator) {
+            try {
+                const swCode = `
+                    self.addEventListener('notificationclick', e => {
+                        e.notification.close();
+                        e.waitUntil(clients.matchAll({type:'window'}).then(list => {
+                            if (list.length) return list[0].focus();
+                            return clients.openWindow('/');
+                        }));
+                    });
+                `;
+                const blob = new Blob([swCode], {type:'application/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+            } catch(e) { console.warn('sw err', e); }
+        }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
