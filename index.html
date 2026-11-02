@@ -859,7 +859,7 @@
                         </div>
                         {view === 'tap' && (
                             <div className="flex flex-col items-center justify-center py-6">
-                                <div onClick={tap} onTouchStart={tap} className={`clicker-pumpkin ${pulse ? 'pulse' : ''} ${!isActive ? 'opacity-40 cursor-not-allowed' : ''}`}>🎃</div>
+                                <div onClick={tap} className={`clicker-pumpkin ${pulse ? 'pulse' : ''} ${!isActive ? 'opacity-40 cursor-not-allowed' : ''}`}>🎃</div>
                                 <p className="text-center text-sm text-slate-400 mt-6 font-bold px-4">{isActive ? 'Тапай по тыкве, чтобы получать конфеты 🍬' : 'Ивент закончился — тыква спит'}</p>
                                 <div className="mt-6 text-center"><div className="text-5xl font-black text-orange-300">{candies}</div><div className="text-xs text-slate-400 font-bold mt-1">🍬 конфет</div></div>
                             </div>
