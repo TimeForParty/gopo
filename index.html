@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GoPo 🎃</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
+    <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#FF0055">
-    <link rel="manifest" href='data:application/manifest+json,{"name":"GoPo","short_name":"GoPo","start_url":"/","display":"standalone","background_color":"%23f0f2f5","theme_color":"%23FF0055","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' rx=\'22\' fill=\'%23FF0055\'/%3E%3Ctext x=\'50\' y=\'68\' font-size=\'48\' font-weight=\'900\' fill=\'white\' text-anchor=\'middle\' font-family=\'Arial\'%3EGoPo%3C/text%3E%3C/svg%3E","sizes":"any","type":"image/svg+xml","purpose":"any"}]}'>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GoPo">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -62,7 +67,6 @@
         .splash-bubble span { color:#2C2C2C; font-weight:900; font-size:3.5rem; letter-spacing:-2px; transform:rotate(-8deg); display:inline-block; }
         .mini-player { animation: slideUp .3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
         .halloween-tint { background-image: radial-gradient(circle at 0% 0%, rgba(255,107,0,0.05) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(124,58,237,0.05) 0%, transparent 40%); background-attachment: fixed; }
         .gopo-logo-halloween::before { content: '🎃'; position: absolute; top: -10px; right: -14px; font-size: 26px; filter: drop-shadow(0 0 8px rgba(255,107,0,0.8)); animation: pumpkinGlow 2.5s ease-in-out infinite; z-index: 10; }
         @keyframes pumpkinGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(255,107,0,0.6)); transform: rotate(-6deg) scale(1); } 50% { filter: drop-shadow(0 0 16px rgba(255,107,0,1)); transform: rotate(6deg) scale(1.1); } }
@@ -92,6 +96,7 @@
         @keyframes skullFloat { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-5px) rotate(5deg); } }
         .poll-option { position: relative; overflow: hidden; }
         .poll-bar { position: absolute; inset: 0; background: rgba(255,0,85,0.15); transition: width 0.3s; }
+        .messages-scroll { overflow-y: auto; overflow-x: hidden; }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -181,7 +186,7 @@
                 return d.toLocaleDateString('ru');
             } catch { return '...'; }
         };
-        const postTime = (p) => p.createdAt?.toDate?.()?.getTime?.() ?? (p.createdAt ? 0 : Date.now());
+        const postTime = (p) => p.createdAt?.toDate?.()?.getTime?.() ?? (typeof p.createdAt === 'number' ? p.createdAt : (p.createdAt ? 0 : Date.now()));
         const waveBars = (id) => { let h=0; for(let i=0;i<(id||'').length;i++) h=(h*31+id.charCodeAt(i))>>>0; const o=[]; for(let i=0;i<12;i++){h=(h*1103515245+12345)>>>0;o.push(20+(h%80));} return o; };
         const isReallyOnline = (u) => { if(!u?.isOnline) return false; if(!u.lastActiveAt) return true; try{return (Date.now()-u.lastActiveAt.toDate().getTime())<120000;}catch{return true;} };
         const formatLastSeen = (u) => {
@@ -223,17 +228,23 @@
             return map[n.type] || 'Новое уведомление в GoPo';
         };
 
-        const showBrowserNotif = (n) => {
+        const showBrowserNotif = async (n) => {
             try {
                 if (!('Notification' in window) || Notification.permission !== 'granted') return;
                 const title = 'GoPo 🎃';
                 const body = notifBodyText(n);
-                new Notification(title, {
-                    body,
-                    icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial'%3EGoPo%3C/text%3E%3C/svg%3E",
-                    tag: n.id || 'gopo-notif',
-                    badge: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3C/svg%3E"
-                });
+                const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial'%3EGoPo%3C/text%3E%3C/svg%3E";
+                const options = { body, icon, badge: icon, tag: n.id || 'gopo-notif' };
+                if ('serviceWorker' in navigator) {
+                    try {
+                        const reg = await navigator.serviceWorker.getRegistration();
+                        if (reg && reg.showNotification) {
+                            await reg.showNotification(title, options);
+                            return;
+                        }
+                    } catch(e){}
+                }
+                new Notification(title, options);
             } catch(e) { console.warn('notif err', e); }
         };
 
@@ -324,6 +335,9 @@
             const [playerDuration, setPlayerDuration] = useState(0);
             const playerAudioRef = useRef(null);
 
+            const unreadMsgs = Object.values(profile?.unreadCounts || {}).reduce((a, b) => a + (b || 0), 0) + Object.values(profile?.unreadGroupCounts || {}).reduce((a, b) => a + (b || 0), 0);
+            const totalBadge = unreadNotifs + unreadMsgs;
+
             useEffect(() => {
                 if (!playerAudioRef.current || !playerTrack) return;
                 if (playerPlaying) playerAudioRef.current.play().catch(()=>setPlayerPlaying(false));
@@ -331,6 +345,12 @@
             }, [playerTrack, playerPlaying]);
 
             useEffect(() => { const t = setInterval(() => setEventActive(Date.now() < HALLOWEEN_END), 60000); return () => clearInterval(t); }, []);
+
+            useEffect(() => {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('sw register:', e));
+                }
+            }, []);
 
             const playTrack = (track, queue) => {
                 if (playerTrack?.id === track.id) { setPlayerPlaying(p => !p); return; }
@@ -361,7 +381,7 @@
                 const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
                     if (doc.exists) { setProfile(doc.data()); setLoading(false); }
                     else if (user.displayName && !window.__gopoRegistering) {
-                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === ADMIN_EMAIL, isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === ADMIN_EMAIL, isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null, unreadCounts:{}, unreadGroupCounts:{}, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
                         await db.collection('users').doc(user.uid).set(np);
                         setProfile(np); setLoading(false);
                     }
@@ -373,10 +393,10 @@
                 if (!user) return;
                 const unsub = db.collection('notifications').where('recipientId','==',user.uid).where('read','==',false).onSnapshot(snap => {
                     snap.docChanges().forEach(change => {
-                        if (change.type === 'added') {
+                        if (change.type === 'added' && !change.doc.metadata.hasPendingWrites) {
                             const n = change.doc.data();
                             const nWithId = { id: change.doc.id, ...n };
-                            if (document.hidden) showBrowserNotif(nWithId);
+                            showBrowserNotif(nWithId);
                         }
                     });
                     setUnreadNotifs(snap.size);
@@ -395,15 +415,15 @@
                 (async () => {
                     try {
                         const gDoc = await db.collection('groups').doc(inviteGroup).get();
-                        if (!gDoc.exists) { alert('Группа не найдена'); setInviteGroup(null); history.replaceState(null, '', '/'); return; }
+                        if (!gDoc.exists) { alert('Группа не найдена'); setInviteGroup(null); history.replaceState(null, '', location.pathname); return; }
                         const g = gDoc.data();
                         if ((g.members || []).includes(user.uid)) {
                             setActiveTab('dm');
                             setInviteGroup(null);
-                            history.replaceState(null, '', '/');
+                            history.replaceState(null, '', location.pathname);
                             return;
                         }
-                        if (!confirm(`Вступить в группу «${g.name}»?`)) { setInviteGroup(null); history.replaceState(null, '', '/'); return; }
+                        if (!confirm(`Вступить в группу «${g.name}»?`)) { setInviteGroup(null); history.replaceState(null, '', location.pathname); return; }
                         await db.collection('groups').doc(inviteGroup).update({
                             members: firebase.firestore.FieldValue.arrayUnion(user.uid)
                         });
@@ -411,20 +431,22 @@
                         setActiveTab('dm');
                         alert('Вы вступили в группу!');
                         setInviteGroup(null);
-                        history.replaceState(null, '', '/');
+                        history.replaceState(null, '', location.pathname);
                     } catch(e) { alert('Ошибка: ' + e.message); setInviteGroup(null); }
                 })();
             }, [inviteGroup, user, profile]);
 
             const requestNotifPerm = async () => {
                 if (!('Notification' in window)) { alert('Уведомления не поддерживаются'); return; }
-                const p = await Notification.requestPermission();
-                setNotifPermission(p);
-                if (p === 'granted') {
-                    showBrowserNotif({ senderName: '', type: 'welcome', text: 'Уведомления включены' });
-                } else {
-                    alert('Уведомления отключены. Включи в настройках браузера для сайта gopo.layero.app');
-                }
+                try {
+                    const p = await Notification.requestPermission();
+                    setNotifPermission(p);
+                    if (p === 'granted') {
+                        await showBrowserNotif({ senderName: 'GoPo', type: 'welcome', text: 'Уведомления включены' });
+                    } else if (p === 'denied') {
+                        alert('Уведомления заблокированы. Открой настройки браузера для gopo.layero.app и разреши уведомления');
+                    }
+                } catch(e) { alert('Ошибка: ' + e.message); }
             };
 
             if (!splashDone) return <SplashScreen />;
@@ -450,16 +472,22 @@
             return (
                 <div className={`flex h-screen relative overflow-hidden ${eventActive ? 'halloween-tint bg-[#f0f2f5]' : 'bg-[#f0f2f5]'}`}>
                     {eventActive && <HalloweenBats />}
-                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={unreadNotifs} />
+                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={totalBadge} unreadMsgs={unreadMsgs} />
                     <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${playerTrack ? 'pb-56 md:pb-40' : 'pb-24 md:pb-8'}`}>
                         <div className="max-w-2xl mx-auto">
-                            <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
+                                <button onClick={()=>setShowNotifications(true)} className="md:hidden relative liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition">
+                                    <I.Bell />
+                                    {totalBadge > 0 && <span className="absolute -top-1 -right-1 bg-gopo text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">{totalBadge > 9 ? '9+' : totalBadge}</span>}
+                                </button>
+                            </div>
 
                             {showVerifyBanner && (
                                 <div className="mb-3 bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-center gap-2 text-xs">
                                     <span className="text-xl">✉️</span>
-                                    <div className="flex-1 font-bold text-amber-900">Подтверди почту, чтобы получать уведомления</div>
-                                    <button onClick={async ()=>{ try{ await user.sendEmailVerification(); alert('Письмо отправлено на '+user.email); }catch(e){ alert(e.message); } }} className="bg-amber-500 text-white font-bold px-3 py-1.5 rounded-lg text-[11px]">Отправить</button>
+                                    <div className="flex-1 font-bold text-amber-900">Подтверди {user.email}, чтобы получать важные уведомления</div>
+                                    <button onClick={async ()=>{ try{ await user.sendEmailVerification(); alert('Письмо отправлено на '+user.email+'. Проверь папку Спам, если не видишь.'); }catch(e){ alert('Не удалось отправить: '+e.message); } }} className="bg-amber-500 text-white font-bold px-3 py-1.5 rounded-lg text-[11px]">Отправить</button>
                                 </div>
                             )}
 
@@ -484,7 +512,7 @@
                             {activeTab==='clicker' && <ClickerTab user={user} profile={profile} />}
                         </div>
                     </main>
-                    <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} unread={unreadNotifs} />
+                    <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} unread={totalBadge} unreadMsgs={unreadMsgs} onOpenNotifs={()=>setShowNotifications(true)} />
                     {showCreate && <CreatePostModal user={user} profile={profile} onClose={()=>setShowCreate(false)} />}
                     {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user} currentProfile={profile} onClose={()=>setViewingProfile(null)} />}
                     {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile} usersMap={usersMap} isAdmin={isAdmin} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} />}
@@ -519,9 +547,10 @@
             const [error, setError] = useState('');
             const [loading, setLoading] = useState(false);
             const [sentVerify, setSentVerify] = useState(false);
+            const [verifyError, setVerifyError] = useState('');
 
             const submit = async (e) => {
-                e.preventDefault(); setError(''); setLoading(true);
+                e.preventDefault(); setError(''); setLoading(true); setVerifyError('');
                 try {
                     if (isLogin) {
                         await auth.signInWithEmailAndPassword(email, password);
@@ -532,7 +561,13 @@
                         window.__gopoRegistering = true;
                         const cred = await auth.createUserWithEmailAndPassword(email, password);
                         await cred.user.updateProfile({ displayName: name });
-                        try { await cred.user.sendEmailVerification(); setSentVerify(true); } catch(e){ console.warn('verify:', e); }
+                        try {
+                            await cred.user.sendEmailVerification();
+                            setSentVerify(true);
+                        } catch(ve) {
+                            console.warn('verify err:', ve);
+                            setVerifyError(ve.message || ve.code || 'Не удалось отправить письмо');
+                        }
                         const dup = await db.collection('users').where('username','==',uname).limit(1).get();
                         if (!dup.empty) {
                             await cred.user.delete().catch(()=>{});
@@ -549,13 +584,14 @@
                             followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null,
                             typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[],
                             halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null,
+                            unreadCounts:{}, unreadGroupCounts:{},
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                         window.__gopoRegistering = false;
                     }
                 } catch(err) {
                     window.__gopoRegistering = false;
-                    const m = {'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль','auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)','auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные','permission-denied':'Ошибка прав Firestore'};
+                    const m = {'auth/email-already-in-use':'Этот email уже занят','auth/wrong-password':'Неверный пароль','auth/user-not-found':'Пользователь не найден','auth/weak-password':'Пароль слишком простой (мин. 6)','auth/invalid-email':'Некорректный email','auth/invalid-credential':'Неверные данные','permission-denied':'Ошибка прав Firestore','auth/operation-not-allowed':'Включите Email/Password в Firebase Console'};
                     setError(m[err.code] || err.message);
                 }
                 setLoading(false);
@@ -567,7 +603,8 @@
                     <div className="liquid-glass p-8 rounded-3xl w-full max-w-md relative z-10">
                         <div className="flex justify-center mb-8"><Logo /></div>
                         <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo 🎃':'Создать аккаунт 🎃'}</h2>
-                        {sentVerify && <div className="bg-green-100 text-green-700 p-3 rounded-xl mb-4 text-sm font-bold">✉️ Мы отправили письмо для подтверждения на {email}. Проверь почту!</div>}
+                        {sentVerify && <div className="bg-green-100 text-green-700 p-3 rounded-xl mb-4 text-sm font-bold">✉️ Письмо отправлено на {email}. Проверь почту и папку Спам.</div>}
+                        {verifyError && <div className="bg-amber-100 text-amber-800 p-3 rounded-xl mb-4 text-xs font-bold">Не удалось отправить письмо: {verifyError}. Попробуй «Забыли пароль?» на входе.</div>}
                         {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 text-sm font-bold">{error}</div>}
                         <form onSubmit={submit} className="space-y-4">
                             {!isLogin && <>
@@ -578,13 +615,13 @@
                             <input type="password" placeholder="Пароль (мин. 6 символов)" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3.5 bg-white/50 border border-white/50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" required />
                             <button type="submit" disabled={loading} className="w-full bg-gopo text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-200 disabled:opacity-50">{loading?'Загрузка...':(isLogin?'Войти':'Зарегистрироваться')}</button>
                         </form>
-                        <p onClick={()=>{setIsLogin(!isLogin); setError(''); setSentVerify(false);}} className="text-center mt-5 text-sm font-bold text-slate-600 cursor-pointer hover:text-gopo">{isLogin?'Нет аккаунта? Зарегистрироваться':'Уже есть аккаунт? Войти'}</p>
+                        <p onClick={()=>{setIsLogin(!isLogin); setError(''); setSentVerify(false); setVerifyError('');}} className="text-center mt-5 text-sm font-bold text-slate-600 cursor-pointer hover:text-gopo">{isLogin?'Нет аккаунта? Зарегистрироваться':'Уже есть аккаунт? Войти'}</p>
                     </div>
                 </div>
             );
         };
 
-        const Sidebar = ({ activeTab, setActiveTab, isAdmin, onCreate, onOpenNotifs, unread }) => (
+        const Sidebar = ({ activeTab, setActiveTab, isAdmin, onCreate, onOpenNotifs, unread, unreadMsgs }) => (
             <nav className="hidden md:flex flex-col w-64 m-4 rounded-3xl liquid-glass p-4 z-20">
                 <div className="mb-6 pl-2 flex items-center justify-between">
                     <Logo small />
@@ -592,7 +629,7 @@
                 </div>
                 <div className="space-y-1 flex-1">
                     <NavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} label="Лента" />
-                    <NavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} label="Чаты" />
+                    <NavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} label="Чаты" badge={unreadMsgs} />
                     <NavItem active={activeTab==='search'} onClick={()=>setActiveTab('search')} icon={<I.Search/>} label="Поиск" />
                     <NavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} label="Профиль" />
                     <NavItem active={activeTab==='music'} onClick={()=>setActiveTab('music')} icon={<I.Music/>} label="Музыка" />
@@ -614,11 +651,10 @@
                 return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle); };
             }, [open]);
             return (
-                <div ref={ref} className="md:hidden relative mb-4 flex items-center justify-between">
+                <div ref={ref} className="md:hidden relative">
                     <button onClick={()=>setOpen(!open)} className="liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition" aria-label="Меню">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
                     </button>
-                    <Logo small />
                     {open && (
                         <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-56 fade-in">
                             <button onClick={()=>{ setActiveTab('search'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"><span className="text-slate-500"><I.Search /></span><span>Поиск</span></button>
@@ -631,19 +667,24 @@
             );
         };
 
-        const MobileNav = ({ activeTab, setActiveTab, isAdmin, onCreate, unread }) => (
+        const MobileNav = ({ activeTab, setActiveTab, isAdmin, onCreate, unread, unreadMsgs, onOpenNotifs }) => (
             <nav className="md:hidden fixed bottom-4 left-4 right-4 liquid-glass rounded-3xl flex justify-around items-center py-3 z-50">
                 <MobileNavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} />
-                <MobileNavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} />
+                <MobileNavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} badge={unreadMsgs} />
                 <button onClick={onCreate} className="bg-gopo text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-pink-300 -mt-8 border-4 border-white"><I.Plus/></button>
-                <MobileNavItem active={activeTab==='clicker'} onClick={()=>setActiveTab('clicker')} icon={<span className="text-xl">🎃</span>} />
+                <button onClick={onOpenNotifs} className="relative p-2 rounded-xl text-slate-500">
+                    <I.Bell />
+                    {unread > 0 && <span className="absolute top-0 right-0 bg-gopo text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">{unread > 9 ? '9+' : unread}</span>}
+                </button>
                 <MobileNavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} />
             </nav>
         );
 
-        const NavItem = ({ icon, label, active, onClick, disabled, color }) => (
-            <button onClick={onClick} disabled={disabled} className={`w-full flex items-center space-x-3 p-3.5 rounded-2xl font-bold text-sm transition-all ${disabled?'opacity-40 cursor-not-allowed text-slate-400':active?'bg-gopo text-white shadow-lg shadow-pink-200':`hover:bg-white/60 ${color||'text-slate-700'}`}`}>
-                <span className={active && !disabled?'text-white':color||'text-slate-500'}>{icon}</span><span>{label}</span>
+        const NavItem = ({ icon, label, active, onClick, disabled, color, badge }) => (
+            <button onClick={onClick} disabled={disabled} className={`relative w-full flex items-center space-x-3 p-3.5 rounded-2xl font-bold text-sm transition-all ${disabled?'opacity-40 cursor-not-allowed text-slate-400':active?'bg-gopo text-white shadow-lg shadow-pink-200':`hover:bg-white/60 ${color||'text-slate-700'}`}`}>
+                <span className={active && !disabled?'text-white':color||'text-slate-500'}>{icon}</span>
+                <span className="flex-1 text-left">{label}</span>
+                {badge > 0 && <span className={`text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 ${active?'bg-white text-gopo':'bg-gopo text-white'}`}>{badge > 9 ? '9+' : badge}</span>}
             </button>
         );
 
@@ -1180,7 +1221,7 @@
                     const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
                     arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
                     setComments(arr);
-                    setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth'}), 100);
+                    setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
                 });
                 return () => unsub();
             }, [post.id]);
@@ -1277,7 +1318,7 @@
                         text: text.trim(), image, mood,
                         authorId: user.uid, authorName: profile.username, authorAvatar: profile.avatar,
                         resonances: [], blows: [], commentsCount: 0,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        createdAt: Date.now()
                     };
                     if (pollOn && pollQ.trim()) {
                         payload.poll = {
@@ -1361,8 +1402,10 @@
             const filteredUsers = allUsers.filter(u => (u.username||'').toLowerCase().includes(query.toLowerCase()) || (u.displayName||'').toLowerCase().includes(query.toLowerCase()));
             const filteredGroups = groups.filter(g => (g.name||'').toLowerCase().includes(query.toLowerCase()));
             const closeChat = () => { setSelectedUser(null); setSelectedGroup(null); };
+            const unreadCounts = profile.unreadCounts || {};
+            const unreadGroupCounts = profile.unreadGroupCounts || {};
             return (
-                <div className="flex h-[calc(100vh-100px)] md:h-[calc(100vh-64px)] liquid-glass rounded-3xl overflow-hidden fade-in">
+                <div className="flex h-[calc(100vh-140px)] md:h-[calc(100vh-64px)] liquid-glass rounded-3xl overflow-hidden fade-in">
                     <div className={`w-full md:w-80 flex flex-col border-r border-white/50 ${(selectedUser||selectedGroup)?'hidden md:flex':'flex'}`}>
                         <div className="p-4 border-b border-white/50 bg-white/30">
                             <div className="flex items-center justify-between mb-3">
@@ -1381,13 +1424,17 @@
                         <div className="flex-1 overflow-y-auto">
                             {view==='users' && filteredUsers.map(u => {
                                 const typing = isTypingNow(u, user.uid);
+                                const unread = unreadCounts[u.uid] || 0;
                                 return (
                                     <button key={u.uid} onClick={()=>{ setSelectedGroup(null); setSelectedUser(u); }} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedUser?.uid===u.uid?'bg-white/60':''}`}>
                                         <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} />
                                         <div className="min-w-0 flex-1">
-                                            <div className="flex items-center">
-                                                <span className="font-bold text-sm truncate">{u.displayName || u.username}</span>
-                                                {u.isVerified && <I.Check className="text-blue-500 ml-1"/>}
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center min-w-0">
+                                                    <span className="font-bold text-sm truncate">{u.displayName || u.username}</span>
+                                                    {u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}
+                                                </div>
+                                                {unread > 0 && <span className="bg-gopo text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">{unread > 9 ? '9+' : unread}</span>}
                                             </div>
                                             {typing ? (
                                                 <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
@@ -1398,15 +1445,21 @@
                                     </button>
                                 );
                             })}
-                            {view==='groups' && filteredGroups.map(g => (
-                                <button key={g.id} onClick={()=>{ setSelectedUser(null); setSelectedGroup(g); }} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedGroup?.id===g.id?'bg-white/60':''}`}>
-                                    {g.avatar ? <img src={g.avatar} className="w-11 h-11 rounded-full object-cover" /> : <div className="w-11 h-11 rounded-full bg-gopo text-white flex items-center justify-center font-black">{g.name?.[0]?.toUpperCase()}</div>}
-                                    <div className="min-w-0 flex-1">
-                                        <span className="font-bold text-sm truncate block">{g.name}</span>
-                                        <p className="text-xs text-slate-500">{g.members?.length || 0} участников</p>
-                                    </div>
-                                </button>
-                            ))}
+                            {view==='groups' && filteredGroups.map(g => {
+                                const unread = unreadGroupCounts[g.id] || 0;
+                                return (
+                                    <button key={g.id} onClick={()=>{ setSelectedUser(null); setSelectedGroup(g); }} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedGroup?.id===g.id?'bg-white/60':''}`}>
+                                        {g.avatar ? <img src={g.avatar} className="w-11 h-11 rounded-full object-cover flex-shrink-0" /> : <div className="w-11 h-11 rounded-full bg-gopo text-white flex items-center justify-center font-black flex-shrink-0">{g.name?.[0]?.toUpperCase()}</div>}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="font-bold text-sm truncate">{g.name}</span>
+                                                {unread > 0 && <span className="bg-gopo text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">{unread > 9 ? '9+' : unread}</span>}
+                                            </div>
+                                            <p className="text-xs text-slate-500">{g.members?.length || 0} участников</p>
+                                        </div>
+                                    </button>
+                                );
+                            })}
                             {view==='groups' && filteredGroups.length===0 && <p className="text-center text-slate-400 text-xs font-bold p-6">Групп нет. Создай первую!</p>}
                         </div>
                     </div>
@@ -1486,6 +1539,7 @@
             const [showEmojiPicker, setShowEmojiPicker] = useState(null);
             const [playingId, setPlayingId] = useState(null);
             const participants = [user.uid, other.uid].sort();
+            const messagesRef = useRef(null);
             const endRef = useRef(null);
             const typingThrottle = useRef(0);
             const typingClear = useRef(null);
@@ -1494,20 +1548,42 @@
             const [, tick] = useState(0);
             useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 5000); return () => clearInterval(t); }, []);
             useEffect(() => { const unsub = db.collection('users').doc(other.uid).onSnapshot(doc => { if (doc.exists) setOtherUser(doc.data()); }); return () => unsub(); }, [other.uid]);
+
+            useEffect(() => {
+                const ref = db.collection('users').doc(user.uid);
+                ref.update({ [`unreadCounts.${other.uid}`]: 0 }).catch(()=>{});
+            }, [user.uid, other.uid]);
+
+            const isNearBottom = () => {
+                const el = messagesRef.current;
+                if (!el) return true;
+                return el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+            };
+            const scrollToBottom = (smooth) => {
+                const el = messagesRef.current;
+                if (!el) return;
+                el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+            };
+
             useEffect(() => {
                 const unsub = db.collection('messages').where('participants','==',participants).onSnapshot(snap => {
                     const arr = snap.docs.map(d => ({id:d.id, reactions:{}, readBy:[], ...d.data()}));
                     arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
+                    const grew = arr.length > prevLen.current;
+                    const wasBottom = isNearBottom();
                     setMessages(arr);
-                    if (arr.length > prevLen.current) {
+                    if (grew) {
                         prevLen.current = arr.length;
-                        setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth', block:'end'}), 80);
+                        if (wasBottom) setTimeout(() => scrollToBottom(true), 80);
                     }
                     arr.filter(m => m.senderId === other.uid && !(m.readBy||[]).includes(user.uid))
                        .forEach(m => db.collection('messages').doc(m.id).update({readBy: firebase.firestore.FieldValue.arrayUnion(user.uid)}).catch(()=>{}));
                 });
                 return () => unsub();
             }, [participants.join(',')]);
+
+            useEffect(() => { setTimeout(() => scrollToBottom(false), 100); }, []);
+
             useEffect(() => () => { db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{}); clearTimeout(typingClear.current); }, [user.uid]);
             const delMsg = async (id) => { if (!window.confirm('Удалить сообщение?')) return; await db.collection('messages').doc(id).delete(); };
             const toggleReaction = async (msg, emoji) => {
@@ -1530,6 +1606,7 @@
             const send = async (e) => {
                 e.preventDefault(); if (!text.trim()) return;
                 await db.collection('messages').add({ participants, text: text.trim(), senderId: user.uid, readBy: [user.uid], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                await db.collection('users').doc(other.uid).update({ [`unreadCounts.${user.uid}`]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
                 if (other.uid !== user.uid) sendNotification(other.uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'message', text.trim().slice(0,60));
                 setText('');
                 db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{});
@@ -1543,8 +1620,8 @@
             const isOtherTyping = isTypingNow(otherUser, user.uid);
             const isOtherOnline = isReallyOnline(otherUser);
             return (
-                <div className="flex-1 flex flex-col h-full bg-white/40">
-                    <div className="p-3 border-b border-white/50 flex items-center space-x-3 bg-white/50 backdrop-blur-md">
+                <div className="flex-1 flex flex-col h-full bg-white/40 min-h-0">
+                    <div className="p-3 border-b border-white/50 flex items-center space-x-3 bg-white/50 backdrop-blur-md flex-shrink-0">
                         <button onClick={onBack} className="p-2 text-slate-600 hover:bg-white rounded-full md:hidden"><I.Back/></button>
                         <Avatar src={otherUser.avatar} name={otherUser.username} size={40} showStatus isOnline={isOtherOnline} halloweenFrame={otherUser.halloweenFrameId} />
                         <div className="flex-1 min-w-0">
@@ -1557,7 +1634,7 @@
                                 : <p className={`text-xs font-bold ${isOtherOnline?'text-green-600':'text-slate-500'}`}>{formatLastSeen(otherUser)}</p>}
                         </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    <div ref={messagesRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-2 messages-scroll">
                         {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните диалог 👋</p>}
                         {messages.map(m => {
                             const mine = m.senderId === user.uid;
@@ -1570,7 +1647,7 @@
                                             {mine && <button onClick={()=>delMsg(m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100"><I.Trash size={14}/></button>}
                                             <button onClick={()=>setShowEmojiPicker(showEmojiPicker===m.id?null:m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-gopo opacity-0 group-hover:opacity-100 text-sm">😊</button>
                                         </div>
-                                        <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
+                                        <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm break-words ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
                                             {m.audio ? (
                                                 <button onClick={()=>playAudio(m)} className="flex items-center space-x-2">
                                                     {playingId===m.id ? <I.Pause size={16}/> : <I.Play size={16}/>}
@@ -1600,9 +1677,9 @@
                         })}
                         <div ref={endRef} />
                     </div>
-                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center">
-                        <input value={text} onChange={e=>handleChange(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
-                        <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50"><I.Send/></button>
+                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center flex-shrink-0">
+                        <input value={text} onChange={e=>handleChange(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium min-w-0" />
+                        <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50 flex-shrink-0"><I.Send/></button>
                     </form>
                 </div>
             );
@@ -1613,22 +1690,40 @@
             const [text, setText] = useState('');
             const [liveGroup, setLiveGroup] = useState(group);
             const [showMembers, setShowMembers] = useState(false);
+            const messagesRef = useRef(null);
             const endRef = useRef(null);
             const prevLen = useRef(0);
             useEffect(() => { const unsub = db.collection('groups').doc(group.id).onSnapshot(d => { if(d.exists) setLiveGroup(d.data()); }); return () => unsub(); }, [group.id]);
+
+            useEffect(() => {
+                db.collection('users').doc(user.uid).update({ [`unreadGroupCounts.${group.id}`]: 0 }).catch(()=>{});
+            }, [user.uid, group.id]);
+
+            const scrollToBottom = (smooth) => { const el = messagesRef.current; if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' }); };
+            const isNearBottom = () => { const el = messagesRef.current; if (!el) return true; return el.scrollHeight - el.scrollTop - el.clientHeight < 120; };
+
             useEffect(() => {
                 const unsub = db.collection('groups').doc(group.id).collection('messages').onSnapshot(snap => {
                     const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
                     arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
+                    const wasBottom = isNearBottom();
                     setMessages(arr);
-                    if (arr.length > prevLen.current) { prevLen.current = arr.length; setTimeout(() => endRef.current?.scrollIntoView({behavior:'smooth', block:'end'}), 80); }
+                    if (arr.length > prevLen.current && wasBottom) { prevLen.current = arr.length; setTimeout(() => scrollToBottom(true), 80); }
+                    else prevLen.current = arr.length;
                 });
                 return () => unsub();
             }, [group.id]);
+            useEffect(() => { setTimeout(() => scrollToBottom(false), 100); }, []);
+
             const send = async (e) => {
                 e.preventDefault(); if (!text.trim()) return;
                 await db.collection('groups').doc(group.id).collection('messages').add({ senderId: user.uid, senderName: profile.username, senderAvatar: profile.avatar, text: text.trim(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 await db.collection('groups').doc(group.id).update({lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()});
+                (liveGroup.members || []).forEach(uid => {
+                    if (uid !== user.uid) {
+                        db.collection('users').doc(uid).update({ [`unreadGroupCounts.${group.id}`]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
+                    }
+                });
                 setText('');
             };
             const delMsg = async (m) => {
@@ -1638,7 +1733,7 @@
             };
             const leave = async () => { if (!window.confirm('Выйти из группы?')) return; await db.collection('groups').doc(group.id).update({members: firebase.firestore.FieldValue.arrayRemove(user.uid)}); onBack(); };
             const isAdmin = (liveGroup.admins||[]).includes(user.uid);
-            const inviteLink = `${location.origin}/?invite=${group.id}`;
+            const inviteLink = `${location.origin}${location.pathname}?invite=${group.id}`;
             const copyInvite = async () => {
                 try { await navigator.clipboard.writeText(inviteLink); alert('Ссылка скопирована: ' + inviteLink); }
                 catch(e){ prompt('Скопируй ссылку:', inviteLink); }
@@ -1658,8 +1753,8 @@
             const membersList = (liveGroup.members || []).map(uid => usersMap[uid] ? { ...usersMap[uid], uid } : { uid, username:'unknown', avatar:null }).filter(Boolean);
 
             return (
-                <div className="flex-1 flex flex-col h-full bg-white/40">
-                    <div className="p-3 border-b border-white/50 flex items-center space-x-2 bg-white/50 backdrop-blur-md">
+                <div className="flex-1 flex flex-col h-full bg-white/40 min-h-0">
+                    <div className="p-3 border-b border-white/50 flex items-center space-x-2 bg-white/50 backdrop-blur-md flex-shrink-0">
                         <button onClick={onBack} className="p-2 text-slate-600 hover:bg-white rounded-full md:hidden"><I.Back/></button>
                         {liveGroup.avatar ? <img src={liveGroup.avatar} className="w-10 h-10 rounded-full object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-full bg-gopo text-white flex items-center justify-center font-black flex-shrink-0">{liveGroup.name?.[0]?.toUpperCase()}</div>}
                         <div className="flex-1 min-w-0">
@@ -1669,7 +1764,7 @@
                         <button onClick={copyInvite} className="p-2 text-slate-500 hover:text-gopo rounded-lg" title="Пригласить"><I.Link/></button>
                         <button onClick={leave} className="text-xs font-bold text-red-500 px-2 py-1 rounded-lg hover:bg-red-50">Выйти</button>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    <div ref={messagesRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-2 messages-scroll">
                         {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните общение 👋</p>}
                         {messages.map(m => {
                             const mine = m.senderId === user.uid;
@@ -1677,7 +1772,7 @@
                                 <div key={m.id} className={`flex flex-col ${mine?'items-end':'items-start'} group`}>
                                     <div className={`flex ${mine?'flex-row':'flex-row-reverse'} items-end space-x-1.5`}>
                                         {!mine && <Avatar src={m.senderAvatar} name={m.senderName} size={28} />}
-                                        <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm font-medium shadow-sm ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
+                                        <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm font-medium shadow-sm break-words ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
                                             {!mine && <p className="text-[10px] font-black text-gopo mb-0.5">@{m.senderName}</p>}
                                             {m.text}
                                         </div>
@@ -1688,9 +1783,9 @@
                         })}
                         <div ref={endRef} />
                     </div>
-                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center">
-                        <input value={text} onChange={e=>setText(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
-                        <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50"><I.Send/></button>
+                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center flex-shrink-0">
+                        <input value={text} onChange={e=>setText(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium min-w-0" />
+                        <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50 flex-shrink-0"><I.Send/></button>
                     </form>
                     {showMembers && (
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
@@ -1732,6 +1827,7 @@
             const [banner, setBanner] = useState(profile.banner || '');
             const [saving, setSaving] = useState(false);
             const [userPosts, setUserPosts] = useState([]);
+            const [verifyStatus, setVerifyStatus] = useState('');
             const bannerRef = useRef(null);
             useEffect(() => {
                 const unsub = db.collection('posts').where('authorId','==',user.uid).onSnapshot(s => {
@@ -1759,18 +1855,37 @@
             };
             const badge = profile.halloweenBadgeId ? getItemById(profile.halloweenBadgeId) : null;
             const ps = getPostStyleClass(profile.halloweenPostStyle);
-            const resendVerify = async () => { try { await user.sendEmailVerification(); alert('Письмо отправлено на ' + user.email); } catch(e){ alert(e.message); } };
+            const resendVerify = async () => {
+                setVerifyStatus('Отправляем...');
+                try {
+                    await user.reload();
+                    if (user.emailVerified) { setVerifyStatus('✅ Почта подтверждена'); return; }
+                    await user.sendEmailVerification();
+                    setVerifyStatus('✉️ Письмо отправлено. Проверь папку Спам!');
+                } catch(e) {
+                    setVerifyStatus('❌ ' + (e.message || e.code));
+                }
+            };
+            const checkVerified = async () => {
+                setVerifyStatus('Проверяем...');
+                try { await user.reload(); if (user.emailVerified) setVerifyStatus('✅ Почта подтверждена! Обнови страницу'); else setVerifyStatus('❌ Пока не подтверждено'); }
+                catch(e) { setVerifyStatus('❌ ' + e.message); }
+            };
             return (
                 <div className="fade-in max-w-xl mx-auto">
                     {!user.emailVerified && user.email !== ADMIN_EMAIL && (
                         <div className="mb-4 bg-amber-50 border border-amber-300 rounded-2xl p-4">
                             <p className="font-black text-amber-900 text-sm">✉️ Почта не подтверждена</p>
                             <p className="text-xs text-amber-700 font-medium mt-1">Подтверди {user.email}, чтобы повысить безопасность</p>
-                            <button onClick={resendVerify} className="mt-2 bg-amber-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs">Отправить письмо</button>
+                            <div className="mt-2 flex gap-2 flex-wrap">
+                                <button onClick={resendVerify} className="bg-amber-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs">Отправить письмо</button>
+                                <button onClick={checkVerified} className="bg-white border border-amber-300 text-amber-700 font-bold px-4 py-1.5 rounded-lg text-xs">Я подтвердил</button>
+                            </div>
+                            {verifyStatus && <p className="text-xs font-bold mt-2 text-amber-900">{verifyStatus}</p>}
                         </div>
                     )}
                     <div className="mb-4 bg-blue-50 border border-blue-300 rounded-2xl p-4">
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center flex-wrap gap-2">
                             <div>
                                 <p className="font-black text-blue-900 text-sm">🔔 Уведомления</p>
                                 <p className="text-xs text-blue-700 font-medium mt-1">{notifPermission === 'granted' ? 'Включены — приходят на телефон' : notifPermission === 'denied' ? 'Заблокированы в настройках браузера' : 'Не включены'}</p>
@@ -1788,7 +1903,7 @@
                             </div>
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <div className="flex items-center">
+                                    <div className="flex items-center flex-wrap">
                                         <h1 className="text-2xl font-black mr-2">{profile.displayName || profile.username}</h1>
                                         {profile.isVerified && <I.Check className="text-blue-500"/>}
                                         {badge && <span className="ml-1 text-xl" title={badge.name}>{badge.emoji}</span>}
@@ -1897,9 +2012,9 @@
                             <div className="-mt-14 mb-3 inline-block p-1 bg-white rounded-full shadow-lg">
                                 <Avatar src={liveUser.avatar} name={liveUser.username} size={100} showStatus isOnline={isReallyOnline(liveUser)} halloweenFrame={liveUser.halloweenFrameId} />
                             </div>
-                            <div className="flex items-start justify-between">
+                            <div className="flex items-start justify-between flex-wrap gap-2">
                                 <div>
-                                    <div className="flex items-center">
+                                    <div className="flex items-center flex-wrap">
                                         <h1 className="text-2xl font-black mr-2">{liveUser.displayName || liveUser.username}</h1>
                                         {liveUser.isVerified && <I.Check className="text-blue-500"/>}
                                         {badge && <span className="ml-1 text-xl" title={badge.name}>{badge.emoji}</span>}
@@ -2216,10 +2331,7 @@
             const audioRef = useRef(null);
             const coverRef = useRef(null);
 
-            const pickCover = async (e) => {
-                const f = e.target.files[0]; if (!f) return;
-                setCoverFile(f); setCoverPreview(await compressImage(f, 400, 0.7));
-            };
+            const pickCover = async (e) => { const f = e.target.files[0]; if (!f) return; setCoverFile(f); setCoverPreview(await compressImage(f, 400, 0.7)); };
 
             const getUploadUrl = async (fileName, fileType, folder) => {
                 const res = await fetch('https://gopo-web.vercel.app/api/yandex-auth', {
@@ -2276,8 +2388,7 @@
                     }
                     setProgress('Загружаем аудио...');
                     const { uploadUrl: audioUploadUrl, key: audioKey } = await getUploadUrl(audioFile.name, audioFile.type, 'audio');
-                    await uploadFileDirect(audioFile, uploadAudioUrl => {}, 0).catch(()=>{});
-                    await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`)).catch(()=>{});
+                    await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`));
                     const audioUrl = `https://gopo-music.storage.yandexcloud.net/${audioKey}`;
                     await db.collection('tracks').add({
                         title: title.trim(), artist: artist.trim() || 'Неизвестен',
@@ -2326,22 +2437,6 @@
                 </div>
             );
         };
-
-        if ('serviceWorker' in navigator) {
-            try {
-                const swCode = `
-                    self.addEventListener('notificationclick', e => {
-                        e.notification.close();
-                        e.waitUntil(clients.matchAll({type:'window'}).then(list => {
-                            if (list.length) return list[0].focus();
-                            return clients.openWindow('/');
-                        }));
-                    });
-                `;
-                const blob = new Blob([swCode], {type:'application/javascript'});
-                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
-            } catch(e) { console.warn('sw err', e); }
-        }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
