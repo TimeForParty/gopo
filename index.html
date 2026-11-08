@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GoPo 🎃</title>
+    <title>GoPo ❄️</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
     <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial' transform='rotate(-8 50 50)'%3EGoPo%3C/text%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="/icon-192.png">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href='data:application/manifest+json,{"name":"GoPo","short_name":"GoPo","start_url":"/","display":"standalone","background_color":"#f0f2f5","theme_color":"#FF0055","icons":[]}'>
     <meta name="theme-color" content="#FF0055">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,6 +19,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
     <script>
         tailwind.config = { theme: { extend: { colors: { gopo: '#FF0055' }, fontFamily: { sans: ['Inter', 'sans-serif'] },
             animation: {
@@ -41,8 +42,8 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
-        .liquid-glass { background: rgba(255,255,255,0.65); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px 0 rgba(31,38,135,0.07); }
+        body { font-family: 'Inter', sans-serif; background-color: #eef4fb; }
+        .liquid-glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 8px 32px 0 rgba(31,38,135,0.07); }
         .gopo-logo { background: #FF0055; padding: 10px 30px; border-radius: 40px 40px 40px 10px; position: relative; display: inline-flex; box-shadow: 0 10px 25px rgba(255,0,85,0.4); user-select: none; -webkit-user-select: none; }
         .gopo-logo::after { content: ''; position: absolute; bottom: -12px; right: 20px; border-left: 25px solid transparent; border-top: 35px solid #FF0055; border-bottom-left-radius: 10px; transform: rotate(-15deg); }
         .gopo-logo span { color: #fff; font-weight: 900; font-size: 1.8rem; transform: rotate(-10deg); }
@@ -54,7 +55,7 @@
         @keyframes typingDot { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-3px);opacity:1} }
         .typing-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; animation: typingDot 1.4s ease-in-out infinite; }
         .typing-dot:nth-child(2){animation-delay:.2s} .typing-dot:nth-child(3){animation-delay:.4s}
-        .story-ring { background: linear-gradient(45deg,#FF0055,#FFB800,#FF0055); padding:3px; border-radius:50%; }
+        .story-ring { background: linear-gradient(45deg,#FF0055,#4FC3F7,#FF0055); padding:3px; border-radius:50%; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .blown-post { opacity:.4; transform:scale(.96); filter:grayscale(.6); }
         @keyframes recordingPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
@@ -67,26 +68,39 @@
         .splash-bubble span { color:#2C2C2C; font-weight:900; font-size:3.5rem; letter-spacing:-2px; transform:rotate(-8deg); display:inline-block; }
         .mini-player { animation: slideUp .3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .halloween-tint { background-image: radial-gradient(circle at 0% 0%, rgba(255,107,0,0.05) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(124,58,237,0.05) 0%, transparent 40%); background-attachment: fixed; }
-        .gopo-logo-halloween::before { content: '🎃'; position: absolute; top: -10px; right: -14px; font-size: 26px; filter: drop-shadow(0 0 8px rgba(255,107,0,0.8)); animation: pumpkinGlow 2.5s ease-in-out infinite; z-index: 10; }
-        @keyframes pumpkinGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(255,107,0,0.6)); transform: rotate(-6deg) scale(1); } 50% { filter: drop-shadow(0 0 16px rgba(255,107,0,1)); transform: rotate(6deg) scale(1.1); } }
-        @keyframes flyBat { 0% { transform: translate(-80px, 0) rotate(-10deg); } 50% { transform: translate(50vw, -40px) rotate(10deg); } 100% { transform: translate(calc(100vw + 80px), 0) rotate(-10deg); } }
-        .event-pill { background: linear-gradient(90deg, #FF6B00 0%, #7C3AED 100%); color: white; font-weight: 800; padding: 7px 16px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; text-align: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,107,0,0.4); animation: eventPulse 2s ease-in-out infinite; }
-        @keyframes eventPulse { 0%, 100% { box-shadow: 0 4px 15px rgba(255,107,0,0.4); } 50% { box-shadow: 0 4px 25px rgba(255,107,0,0.85); } }
-        .clicker-pumpkin { font-size: 200px; line-height: 1; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; filter: drop-shadow(0 0 40px rgba(255,107,0,0.6)); transition: transform 0.06s; touch-action: manipulation; }
-        .clicker-pumpkin:active, .clicker-pumpkin.pulse { transform: scale(0.9); }
-        .float-candy { position: fixed; pointer-events: none; font-weight: 900; font-size: 22px; color: #FFB800; text-shadow: 0 0 10px rgba(255,184,0,0.9); transform: translate(-50%, 0); animation: floatUp 1s ease-out forwards; z-index: 100; }
-        @keyframes floatUp { 0% { transform: translate(-50%, 0) scale(1); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(1.4); opacity: 0; } }
+
+        /* ================= ЗИМНЯЯ ТЕМА ================= */
+        .winter-tint { background-image: radial-gradient(circle at 0% 0%, rgba(120,180,255,0.10) 0%, transparent 45%), radial-gradient(circle at 100% 100%, rgba(180,140,255,0.10) 0%, transparent 45%); background-attachment: fixed; }
+        .gopo-logo-winter::before { content: '❄️'; position: absolute; top: -12px; right: -14px; font-size: 26px; filter: drop-shadow(0 0 8px rgba(120,190,255,0.9)); animation: snowGlow 2.8s ease-in-out infinite; z-index: 10; }
+        @keyframes snowGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(150,210,255,0.7)); transform: rotate(-8deg) scale(1); } 50% { filter: drop-shadow(0 0 18px rgba(200,230,255,1)); transform: rotate(8deg) scale(1.12); } }
+        @keyframes snowFall { 0% { transform: translate(-80px, -20px) rotate(0deg); opacity: 0.9; } 50% { opacity: 0.6; } 100% { transform: translate(calc(100vw + 80px), 70vh) rotate(360deg); opacity: 0.3; } }
+
+        .winter-event-pill { background: linear-gradient(90deg, #4FC3F7 0%, #7C4DFF 100%); color: white; font-weight: 800; padding: 7px 16px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; text-align: center; justify-content: center; box-shadow: 0 4px 15px rgba(79,195,247,0.4); animation: winterPulse 2s ease-in-out infinite; }
+        @keyframes winterPulse { 0%, 100% { box-shadow: 0 4px 15px rgba(79,195,247,0.4); } 50% { box-shadow: 0 4px 25px rgba(124,77,255,0.85); } }
+
         .rarity-common { border-color: #94a3b8 !important; box-shadow: 0 0 10px rgba(148,163,184,0.3); }
         .rarity-rare { border-color: #3b82f6 !important; box-shadow: 0 0 12px rgba(59,130,246,0.4); }
         .rarity-epic { border-color: #a855f7 !important; box-shadow: 0 0 15px rgba(168,85,247,0.55); }
         .rarity-legendary { border-color: #f59e0b !important; box-shadow: 0 0 20px rgba(245,158,11,0.65); }
         .rarity-mythic { border-color: #ef4444 !important; box-shadow: 0 0 25px rgba(239,68,68,0.75); }
+
         .post-halloween-style { background: linear-gradient(135deg, #1a0a1f 0%, #2d1b3d 50%, #1a0a1f 100%) !important; border-color: #FF6B00 !important; position: relative; overflow: hidden; }
-        .post-halloween-style::before { content: '🎃'; position: absolute; top: 10px; right: 60px; font-size: 22px; opacity: 0.8; animation: pumpkinGlow 3s ease-in-out infinite; pointer-events: none; }
+        .post-halloween-style::before { content: '🎃'; position: absolute; top: 10px; right: 60px; font-size: 22px; opacity: 0.8; animation: snowGlow 3s ease-in-out infinite; pointer-events: none; }
         .post-halloween-style p, .post-halloween-style span:not(.hashtag), .post-halloween-style div:not(.hashtag) { color: #e8d8f0 !important; }
         .post-halloween-style .hashtag { color: #FF6B00 !important; }
         .post-halloween-style img { border: 1px solid rgba(255,107,0,0.4); }
+
+        .post-winter-style { background: linear-gradient(135deg, #0a1a2f 0%, #1e3a5f 50%, #0a1a2f 100%) !important; border-color: #4FC3F7 !important; position: relative; overflow: hidden; }
+        .post-winter-style::before { content: '❄️'; position: absolute; top: 10px; right: 60px; font-size: 22px; opacity: 0.85; animation: snowGlow 3s ease-in-out infinite; pointer-events: none; }
+        .post-winter-style::after { content: '🌨️'; position: absolute; bottom: 8px; left: 12px; font-size: 18px; opacity: 0.4; pointer-events: none; }
+        .post-winter-style p, .post-winter-style span:not(.hashtag), .post-winter-style div:not(.hashtag) { color: #dff3ff !important; }
+        .post-winter-style .hashtag { color: #4FC3F7 !important; }
+        .post-winter-style img { border: 1px solid rgba(79,195,247,0.5); }
+        .post-winter-style .bg-white, .post-winter-style .bg-white\/50, .post-winter-style .bg-white\/60, .post-winter-style .bg-white\/70 { background: rgba(10,30,55,0.85) !important; }
+        .post-winter-style .text-slate-800, .post-winter-style .text-slate-700, .post-winter-style .text-slate-600, .post-winter-style .text-slate-500, .post-winter-style .text-slate-400, .post-winter-style .text-black { color: #dff3ff !important; }
+        .post-winter-style .border-slate-200 { border-color: rgba(79,195,247,0.5) !important; }
+        .post-winter-style .poll-bar { background: rgba(79,195,247,0.3) !important; }
+
         .post-cursed-style { background: linear-gradient(135deg, #2d0505 0%, #4a0a0a 50%, #2d0505 100%) !important; border-color: #DC2626 !important; position: relative; overflow: hidden; animation: cursedPulse 4s ease-in-out infinite; }
         .post-cursed-style::before { content: '💀'; position: absolute; top: 10px; right: 60px; font-size: 24px; opacity: 0.85; animation: skullFloat 3s ease-in-out infinite; pointer-events: none; }
         .post-cursed-style p, .post-cursed-style span:not(.hashtag), .post-cursed-style div:not(.hashtag) { color: #ffe0e0 !important; }
@@ -94,9 +108,25 @@
         .post-cursed-style img { border: 1px solid rgba(220,38,38,0.5); }
         @keyframes cursedPulse { 0%,100% { box-shadow: 0 0 0 rgba(220,38,38,0.2); } 50% { box-shadow: 0 0 20px rgba(220,38,38,0.5); } }
         @keyframes skullFloat { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-5px) rotate(5deg); } }
+        .post-cursed-style .bg-white, .post-cursed-style .bg-white\/50, .post-cursed-style .bg-white\/60, .post-cursed-style .bg-white\/70 { background: rgba(60,10,10,0.82) !important; }
+        .post-cursed-style button, .post-cursed-style input, .post-cursed-style textarea { color: #ffe0e0 !important; }
+        .post-cursed-style .poll-bar { background: rgba(220,38,38,0.35) !important; }
+        .post-cursed-style .text-slate-800, .post-cursed-style .text-slate-700, .post-cursed-style .text-slate-600, .post-cursed-style .text-slate-500, .post-cursed-style .text-slate-400, .post-cursed-style .text-black { color: #ffe0e0 !important; }
+        .post-cursed-style .border-slate-200 { border-color: rgba(220,38,38,0.55) !important; }
+
         .poll-option { position: relative; overflow: hidden; }
         .poll-bar { position: absolute; inset: 0; background: rgba(255,0,85,0.15); transition: width 0.3s; }
         .messages-scroll { overflow-y: auto; overflow-x: hidden; }
+
+        /* Адвент */
+        .advent-day { position: relative; aspect-ratio: 1/1; border-radius: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform .15s; cursor: pointer; }
+        .advent-day:active:not(.locked):not(.opened) { transform: scale(.95); }
+        .advent-day.locked { opacity: .45; cursor: not-allowed; }
+        .advent-day.opened { background: linear-gradient(135deg, #dff3ff, #b3e5fc) !important; }
+        .advent-day.today { box-shadow: 0 0 20px rgba(79,195,247,0.7), 0 0 0 3px #4FC3F7; animation: adventTodayPulse 2s ease-in-out infinite; }
+        @keyframes adventTodayPulse { 0%,100% { box-shadow: 0 0 20px rgba(79,195,247,0.5), 0 0 0 3px #4FC3F7; } 50% { box-shadow: 0 0 30px rgba(79,195,247,0.9), 0 0 0 3px #7C4DFF; } }
+        @keyframes giftPop { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 60% { transform: scale(1.2) rotate(10deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        .gift-pop { animation: giftPop .5s cubic-bezier(.175,.885,.32,1.275) forwards; }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -115,36 +145,96 @@
         try { const app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e){ console.error(e); }
 
         const ADMIN_EMAIL = 'hvadim439@gmail.com';
-        const HALLOWEEN_END = new Date('2026-11-10T09:00:00Z').getTime();
+        const APP_VERSION = '2.0.0';
+        const WORKER_BASE = 'https://gopo-proxy.gopo.workers.dev';
+        const FCM_VAPID_KEY = 'BInOM81hTsZ-8g-3MgZ9nuxW-DJUjPFbcYjzSzuYlRrTtvylyHD_DCetF0yASOyCxKAg-5emjehD32eEZb_FD7Y';
+
+        const WINTER_END   = new Date('2027-01-15T00:00:00Z').getTime();
+        const ADVENT_START = new Date('2026-12-01T00:00:00Z').getTime();
+        const ADVENT_END   = new Date('2026-12-31T23:59:59Z').getTime();
+        const ADVENT_DAYS  = 31;
+        const PASSIVE_INTERVAL_MS = 10 * 60 * 1000;
+        const PASSIVE_REWARD = 10;
+
+        // ============ КАТАЛОГ КОСМЕТИКИ ============
+        // season: 'halloween' — архив (не продаётся, но остаётся у купивших)
+        // season: 'winter' / 'all' — продаётся за GoCoin
         const SHOP_ITEMS = [
-            { id: 'frame_orange', type: 'frame', name: 'Тыквенная рамка', emoji: '🎃', price: 75, rarity: 'common', color: '#FF8C00' },
-            { id: 'frame_purple', type: 'frame', name: 'Ведьминская рамка', emoji: '🔮', price: 225, rarity: 'rare', color: '#8B5CF6' },
-            { id: 'frame_green', type: 'frame', name: 'Ядовитая рамка', emoji: '🧪', price: 450, rarity: 'epic', color: '#22C55E' },
-            { id: 'frame_red', type: 'frame', name: 'Кровавая рамка', emoji: '🩸', price: 750, rarity: 'legendary', color: '#EF4444' },
-            { id: 'badge_orange', type: 'badge', name: 'Тыква', emoji: '🎃', price: 45, rarity: 'common' },
-            { id: 'badge_purple', type: 'badge', name: 'Дух', emoji: '👻', price: 150, rarity: 'rare' },
-            { id: 'badge_green', type: 'badge', name: 'Упырь', emoji: '🧟', price: 375, rarity: 'epic' },
-            { id: 'badge_red', type: 'badge', name: 'Демон', emoji: '😈', price: 600, rarity: 'legendary' },
-            { id: 'post_halloween', type: 'post', name: 'Хэллоуин-посты', emoji: '🕸️', price: 1000, rarity: 'mythic' },
-            { id: 'badge_bat', type: 'badge', name: 'Летучая мышь', emoji: '🦇', price: 280, rarity: 'common' },
-            { id: 'badge_skull', type: 'badge', name: 'Светящийся череп', emoji: '💀', price: 900, rarity: 'legendary' },
-            { id: 'badge_crown', type: 'badge', name: 'Корона тьмы', emoji: '👑', price: 1500, rarity: 'mythic' },
-            { id: 'frame_spider', type: 'frame', name: 'Паутинная рамка', emoji: '🕸️', price: 1100, rarity: 'epic', color: '#475569' },
-            { id: 'frame_cauldron', type: 'frame', name: 'Рамка-котёл', emoji: '🧙', price: 1600, rarity: 'legendary', color: '#84CC16' },
-            { id: 'frame_ghost', type: 'frame', name: 'Призрачная рамка', emoji: '👻', price: 2200, rarity: 'mythic', color: '#B8C2FF' },
-            { id: 'post_cursed', type: 'post', name: 'Проклятый стиль', emoji: '🔮', price: 2500, rarity: 'mythic' },
+            // ---------- ХЭЛЛОУИН (архив, только в инвентаре у купивших) ----------
+            { id: 'frame_orange',   type: 'frame', season: 'halloween', name: 'Тыквенная рамка',   emoji: '🎃', price: 75,   rarity: 'common',    color: '#FF8C00' },
+            { id: 'frame_purple',   type: 'frame', season: 'halloween', name: 'Ведьминская рамка', emoji: '🔮', price: 225,  rarity: 'rare',      color: '#8B5CF6' },
+            { id: 'frame_green',    type: 'frame', season: 'halloween', name: 'Ядовитая рамка',    emoji: '🧪', price: 450,  rarity: 'epic',      color: '#22C55E' },
+            { id: 'frame_red',      type: 'frame', season: 'halloween', name: 'Кровавая рамка',    emoji: '🩸', price: 750,  rarity: 'legendary', color: '#EF4444' },
+            { id: 'badge_orange',   type: 'badge', season: 'halloween', name: 'Тыква',             emoji: '🎃', price: 45,   rarity: 'common' },
+            { id: 'badge_purple',   type: 'badge', season: 'halloween', name: 'Дух',               emoji: '👻', price: 150,  rarity: 'rare' },
+            { id: 'badge_green',    type: 'badge', season: 'halloween', name: 'Упырь',             emoji: '🧟', price: 375,  rarity: 'epic' },
+            { id: 'badge_red',      type: 'badge', season: 'halloween', name: 'Демон',             emoji: '😈', price: 600,  rarity: 'legendary' },
+            { id: 'post_halloween', type: 'post',  season: 'halloween', name: 'Хэллоуин-посты',    emoji: '🕸️', price: 1000, rarity: 'mythic' },
+            { id: 'badge_bat',      type: 'badge', season: 'halloween', name: 'Летучая мышь',      emoji: '🦇', price: 280,  rarity: 'common' },
+            { id: 'badge_skull',    type: 'badge', season: 'halloween', name: 'Светящийся череп',  emoji: '💀', price: 900,  rarity: 'legendary' },
+            { id: 'badge_crown',    type: 'badge', season: 'halloween', name: 'Корона тьмы',       emoji: '👑', price: 1500, rarity: 'mythic' },
+            { id: 'frame_spider',   type: 'frame', season: 'halloween', name: 'Паутинная рамка',   emoji: '🕸️', price: 1100, rarity: 'epic',      color: '#475569' },
+            { id: 'frame_cauldron', type: 'frame', season: 'halloween', name: 'Рамка-котёл',       emoji: '🧙', price: 1600, rarity: 'legendary', color: '#84CC16' },
+            { id: 'frame_ghost',    type: 'frame', season: 'halloween', name: 'Призрачная рамка',  emoji: '👻', price: 2200, rarity: 'mythic',    color: '#B8C2FF' },
+            { id: 'post_cursed',    type: 'post',  season: 'halloween', name: 'Проклятый стиль',   emoji: '🔮', price: 2500, rarity: 'mythic' },
+
+            // ---------- ЗИМА (за GoCoin) ----------
+            { id: 'w_frame_snow',    type: 'frame', season: 'winter', name: 'Снежная рамка',      emoji: '❄️', price: 1000,  rarity: 'common',    color: '#B8E6FF' },
+            { id: 'w_frame_ice',     type: 'frame', season: 'winter', name: 'Ледяная рамка',      emoji: '🧊', price: 2500,  rarity: 'rare',      color: '#4DD0E1' },
+            { id: 'w_frame_aurora',  type: 'frame', season: 'winter', name: 'Северное сияние',    emoji: '🌌', price: 5000,  rarity: 'epic',      color: '#9C27B0' },
+            { id: 'w_frame_star',    type: 'frame', season: 'winter', name: 'Звёздная рамка',     emoji: '⭐', price: 10000, rarity: 'epic',      color: '#FFD700' },
+            { id: 'w_frame_frost',   type: 'frame', season: 'winter', name: 'Морозная рамка',     emoji: '❄️', price: 25000, rarity: 'legendary', color: '#64B5F6' },
+            { id: 'w_frame_gift',    type: 'frame', season: 'winter', name: 'Подарочная рамка',   emoji: '🎁', price: 50000, rarity: 'legendary', color: '#F44336' },
+            { id: 'w_frame_newyear', type: 'frame', season: 'winter', name: 'Новогодняя рамка',   emoji: '🎆', price: 100000, rarity: 'mythic',   color: '#FF4081' },
+
+            { id: 'w_badge_snow',    type: 'badge', season: 'winter', name: 'Снежинка',           emoji: '❄️', price: 1000,  rarity: 'common' },
+            { id: 'w_badge_ginger',  type: 'badge', season: 'winter', name: 'Пряничный',          emoji: '🍪', price: 2500,  rarity: 'common' },
+            { id: 'w_badge_bell',    type: 'badge', season: 'winter', name: 'Колокольчик',        emoji: '🔔', price: 5000,  rarity: 'epic' },
+            { id: 'w_badge_deer',    type: 'badge', season: 'winter', name: 'Олень',              emoji: '🦌', price: 10000, rarity: 'legendary' },
+            { id: 'w_badge_snowman', type: 'badge', season: 'winter', name: 'Снеговик',           emoji: '⛄', price: 25000, rarity: 'legendary' },
+            { id: 'w_badge_tree',    type: 'badge', season: 'winter', name: 'Ёлка',               emoji: '🎄', price: 50000, rarity: 'mythic' },
+            { id: 'w_badge_star',    type: 'badge', season: 'winter', name: 'Звезда',             emoji: '⭐', price: 100000, rarity: 'mythic' },
+
+            { id: 'w_post_winter',   type: 'post',  season: 'winter', name: 'Зимний стиль',       emoji: '❄️', price: 10000, rarity: 'mythic' },
+            { id: 'w_post_frozen',   type: 'post',  season: 'winter', name: 'Ледяной стиль',      emoji: '🧊', price: 50000, rarity: 'mythic' },
+
+            // ---------- УНИВЕРСАЛЬНЫЕ (за GoCoin) ----------
+            { id: 'u_frame_gold',   type: 'frame', season: 'all', name: 'Золотая рамка',    emoji: '🥇', price: 50000,  rarity: 'legendary', color: '#FFD700' },
+            { id: 'u_frame_diamond',type: 'frame', season: 'all', name: 'Алмазная рамка',   emoji: '💎', price: 100000, rarity: 'mythic',    color: '#B2EBF2' },
+            { id: 'u_badge_fire',   type: 'badge', season: 'all', name: 'Огонь',            emoji: '🔥', price: 5000,   rarity: 'epic' },
+            { id: 'u_badge_king',   type: 'badge', season: 'all', name: 'Корона',           emoji: '👑', price: 100000, rarity: 'mythic' },
         ];
         const RARITY_LABEL = { common: 'Обычный', rare: 'Редкий', epic: 'Эпический', legendary: 'Легендарный', mythic: 'Мифический' };
         const getItemById = (id) => SHOP_ITEMS.find(i => i.id === id);
-        const FRAME_COLORS = {
-            frame_orange: '#FF8C00', frame_purple: '#8B5CF6', frame_green: '#22C55E', frame_red: '#EF4444',
-            frame_spider: '#475569', frame_cauldron: '#84CC16', frame_ghost: '#B8C2FF',
-        };
+        const FRAME_COLORS = {};
+        SHOP_ITEMS.filter(i => i.type === 'frame').forEach(i => { if (i.color) FRAME_COLORS[i.id] = i.color; });
+
         const getPostStyleClass = (field) => {
             if (field === 'post_cursed') return 'post-cursed-style';
+            if (field === 'w_post_winter' || field === 'w_post_frozen') return 'post-winter-style';
             if (field === 'post_halloween' || field === true) return 'post-halloween-style';
             return '';
         };
+
+        // Награды адвента (дни 1-30)
+        const ADVENT_POOL = [
+            { type: 'coins', amount: 50,    name: '50 GoCoin',  emoji: '🪙' },
+            { type: 'coins', amount: 75,    name: '75 GoCoin',  emoji: '🪙' },
+            { type: 'coins', amount: 100,   name: '100 GoCoin', emoji: '🪙' },
+            { type: 'coins', amount: 150,   name: '150 GoCoin', emoji: '🪙' },
+            { type: 'coins', amount: 200,   name: '200 GoCoin', emoji: '🪙' },
+            { type: 'coins', amount: 250,   name: '250 GoCoin', emoji: '🪙' },
+            { type: 'coins', amount: 300,   name: '300 GoCoin', emoji: '🪙' },
+            { type: 'coins', amount: 500,   name: '500 GoCoin', emoji: '🪙' },
+            { type: 'cosmetic', itemId: 'w_badge_snow',   name: 'Снежинка',       emoji: '❄️' },
+            { type: 'cosmetic', itemId: 'w_frame_snow',   name: 'Снежная рамка',  emoji: '❄️' },
+            { type: 'cosmetic', itemId: 'w_badge_ginger', name: 'Пряничный',      emoji: '🍪' },
+            { type: 'cosmetic', itemId: 'w_badge_bell',   name: 'Колокольчик',    emoji: '🔔' },
+            { type: 'cosmetic', itemId: 'w_frame_ice',    name: 'Ледяная рамка',  emoji: '🧊' },
+            { type: 'cosmetic', itemId: 'w_badge_deer',   name: 'Олень',          emoji: '🦌' },
+        ];
+        // День 31 — финал
+        const ADVENT_FINAL = { type: 'cosmetic', itemId: 'w_frame_gift', name: 'Подарочная рамка', emoji: '🎁', rarity: 'legendary', bonusCoins: 1000 };
 
         const MOODS = {
             neutral:{emoji:'💬',name:'Обычный',bg:'bg-white',border:'border-slate-200',text:'text-slate-800',anim:''},
@@ -204,15 +294,31 @@
             } catch { return 'не в сети'; }
         };
         const isTypingNow = (u, targetId) => { if(!u?.typingIn||u.typingIn!==targetId) return false; if(!u.typingAt) return true; try{return (Date.now()-u.typingAt.toDate().getTime())<6000;}catch{return true;} };
-        const sendNotification = async (recipientId, sender, type, text, extra={}) => {
+                const sendNotification = async (recipientId, sender, type, text, extra={}) => {
             if (!recipientId || recipientId === sender.uid) return;
-            try { await db.collection('notifications').add({ recipientId, senderId: sender.uid, senderName: sender.username, senderAvatar: sender.avatar, type, text, read:false, createdAt: firebase.firestore.FieldValue.serverTimestamp(), ...extra }); } catch(e){ console.error('notif:', e); }
+            try { 
+                // 1. Записываем в базу (для колокольчика)
+                await db.collection('notifications').add({ 
+                    recipientId, senderId: sender.uid, senderName: sender.username, 
+                    senderAvatar: sender.avatar, type, text, read:false, 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(), ...extra 
+                });
+                
+                // 2. Стучимся на сервер Layero для отправки пуша
+                fetch('/api/push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipientId, senderName: sender.username, type, text })
+                }).catch(err => console.warn('Push send error:', err));
+
+            } catch(e){ console.error('notif:', e); }
         };
         const renderTextWithHashtags = (text, onHashtagClick) => {
             if (!text) return null;
             const parts = text.split(/(#[\wа-яА-ЯёЁ]+)/g);
             return parts.map((p, i) => p.startsWith('#') ? <span key={i} className="hashtag" onClick={(e)=>{e.stopPropagation(); onHashtagClick&&onHashtagClick(p);}}>{p}</span> : <span key={i}>{p}</span>);
         };
+        const addGoCoins = (uid, amount) => db.collection('users').doc(uid).update({ goCoins: firebase.firestore.FieldValue.increment(amount) }).catch(()=>{});
 
         const notifBodyText = (n) => {
             const map = {
@@ -231,17 +337,14 @@
         const showBrowserNotif = async (n) => {
             try {
                 if (!('Notification' in window) || Notification.permission !== 'granted') return;
-                const title = 'GoPo 🎃';
+                const title = 'GoPo ❄️';
                 const body = notifBodyText(n);
                 const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FF0055'/%3E%3Ctext x='50' y='68' font-size='48' font-weight='900' fill='white' text-anchor='middle' font-family='Arial'%3EGoPo%3C/text%3E%3C/svg%3E";
                 const options = { body, icon, badge: icon, tag: n.id || 'gopo-notif' };
                 if ('serviceWorker' in navigator) {
                     try {
                         const reg = await navigator.serviceWorker.getRegistration();
-                        if (reg && reg.showNotification) {
-                            await reg.showNotification(title, options);
-                            return;
-                        }
+                        if (reg && reg.showNotification) { await reg.showNotification(title, options); return; }
                     } catch(e){}
                 }
                 new Notification(title, options);
@@ -269,7 +372,6 @@
             Info: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
             Eye: ({className}) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={className}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
             Wind: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>,
-            Mic: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
             Play: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
             Pause: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
             Next: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="4" width="3" height="16"/></svg>,
@@ -281,6 +383,9 @@
             Users: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
             Link: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
             Chart: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
+            Cart: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>,
+            Gift: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>,
+            Coin: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="#FFB800"/><text x="12" y="17" fontSize="13" fontWeight="900" textAnchor="middle" fill="#7A4A00">G</text></svg>,
         };
 
         const SplashScreen = () => (
@@ -292,7 +397,7 @@
         const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false, halloweenFrame }) => {
             const inner = src ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} /> : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
             const frameColor = halloweenFrame ? (FRAME_COLORS[halloweenFrame] || null) : null;
-            const wrapped = frameColor ? <div style={{ padding: 3, borderRadius: '50%', display: 'inline-block', background: `linear-gradient(135deg, ${frameColor}, #FFB800)`, boxShadow: `0 0 12px ${frameColor}80` }}>{inner}</div> : inner;
+            const wrapped = frameColor ? <div style={{ padding: 3, borderRadius: '50%', display: 'inline-block', background: `linear-gradient(135deg, ${frameColor}, #B3E5FC)`, boxShadow: `0 0 12px ${frameColor}80` }}>{inner}</div> : inner;
             if (!showStatus) return <div className="flex-shrink-0">{wrapped}</div>;
             const dot = Math.max(10, Math.round(size*0.28));
             const extra = frameColor ? 6 : 0;
@@ -300,13 +405,14 @@
         });
 
         const TypingDots = ({ className="" }) => (<span className={`inline-flex items-center space-x-1 ${className}`}><span className="typing-dot"></span><span className="typing-dot"></span><span className="typing-dot"></span></span>);
-        const Logo = ({ small }) => <div className={`gopo-logo gopo-logo-halloween ${small?'scale-75 origin-left':''}`}><span>GoPo</span></div>;
+        const Logo = ({ small }) => <div className={`gopo-logo gopo-logo-winter ${small?'scale-75 origin-left':''}`}><span>GoPo</span></div>;
 
-        const HalloweenBats = () => (
+        const WinterSnowflakes = () => (
             <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
-                <div className="absolute text-3xl opacity-25" style={{top:'12%', animation:'flyBat 22s linear infinite'}}>🦇</div>
-                <div className="absolute text-2xl opacity-20" style={{top:'42%', animation:'flyBat 28s linear infinite', animationDelay:'-8s'}}>🦇</div>
-                <div className="absolute text-xl opacity-25" style={{top:'72%', animation:'flyBat 19s linear infinite', animationDelay:'-12s'}}>🦇</div>
+                <div className="absolute text-3xl opacity-30" style={{top:'5%', animation:'snowFall 24s linear infinite'}}>❄️</div>
+                <div className="absolute text-2xl opacity-25" style={{top:'28%', animation:'snowFall 30s linear infinite', animationDelay:'-9s'}}>❄️</div>
+                <div className="absolute text-xl opacity-30" style={{top:'52%', animation:'snowFall 20s linear infinite', animationDelay:'-13s'}}>❄️</div>
+                <div className="absolute text-2xl opacity-20" style={{top:'75%', animation:'snowFall 27s linear infinite', animationDelay:'-5s'}}>❄️</div>
             </div>
         );
 
@@ -323,10 +429,13 @@
             const [showNotifications, setShowNotifications] = useState(false);
             const [unreadNotifs, setUnreadNotifs] = useState(0);
             const [searchHashtag, setSearchHashtag] = useState(null);
-            const [eventActive, setEventActive] = useState(Date.now() < HALLOWEEN_END);
+            const [eventActive, setEventActive] = useState(Date.now() < WINTER_END);
             const [notifPermission, setNotifPermission] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
             const [inviteGroup, setInviteGroup] = useState(null);
             const isAdmin = user?.email === ADMIN_EMAIL;
+            const [newVersion, setNewVersion] = useState(false);
+            const [reconnectKey, setReconnectKey] = useState(0);
+            const hiddenAtRef = useRef(null);
 
             const [playerTrack, setPlayerTrack] = useState(null);
             const [playerQueue, setPlayerQueue] = useState([]);
@@ -337,6 +446,9 @@
 
             const unreadMsgs = Object.values(profile?.unreadCounts || {}).reduce((a, b) => a + (b || 0), 0) + Object.values(profile?.unreadGroupCounts || {}).reduce((a, b) => a + (b || 0), 0);
             const totalBadge = unreadNotifs + unreadMsgs;
+            const now = Date.now();
+            const adventAvailable = now >= ADVENT_START && now <= ADVENT_END;
+            const adventFinished = now > ADVENT_END;
 
             useEffect(() => {
                 if (!playerAudioRef.current || !playerTrack) return;
@@ -344,13 +456,85 @@
                 else playerAudioRef.current.pause();
             }, [playerTrack, playerPlaying]);
 
-            useEffect(() => { const t = setInterval(() => setEventActive(Date.now() < HALLOWEEN_END), 60000); return () => clearInterval(t); }, []);
+            useEffect(() => { const t = setInterval(() => setEventActive(Date.now() < WINTER_END), 60000); return () => clearInterval(t); }, []);
 
             useEffect(() => {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('sw register:', e));
-                }
+                if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+                if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(e => console.warn('sw register:', e));
             }, []);
+
+            useEffect(() => {
+                const check = async () => {
+                    if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+                    try {
+                        const r = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
+                        if (r.ok) { const j = await r.json(); if (j.version && j.version !== APP_VERSION) setNewVersion(true); }
+                    } catch {}
+                };
+                check();
+                const t = setInterval(check, 5 * 60 * 1000);
+                return () => clearInterval(t);
+            }, []);
+
+            useEffect(() => {
+                const handle = () => {
+                    if (document.visibilityState === 'visible') {
+                        try { db.enableNetwork(); } catch {}
+                        if (hiddenAtRef.current && Date.now() - hiddenAtRef.current > 5 * 60 * 1000) setReconnectKey(k => k + 1);
+                        hiddenAtRef.current = null;
+                    } else {
+                        hiddenAtRef.current = Date.now();
+                    }
+                };
+                document.addEventListener('visibilitychange', handle);
+                return () => document.removeEventListener('visibilitychange', handle);
+            }, []);
+
+            useEffect(() => {
+                if (!user || !profile) return;
+                if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+                if (typeof firebase === 'undefined' || !firebase.messaging) return;
+                let messaging, unsub;
+                try { messaging = firebase.messaging(); } catch { return; }
+                (async () => {
+                    try {
+                        if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+                        const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY });
+                        if (token) {
+                            await db.collection('users').doc(user.uid)
+                                .update({ fcmTokens: firebase.firestore.FieldValue.arrayUnion(token) })
+                                .catch(() => {});
+                        }
+                        unsub = messaging.onMessage(p =>
+                            showBrowserNotif({ senderName: 'GoPo', type: 'fcm', text: p.notification?.body || '' })
+                        );
+                    } catch (e) { console.warn('FCM', e); }
+                })();
+                return () => { try { unsub && unsub(); } catch {} };
+            }, [user, profile, notifPermission]);
+
+            // Пассивный заработок: +10 GoCoin за каждые 10 минут активности
+            useEffect(() => {
+                if (!user) return;
+                const tick = async () => {
+                    if (document.hidden) return;
+                    try {
+                        const doc = await db.collection('users').doc(user.uid).get();
+                        if (!doc.exists) return;
+                        const p = doc.data();
+                        const last = p.lastPassiveAt?.toDate?.()?.getTime?.() || 0;
+                        if (Date.now() - last >= PASSIVE_INTERVAL_MS) {
+                            await db.collection('users').doc(user.uid).update({
+                                goCoins: firebase.firestore.FieldValue.increment(PASSIVE_REWARD),
+                                lastPassiveAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        }
+                    } catch {}
+                };
+                tick();
+                const t = setInterval(tick, 60 * 1000);
+                return () => clearInterval(t);
+            }, [user]);
 
             const playTrack = (track, queue) => {
                 if (playerTrack?.id === track.id) { setPlayerPlaying(p => !p); return; }
@@ -379,9 +563,26 @@
             useEffect(() => {
                 if (!user) return;
                 const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
-                    if (doc.exists) { setProfile(doc.data()); setLoading(false); }
+                    if (doc.exists) {
+                        const data = doc.data();
+                        // Миграция: объединяем halloweenOwned → ownedCosmetics
+                        if (!data.ownedCosmetics && Array.isArray(data.halloweenOwned) && data.halloweenOwned.length > 0) {
+                            db.collection('users').doc(user.uid).update({ ownedCosmetics: data.halloweenOwned }).catch(()=>{});
+                        }
+                        setProfile(data); setLoading(false);
+                    }
                     else if (user.displayName && !window.__gopoRegistering) {
-                        const np = { uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName, avatar:null, banner:'', bio:'', isVerified: user.email === ADMIN_EMAIL, isBanned:false, followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null, typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[], halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null, unreadCounts:{}, unreadGroupCounts:{}, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                        const np = {
+                            uid:user.uid, email:user.email, username: user.displayName.toLowerCase().replace(/[^a-z0-9_]/g,''), displayName:user.displayName,
+                            avatar:null, banner:'', bio:'', isVerified: user.email === ADMIN_EMAIL, isBanned:false,
+                            followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null,
+                            typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[],
+                            goCoins: 0, ownedCosmetics: [], lastPassiveAt: null,
+                            adventOpened: [], adventRewards: {},
+                            halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null,
+                            unreadCounts:{}, unreadGroupCounts:{},
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
                         await db.collection('users').doc(user.uid).set(np);
                         setProfile(np); setLoading(false);
                     }
@@ -418,15 +619,10 @@
                         if (!gDoc.exists) { alert('Группа не найдена'); setInviteGroup(null); history.replaceState(null, '', location.pathname); return; }
                         const g = gDoc.data();
                         if ((g.members || []).includes(user.uid)) {
-                            setActiveTab('dm');
-                            setInviteGroup(null);
-                            history.replaceState(null, '', location.pathname);
-                            return;
+                            setActiveTab('dm'); setInviteGroup(null); history.replaceState(null, '', location.pathname); return;
                         }
                         if (!confirm(`Вступить в группу «${g.name}»?`)) { setInviteGroup(null); history.replaceState(null, '', location.pathname); return; }
-                        await db.collection('groups').doc(inviteGroup).update({
-                            members: firebase.firestore.FieldValue.arrayUnion(user.uid)
-                        });
+                        await db.collection('groups').doc(inviteGroup).update({ members: firebase.firestore.FieldValue.arrayUnion(user.uid) });
                         await sendNotification(g.creatorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'group_invite', `@${profile.username} вступил(а) в «${g.name}»`, { groupId: inviteGroup });
                         setActiveTab('dm');
                         alert('Вы вступили в группу!');
@@ -441,11 +637,8 @@
                 try {
                     const p = await Notification.requestPermission();
                     setNotifPermission(p);
-                    if (p === 'granted') {
-                        await showBrowserNotif({ senderName: 'GoPo', type: 'welcome', text: 'Уведомления включены' });
-                    } else if (p === 'denied') {
-                        alert('Уведомления заблокированы. Открой настройки браузера для gopo.layero.app и разреши уведомления');
-                    }
+                    if (p === 'granted') await showBrowserNotif({ senderName: 'GoPo', type: 'welcome', text: 'Уведомления включены' });
+                    else if (p === 'denied') alert('Уведомления заблокированы. Открой настройки браузера и разреши уведомления');
                 } catch(e) { alert('Ошибка: ' + e.message); }
             };
 
@@ -470,17 +663,28 @@
             const showNotifBanner = notifPermission !== 'granted';
 
             return (
-                <div className={`flex h-screen relative overflow-hidden ${eventActive ? 'halloween-tint bg-[#f0f2f5]' : 'bg-[#f0f2f5]'}`}>
-                    {eventActive && <HalloweenBats />}
-                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={totalBadge} unreadMsgs={unreadMsgs} />
+                <div className={`flex h-screen relative overflow-hidden ${eventActive ? 'winter-tint bg-[#eef4fb]' : 'bg-[#f0f2f5]'}`}>
+                    {newVersion && (
+                        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] bg-gopo text-white font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-xs">
+                            🚀 Доступна новая версия
+                            <button onClick={() => location.reload()} className="bg-white text-gopo px-3 py-1 rounded-full font-black">Обновить</button>
+                        </div>
+                    )}
+                    {eventActive && <WinterSnowflakes />}
+                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} onOpenNotifs={()=>setShowNotifications(true)} unread={totalBadge} unreadMsgs={unreadMsgs} adventAvailable={adventAvailable} />
                     <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${playerTrack ? 'pb-56 md:pb-40' : 'pb-24 md:pb-8'}`}>
                         <div className="max-w-2xl mx-auto">
                             <div className="flex items-center justify-between gap-2 mb-3">
-                                <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} />
-                                <button onClick={()=>setShowNotifications(true)} className="md:hidden relative liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition">
-                                    <I.Bell />
-                                    {totalBadge > 0 && <span className="absolute -top-1 -right-1 bg-gopo text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">{totalBadge > 9 ? '9+' : totalBadge}</span>}
-                                </button>
+                                <MobileMenuButton isAdmin={isAdmin} setActiveTab={setActiveTab} adventAvailable={adventAvailable} />
+                                <div className="flex items-center gap-2 ml-auto">
+                                    <div className="liquid-glass px-3 py-1.5 rounded-full flex items-center gap-1.5 text-sm font-black text-amber-600">
+                                        <I.Coin /><span>{profile.goCoins || 0}</span>
+                                    </div>
+                                    <button onClick={()=>setShowNotifications(true)} className="md:hidden relative liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition">
+                                        <I.Bell />
+                                        {totalBadge > 0 && <span className="absolute -top-1 -right-1 bg-gopo text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">{totalBadge > 9 ? '9+' : totalBadge}</span>}
+                                    </button>
+                                </div>
                             </div>
 
                             {showVerifyBanner && (
@@ -499,17 +703,18 @@
                                 </div>
                             )}
 
-                            {eventActive && activeTab !== 'clicker' && (
-                                <button onClick={()=>setActiveTab('clicker')} className="event-pill mb-3 w-full">🎃 Хэллоуин-ивент · Кликай и получай конфеты · до 10.11.26 12:00 МСК</button>
+                            {adventAvailable && activeTab !== 'advent' && (
+                                <button onClick={()=>setActiveTab('advent')} className="winter-event-pill mb-3 w-full">❄️ Зимний ивент · Адвент-календарь · 1–31 декабря</button>
                             )}
-                            {activeTab==='feed' && <FeedTab user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
+                            {activeTab==='feed' && <FeedTab key={reconnectKey} user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
                             {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
-                            {activeTab==='dm' && <MessengerTab user={user} profile={profile} usersMap={usersMap} />}
+                            {activeTab==='dm' && <MessengerTab key={reconnectKey} user={user} profile={profile} usersMap={usersMap} />}
                             {activeTab==='notifications' && <NotificationsTab user={user} onUserClick={setViewingProfile} onOpenPost={setViewingPost} />}
                             {activeTab==='profile' && <ProfileTab user={user} profile={profile} usersMap={usersMap} notifPermission={notifPermission} requestNotifPerm={requestNotifPerm} />}
                             {activeTab==='admin' && isAdmin && <AdminTab user={user} usersMap={usersMap} />}
                             {activeTab==='music' && <MusicTab user={user} profile={profile} playerTrack={playerTrack} playerPlaying={playerPlaying} playTrack={playTrack} />}
-                            {activeTab==='clicker' && <ClickerTab user={user} profile={profile} />}
+                            {activeTab==='shop' && <ShopTab user={user} profile={profile} />}
+                            {activeTab==='advent' && <AdventTab user={user} profile={profile} />}
                         </div>
                     </main>
                     <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} unread={totalBadge} unreadMsgs={unreadMsgs} onOpenNotifs={()=>setShowNotifications(true)} />
@@ -530,14 +735,12 @@
                                     <button onClick={()=>{setPlayerPlaying(false); setPlayerTrack(null);}} className="p-2 text-slate-400 hover:text-red-500"><I.X/></button>
                                 </div>
                                 <input type="range" min="0" max="100" value={playerProgress} onChange={e=>{ const a=playerAudioRef.current; if(a?.duration) a.currentTime=(e.target.value/100)*a.duration; }} className="w-full accent-gopo mt-2 h-1" />
-                                <p className="text-[10px] text-slate-400 font-bold mt-0.5 text-right">{playerDuration ? `${Math.floor((playerProgress/100*playerDuration)/60)}:${String(Math.floor((playerProgress/100*playerDuration)%60)).padStart(2,'0')}` : ''}</p>
                             </div>
                         </div>
                     )}
                 </div>
             );
         }
-
         const AuthScreen = () => {
             const [isLogin, setIsLogin] = useState(true);
             const [email, setEmail] = useState('');
@@ -561,21 +764,14 @@
                         window.__gopoRegistering = true;
                         const cred = await auth.createUserWithEmailAndPassword(email, password);
                         await cred.user.updateProfile({ displayName: name });
-                        try {
-                            await cred.user.sendEmailVerification();
-                            setSentVerify(true);
-                        } catch(ve) {
-                            console.warn('verify err:', ve);
-                            setVerifyError(ve.message || ve.code || 'Не удалось отправить письмо');
-                        }
+                        try { await cred.user.sendEmailVerification(); setSentVerify(true); }
+                        catch(ve) { setVerifyError(ve.message || ve.code || 'Не удалось отправить письмо'); }
                         const dup = await db.collection('users').where('username','==',uname).limit(1).get();
                         if (!dup.empty) {
                             await cred.user.delete().catch(()=>{});
                             await auth.signOut().catch(()=>{});
                             window.__gopoRegistering = false;
-                            setError('Этот никнейм уже занят');
-                            setLoading(false);
-                            return;
+                            setError('Этот никнейм уже занят'); setLoading(false); return;
                         }
                         await db.collection('users').doc(cred.user.uid).set({
                             uid: cred.user.uid, email, username: uname, displayName: name,
@@ -583,7 +779,9 @@
                             isVerified: email === ADMIN_EMAIL, isBanned:false,
                             followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null,
                             typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[],
-                            halloweenCandies:0, halloweenOwned:[], halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null,
+                            goCoins: 0, ownedCosmetics: [], lastPassiveAt: null,
+                            adventOpened: [], adventRewards: {},
+                            halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null,
                             unreadCounts:{}, unreadGroupCounts:{},
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
@@ -599,12 +797,12 @@
 
             return (
                 <div className="h-screen flex items-center justify-center p-4 relative">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80')] bg-cover opacity-20 filter blur-xl"></div>
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1547754980-3df97fed72a8?auto=format&fit=crop&w=1920&q=80')] bg-cover opacity-20 filter blur-xl"></div>
                     <div className="liquid-glass p-8 rounded-3xl w-full max-w-md relative z-10">
                         <div className="flex justify-center mb-8"><Logo /></div>
-                        <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo 🎃':'Создать аккаунт 🎃'}</h2>
+                        <h2 className="text-2xl font-black text-center mb-6">{isLogin?'Вход в GoPo ❄️':'Создать аккаунт ❄️'}</h2>
                         {sentVerify && <div className="bg-green-100 text-green-700 p-3 rounded-xl mb-4 text-sm font-bold">✉️ Письмо отправлено на {email}. Проверь почту и папку Спам.</div>}
-                        {verifyError && <div className="bg-amber-100 text-amber-800 p-3 rounded-xl mb-4 text-xs font-bold">Не удалось отправить письмо: {verifyError}. Попробуй «Забыли пароль?» на входе.</div>}
+                        {verifyError && <div className="bg-amber-100 text-amber-800 p-3 rounded-xl mb-4 text-xs font-bold">Не удалось отправить письмо: {verifyError}</div>}
                         {error && <div className="bg-red-100 text-red-600 p-3 rounded-xl mb-4 text-sm font-bold">{error}</div>}
                         <form onSubmit={submit} className="space-y-4">
                             {!isLogin && <>
@@ -621,7 +819,7 @@
             );
         };
 
-        const Sidebar = ({ activeTab, setActiveTab, isAdmin, onCreate, onOpenNotifs, unread, unreadMsgs }) => (
+        const Sidebar = ({ activeTab, setActiveTab, isAdmin, onCreate, onOpenNotifs, unread, unreadMsgs, adventAvailable }) => (
             <nav className="hidden md:flex flex-col w-64 m-4 rounded-3xl liquid-glass p-4 z-20">
                 <div className="mb-6 pl-2 flex items-center justify-between">
                     <Logo small />
@@ -631,9 +829,10 @@
                     <NavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} label="Лента" />
                     <NavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} label="Чаты" badge={unreadMsgs} />
                     <NavItem active={activeTab==='search'} onClick={()=>setActiveTab('search')} icon={<I.Search/>} label="Поиск" />
+                    <NavItem active={activeTab==='shop'} onClick={()=>setActiveTab('shop')} icon={<I.Cart/>} label="Магазин" />
+                    {adventAvailable && <NavItem active={activeTab==='advent'} onClick={()=>setActiveTab('advent')} icon={<I.Gift/>} label="Адвент ❄️" color="text-sky-500" />}
                     <NavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} label="Профиль" />
                     <NavItem active={activeTab==='music'} onClick={()=>setActiveTab('music')} icon={<I.Music/>} label="Музыка" />
-                    <NavItem active={activeTab==='clicker'} onClick={()=>setActiveTab('clicker')} icon={<span className="text-xl leading-none">🎃</span>} label="Кликер" />
                     {isAdmin && <NavItem active={activeTab==='admin'} onClick={()=>setActiveTab('admin')} icon={<I.Shield/>} label="Админ" color="text-red-500" />}
                 </div>
                 <button onClick={onCreate} className="w-full bg-gopo text-white font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-200 hover:bg-pink-600 transition mb-2"><I.Plus/><span className="ml-2">Создать</span></button>
@@ -641,7 +840,7 @@
             </nav>
         );
 
-        const MobileMenuButton = ({ isAdmin, setActiveTab }) => {
+        const MobileMenuButton = ({ isAdmin, setActiveTab, adventAvailable }) => {
             const [open, setOpen] = useState(false);
             const ref = useRef(null);
             useEffect(() => {
@@ -650,17 +849,19 @@
                 document.addEventListener('mousedown', handle); document.addEventListener('touchstart', handle);
                 return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle); };
             }, [open]);
+            const go = (t) => { setActiveTab(t); setOpen(false); };
             return (
                 <div ref={ref} className="md:hidden relative">
                     <button onClick={()=>setOpen(!open)} className="liquid-glass p-2.5 rounded-2xl text-slate-700 active:scale-95 transition" aria-label="Меню">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
                     </button>
                     {open && (
-                        <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-56 fade-in">
-                            <button onClick={()=>{ setActiveTab('search'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"><span className="text-slate-500"><I.Search /></span><span>Поиск</span></button>
-                            <button onClick={()=>{ setActiveTab('music'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700 border-t border-slate-100"><span className="text-slate-500"><I.Music /></span><span>Музыка</span></button>
-                            <button onClick={()=>{ setActiveTab('clicker'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-orange-50 font-bold text-sm text-orange-600 border-t border-slate-100"><span className="text-xl leading-none">🎃</span><span>Кликер</span></button>
-                            {isAdmin && <button onClick={()=>{ setActiveTab('admin'); setOpen(false); }} className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"><span><I.Shield /></span><span>Админ</span></button>}
+                        <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-60 fade-in">
+                            <button onClick={()=>go('search')} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"><span className="text-slate-500"><I.Search /></span><span>Поиск</span></button>
+                            <button onClick={()=>go('shop')} className="w-full flex items-center space-x-3 p-4 hover:bg-amber-50 font-bold text-sm text-amber-600 border-t border-slate-100"><span><I.Cart /></span><span>Магазин</span></button>
+                            {adventAvailable && <button onClick={()=>go('advent')} className="w-full flex items-center space-x-3 p-4 hover:bg-sky-50 font-bold text-sm text-sky-600 border-t border-slate-100"><span><I.Gift /></span><span>Адвент ❄️</span></button>}
+                            <button onClick={()=>go('music')} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700 border-t border-slate-100"><span className="text-slate-500"><I.Music /></span><span>Музыка</span></button>
+                            {isAdmin && <button onClick={()=>go('admin')} className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"><span><I.Shield /></span><span>Админ</span></button>}
                         </div>
                     )}
                 </div>
@@ -671,6 +872,7 @@
             <nav className="md:hidden fixed bottom-4 left-4 right-4 liquid-glass rounded-3xl flex justify-around items-center py-3 z-50">
                 <MobileNavItem active={activeTab==='feed'} onClick={()=>setActiveTab('feed')} icon={<I.Home/>} />
                 <MobileNavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} badge={unreadMsgs} />
+                <MobileNavItem active={activeTab==='shop'} onClick={()=>setActiveTab('shop')} icon={<I.Cart/>} />
                 <button onClick={onCreate} className="bg-gopo text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-pink-300 -mt-8 border-4 border-white"><I.Plus/></button>
                 <button onClick={onOpenNotifs} className="relative p-2 rounded-xl text-slate-500">
                     <I.Bell />
@@ -696,14 +898,9 @@
 
         const NotifItem = ({ notif, onClick }) => {
             const typeText = {
-                resonance:'резонировал(а) с вашим пузырём',
-                comment:'прокомментировал(а) ваш пузырь',
-                follow:'подписался(-ась) на вас',
-                message:'написал(а) вам сообщение',
-                music_approved:'— ваш трек одобрен и опубликован',
-                music_rejected:'— ваш трек отклонён',
-                music_pending:'— новый трек на модерации',
-                group_invite:'— активность в группе',
+                resonance:'резонировал(а) с вашим пузырём', comment:'прокомментировал(а) ваш пузырь', follow:'подписался(-ась) на вас',
+                message:'написал(а) вам сообщение', music_approved:'— ваш трек одобрен', music_rejected:'— ваш трек отклонён',
+                music_pending:'— новый трек на модерации', group_invite:'— активность в группе',
             };
             return (
                 <div onClick={onClick} className={`flex items-start space-x-3 p-3 rounded-2xl cursor-pointer transition ${notif.read?'hover:bg-slate-50':'bg-pink-50/60 hover:bg-pink-100/60'}`}>
@@ -764,149 +961,6 @@
                     <h1 className="text-2xl font-black mb-4">Уведомления</h1>
                     {notifs.length===0 && <div className="text-center p-16 liquid-glass rounded-3xl text-slate-400"><I.Bell/><p className="mt-4 font-bold">Пока нет уведомлений</p></div>}
                     <div className="bg-white rounded-3xl overflow-hidden shadow-sm">{notifs.map(n => <NotifItem key={n.id} notif={n} onClick={()=>{ if(n.senderId) onUserClick({uid:n.senderId, username:n.senderName, avatar:n.senderAvatar}); }} />)}</div>
-                </div>
-            );
-        };
-
-        const ClickerTab = ({ user, profile }) => {
-            const [candies, setCandies] = useState(profile.halloweenCandies || 0);
-            const [view, setView] = useState('tap');
-            const [pulse, setPulse] = useState(false);
-            const [floats, setFloats] = useState([]);
-            const [now, setNow] = useState(Date.now());
-            const pendingRef = useRef(0);
-            const saveTimerRef = useRef(null);
-
-            useEffect(() => { setCandies(profile.halloweenCandies || 0); }, [profile.halloweenCandies]);
-            useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
-
-            const isActive = now < HALLOWEEN_END;
-            const owned = profile.halloweenOwned || [];
-            const activeFrame = profile.halloweenFrameId || null;
-            const activeBadge = profile.halloweenBadgeId || null;
-            const activePostRaw = profile.halloweenPostStyle;
-            const isPostActive = (id) => activePostRaw === id || (activePostRaw === true && id === 'post_halloween');
-
-            const flush = () => {
-                if (saveTimerRef.current) { clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
-                const amt = pendingRef.current;
-                if (amt === 0) return;
-                pendingRef.current = 0;
-                db.collection('users').doc(user.uid).update({ halloweenCandies: firebase.firestore.FieldValue.increment(amt) }).catch(() => {});
-            };
-
-            const tap = (e) => {
-                if (!isActive) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = e.clientX || (e.touches && e.touches[0]?.clientX) || (rect.left + rect.width / 2);
-                const y = e.clientY || (e.touches && e.touches[0]?.clientY) || (rect.top + rect.height / 2);
-                setCandies(c => c + 1);
-                pendingRef.current += 1;
-                setPulse(true);
-                setTimeout(() => setPulse(false), 100);
-                const fid = Date.now() + Math.random();
-                setFloats(f => [...f, { id: fid, x, y }]);
-                setTimeout(() => setFloats(f => f.filter(v => v.id !== fid)), 1000);
-                if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-                saveTimerRef.current = setTimeout(flush, 2000);
-            };
-
-            useEffect(() => () => flush(), []);
-
-            const buy = async (item) => {
-                if (!isActive) { alert('Ивент завершён 🎃'); return; }
-                if (owned.includes(item.id)) return;
-                if (candies < item.price) { alert('Недостаточно конфет 🍬'); return; }
-                if (saveTimerRef.current) { clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
-                const addBack = pendingRef.current; pendingRef.current = 0;
-                try {
-                    await db.collection('users').doc(user.uid).update({
-                        halloweenCandies: firebase.firestore.FieldValue.increment(addBack - item.price),
-                        halloweenOwned: firebase.firestore.FieldValue.arrayUnion(item.id)
-                    });
-                } catch (e) { alert(e.message); }
-            };
-
-            const equip = async (item) => {
-                const updates = {};
-                if (item.type === 'frame') updates.halloweenFrameId = activeFrame === item.id ? null : item.id;
-                if (item.type === 'badge') updates.halloweenBadgeId = activeBadge === item.id ? null : item.id;
-                if (item.type === 'post') updates.halloweenPostStyle = isPostActive(item.id) ? null : item.id;
-                try { await db.collection('users').doc(user.uid).update(updates); } catch (e) { alert(e.message); }
-            };
-
-            const timeLeft = HALLOWEEN_END - now;
-            const days = Math.max(0, Math.floor(timeLeft / 86400000));
-            const hours = Math.max(0, Math.floor((timeLeft % 86400000) / 3600000));
-            const mins = Math.max(0, Math.floor((timeLeft % 3600000) / 60000));
-
-            return (
-                <div className="fade-in rounded-3xl min-h-[calc(100vh-140px)] p-5 text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a0a1f 0%, #0f0714 50%, #1a0a1f 100%)' }}>
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                        <div className="absolute text-3xl opacity-25" style={{top:'8%', animation:'flyBat 20s linear infinite'}}>🦇</div>
-                        <div className="absolute text-2xl opacity-20" style={{top:'55%', animation:'flyBat 26s linear infinite', animationDelay:'-7s'}}>🦇</div>
-                    </div>
-                    <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2"><span className="text-2xl">🎃</span><h1 className="text-2xl font-black">Ночь конфет</h1></div>
-                            <div className="flex items-center gap-2 bg-black/50 rounded-full px-4 py-2 border border-orange-500/40"><span className="text-lg">🍬</span><span className="font-black text-lg text-orange-300">{candies}</span></div>
-                        </div>
-                        {isActive ? <div className="event-pill mb-4">⏰ До конца ивента: {days}д {hours}ч {mins}м</div> : <div className="bg-red-500/20 border border-red-500/40 rounded-full px-4 py-2 text-sm font-bold mb-4 text-red-300 text-center">🎃 Ивент завершён</div>}
-                        <div className="flex gap-1 mb-4 bg-black/50 rounded-2xl p-1 border border-white/10">
-                            <button onClick={() => setView('tap')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='tap'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🔨 Тапалка</button>
-                            <button onClick={() => setView('shop')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='shop'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🛒 Магазин</button>
-                            <button onClick={() => setView('inv')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${view==='inv'?'bg-gradient-to-r from-orange-500 to-purple-600 text-white':'text-slate-400'}`}>🎒 Инв. ({owned.length})</button>
-                        </div>
-                        {view === 'tap' && (
-                            <div className="flex flex-col items-center justify-center py-6">
-                                <div onClick={tap} className={`clicker-pumpkin ${pulse ? 'pulse' : ''} ${!isActive ? 'opacity-40 cursor-not-allowed' : ''}`}>🎃</div>
-                                <p className="text-center text-sm text-slate-400 mt-6 font-bold px-4">{isActive ? 'Тапай по тыкве, чтобы получать конфеты 🍬' : 'Ивент закончился — тыква спит'}</p>
-                                <div className="mt-6 text-center"><div className="text-5xl font-black text-orange-300">{candies}</div><div className="text-xs text-slate-400 font-bold mt-1">🍬 конфет</div></div>
-                            </div>
-                        )}
-                        {view === 'shop' && (
-                            <div className="space-y-2">
-                                {SHOP_ITEMS.map(item => {
-                                    const has = owned.includes(item.id);
-                                    const canAfford = candies >= item.price;
-                                    return (
-                                        <div key={item.id} className={`bg-black/50 rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
-                                            <div className="text-3xl">{item.emoji}</div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="font-black text-sm">{item.name}</div>
-                                                <div className="text-[10px] text-slate-400 font-bold uppercase">{RARITY_LABEL[item.rarity]} · {item.type === 'frame' ? 'Рамка' : item.type === 'badge' ? 'Бейдж' : 'Стиль постов'}</div>
-                                            </div>
-                                            <div className="flex flex-col items-end gap-1">
-                                                <div className={`text-xs font-bold ${canAfford ? 'text-orange-300' : 'text-slate-500'}`}>🍬 {item.price}</div>
-                                                {has ? <span className="text-[10px] font-black text-green-400">✓ Куплено</span> : <button onClick={() => buy(item)} disabled={!canAfford || !isActive} className="bg-gradient-to-r from-orange-500 to-purple-600 text-white text-xs font-black px-3 py-1.5 rounded-lg disabled:opacity-40">Купить</button>}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                        {view === 'inv' && (
-                            <div>
-                                {owned.length === 0 ? (
-                                    <div className="text-center py-16 text-slate-400"><div className="text-6xl mb-3">🎒</div><p className="font-bold">Инвентарь пуст</p><p className="text-xs mt-1">Заработай конфеты и купи что-нибудь</p></div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {SHOP_ITEMS.filter(i => owned.includes(i.id)).map(item => {
-                                            const isEq = (item.type === 'frame' && activeFrame === item.id) || (item.type === 'badge' && activeBadge === item.id) || (item.type === 'post' && isPostActive(item.id));
-                                            return (
-                                                <div key={item.id} className={`bg-black/50 rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
-                                                    <div className="text-3xl">{item.emoji}</div>
-                                                    <div className="flex-1 min-w-0"><div className="font-black text-sm">{item.name}</div><div className="text-[10px] text-slate-400 font-bold">{isEq ? '✓ Надето' : 'Не надето'}</div></div>
-                                                    <button onClick={() => equip(item)} className={`text-xs font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-700 text-white' : 'bg-gradient-to-r from-orange-500 to-purple-600 text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    {floats.map(f => <div key={f.id} className="float-candy" style={{ left: f.x, top: f.y }}>+1 🍬</div>)}
                 </div>
             );
         };
@@ -1007,7 +1061,6 @@
             }, []);
 
             const del = async (id) => { if (window.confirm('Удалить пост?')) await db.collection('posts').doc(id).delete(); };
-
             const startHold = (e, postId) => {
                 if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.hashtag')) return;
                 const cx = e.clientX || e.touches?.[0]?.clientX || 0; const cy = e.clientY || e.touches?.[0]?.clientY || 0;
@@ -1041,12 +1094,10 @@
                 if (has) await ref.update({blows: firebase.firestore.FieldValue.arrayRemove(user.uid)});
                 else await ref.update({blows: firebase.firestore.FieldValue.arrayUnion(user.uid)});
             };
-
             const votePoll = async (post, idx) => {
                 if (post.poll?.votes?.[user.uid] !== undefined) { alert('Ты уже голосовал'); return; }
-                try {
-                    await db.collection('posts').doc(post.id).update({ [`poll.votes.${user.uid}`]: idx });
-                } catch(e){ alert('Ошибка голоса: ' + e.message); }
+                try { await db.collection('posts').doc(post.id).update({ [`poll.votes.${user.uid}`]: idx }); }
+                catch(e){ alert('Ошибка голоса: ' + e.message); }
             };
 
             const now = Date.now();
@@ -1066,8 +1117,7 @@
                 const commentsCount = post.commentsCount || 0;
                 const authorPostStyle = getPostStyleClass(author?.halloweenPostStyle);
                 return (
-                    <article key={post.id}
-                        className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''} ${authorPostStyle}`}
+                    <article key={post.id} className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''} ${authorPostStyle}`}
                         onMouseDown={e=>startHold(e, post.id)} onMouseUp={endHold} onMouseLeave={endHold} onTouchStart={e=>startHold(e, post.id)} onTouchMove={moveHold} onTouchEnd={endHold} onTouchCancel={endHold}>
                         {isHolding && <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none" style={{background:`conic-gradient(#FF0055 ${holdingState.progress}%, transparent 0)`,mask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',WebkitMask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',maskComposite:'exclude',WebkitMaskComposite:'xor',padding:'4px'}} />}
                         <div className="absolute top-4 right-4 flex flex-col items-center space-y-2 z-10">
@@ -1104,10 +1154,7 @@
                                                 <button key={idx} onClick={()=>votePoll(post, idx)} disabled={voted} className={`w-full text-left relative px-3 py-2 rounded-xl border-2 text-xs font-bold transition ${voted?'border-slate-200 bg-white cursor-default':'border-slate-200 bg-white hover:border-gopo'}`}>
                                                     <div className="poll-bar" style={{width: voted ? pct+'%' : '0%'}}></div>
                                                     <div className="relative flex justify-between items-center">
-                                                        <span className="truncate flex items-center">
-                                                            {myVote === idx && <span className="text-gopo mr-1">✓</span>}
-                                                            {opt.text}
-                                                        </span>
+                                                        <span className="truncate flex items-center">{myVote === idx && <span className="text-gopo mr-1">✓</span>}{opt.text}</span>
                                                         {voted && <span className="text-slate-500 text-[10px] flex-shrink-0 ml-2">{votes} ({pct}%)</span>}
                                                     </div>
                                                 </button>
@@ -1232,6 +1279,7 @@
                 try {
                     await db.collection('posts').doc(post.id).collection('comments').add({ text: text.trim(), authorId: user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     await db.collection('posts').doc(post.id).update({commentsCount: firebase.firestore.FieldValue.increment(1)});
+                    await addGoCoins(user.uid, 10);
                     if (post.authorId !== user.uid) sendNotification(post.authorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'comment', text.trim().slice(0,60), {postId:post.id});
                     setText('');
                 } catch(err) { alert(err.message); }
@@ -1262,7 +1310,7 @@
                             <p className="text-sm line-clamp-2">{renderTextWithHashtags(post.text, onHashtagClick)}</p>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
-                            {comments.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Комментариев пока нет. Будь первым!</p>}
+                            {comments.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Комментариев пока нет. Будь первым! (+10 GoCoin)</p>}
                             {comments.map(c => {
                                 const ca = usersMap[c.authorId] || {username:'unknown', avatar:null};
                                 const canDel = c.authorId === user.uid || post.authorId === user.uid || isAdmin;
@@ -1283,7 +1331,7 @@
                             <div ref={endRef} />
                         </div>
                         <form onSubmit={send} className="p-3 border-t flex gap-2 bg-slate-50 rounded-b-3xl">
-                            <input value={text} onChange={e=>setText(e.target.value)} placeholder="Написать комментарий..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
+                            <input value={text} onChange={e=>setText(e.target.value)} placeholder="Комментарий (+10 GoCoin)..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo text-sm font-medium" />
                             <button type="submit" disabled={sending || !text.trim()} className="bg-gopo text-white p-3 rounded-xl disabled:opacity-50"><I.Send/></button>
                         </form>
                     </div>
@@ -1314,20 +1362,10 @@
                 }
                 setPosting(true);
                 try {
-                    const payload = {
-                        text: text.trim(), image, mood,
-                        authorId: user.uid, authorName: profile.username, authorAvatar: profile.avatar,
-                        resonances: [], blows: [], commentsCount: 0,
-                        createdAt: Date.now()
-                    };
-                    if (pollOn && pollQ.trim()) {
-                        payload.poll = {
-                            question: pollQ.trim(),
-                            options: pollOpts.filter(o => o.trim()).map(o => ({ text: o.trim() })),
-                            votes: {}
-                        };
-                    }
+                    const payload = { text: text.trim(), image, mood, authorId: user.uid, authorName: profile.username, authorAvatar: profile.avatar, resonances: [], blows: [], commentsCount: 0, createdAt: Date.now() };
+                    if (pollOn && pollQ.trim()) payload.poll = { question: pollQ.trim(), options: pollOpts.filter(o => o.trim()).map(o => ({ text: o.trim() })), votes: {} };
                     await db.collection('posts').add(payload);
+                    await addGoCoins(user.uid, 25);
                     onClose();
                 } catch(err) { alert('Ошибка: ' + err.message); }
                 setPosting(false);
@@ -1347,10 +1385,9 @@
                                 ))}
                             </div>
                         </div>
-                        <div className="flex items-center space-x-3 mb-3"><Avatar src={profile.avatar} name={profile.username} size={36} /><span className="font-bold text-sm">@{profile.username}</span></div>
+                        <div className="flex items-center space-x-3 mb-3"><Avatar src={profile.avatar} name={profile.username} size={36} /><span className="font-bold text-sm">@{profile.username}</span><span className="ml-auto text-xs font-black text-amber-600">+25 🪙</span></div>
                         <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Что у тебя на душе?" rows="3" className="w-full p-3 bg-slate-50 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-gopo/30 font-medium" />
                         {image && <div className="relative mt-3"><img src={image} className="rounded-2xl max-h-64 w-full object-cover" /><button onClick={()=>setImage(null)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full"><I.X/></button></div>}
-
                         {pollOn && (
                             <div className="mt-3 bg-slate-50 rounded-2xl p-3 border border-slate-200">
                                 <div className="flex justify-between items-center mb-2">
@@ -1367,7 +1404,6 @@
                                 {pollOpts.length < 4 && <button onClick={addOpt} className="text-xs font-bold text-gopo">+ добавить вариант</button>}
                             </div>
                         )}
-
                         <div className="flex items-center justify-between mt-4 pt-4 border-t flex-wrap gap-2">
                             <div className="flex gap-2">
                                 <button onClick={()=>fileRef.current.click()} className="flex items-center space-x-1 text-slate-500 hover:text-gopo font-bold p-2"><I.Image/><span className="text-xs">Фото</span></button>
@@ -1430,17 +1466,11 @@
                                         <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="flex items-center min-w-0">
-                                                    <span className="font-bold text-sm truncate">{u.displayName || u.username}</span>
-                                                    {u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}
-                                                </div>
+                                                <div className="flex items-center min-w-0"><span className="font-bold text-sm truncate">{u.displayName || u.username}</span>{u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}</div>
                                                 {unread > 0 && <span className="bg-gopo text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">{unread > 9 ? '9+' : unread}</span>}
                                             </div>
-                                            {typing ? (
-                                                <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
-                                            ) : (
-                                                <p className={`text-xs truncate ${isReallyOnline(u)?'text-green-600 font-bold':'text-slate-500'}`}>{formatLastSeen(u)}</p>
-                                            )}
+                                            {typing ? <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
+                                                : <p className={`text-xs truncate ${isReallyOnline(u)?'text-green-600 font-bold':'text-slate-500'}`}>{formatLastSeen(u)}</p>}
                                         </div>
                                     </button>
                                 );
@@ -1467,7 +1497,7 @@
                         {selectedUser && <ChatView key={'u-'+selectedUser.uid} user={user} profile={profile} other={selectedUser} onBack={closeChat} />}
                         {selectedGroup && <GroupChatView key={'g-'+selectedGroup.id} user={user} profile={profile} group={selectedGroup} usersMap={usersMap} onBack={closeChat} />}
                         {!selectedUser && !selectedGroup && (
-                            <div className="flex-1 flex flex-col items-center justify-center text-slate-400"><I.Msg/><p className="mt-4 font-bold">Выберите чат или группу</p></div>
+                            <div className="flex-1 flex flex-col items-center justify-center text-slate-400"><I.Msg/><p className="mt-4 font-bold">Выберите чат или группу</p><p className="text-xs mt-1 text-slate-400">+3 GoCoin за сообщение</p></div>
                         )}
                     </div>
                     {showCreateGroup && <CreateGroupModal user={user} profile={profile} usersMap={usersMap} onClose={()=>setShowCreateGroup(false)} />}
@@ -1490,12 +1520,7 @@
                 if (selected.length === 0) { alert('Выберите хотя бы одного участника'); return; }
                 setCreating(true);
                 try {
-                    await db.collection('groups').add({
-                        name: name.trim(), avatar, creatorId: user.uid, admins: [user.uid],
-                        members: [user.uid, ...selected],
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    await db.collection('groups').add({ name: name.trim(), avatar, creatorId: user.uid, admins: [user.uid], members: [user.uid, ...selected], createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastMessageAt: firebase.firestore.FieldValue.serverTimestamp() });
                     selected.forEach(uid => sendNotification(uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'group_invite', `Приглашение в группу «${name}»`));
                     onClose();
                 } catch(e) { alert(e.message); }
@@ -1504,10 +1529,7 @@
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-black">Новая группа</h2>
-                            <button onClick={onClose} className="p-2 text-slate-400"><I.X/></button>
-                        </div>
+                        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-black">Новая группа</h2><button onClick={onClose} className="p-2 text-slate-400"><I.X/></button></div>
                         <div className="flex flex-col items-center mb-4">
                             <div onClick={()=>fileRef.current.click()} className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200">
                                 {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Group/><p className="text-[10px] font-bold mt-1">Аватар</p></div>}
@@ -1549,21 +1571,10 @@
             useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 5000); return () => clearInterval(t); }, []);
             useEffect(() => { const unsub = db.collection('users').doc(other.uid).onSnapshot(doc => { if (doc.exists) setOtherUser(doc.data()); }); return () => unsub(); }, [other.uid]);
 
-            useEffect(() => {
-                const ref = db.collection('users').doc(user.uid);
-                ref.update({ [`unreadCounts.${other.uid}`]: 0 }).catch(()=>{});
-            }, [user.uid, other.uid]);
+            useEffect(() => { db.collection('users').doc(user.uid).update({ [`unreadCounts.${other.uid}`]: 0 }).catch(()=>{}); }, [user.uid, other.uid]);
 
-            const isNearBottom = () => {
-                const el = messagesRef.current;
-                if (!el) return true;
-                return el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-            };
-            const scrollToBottom = (smooth) => {
-                const el = messagesRef.current;
-                if (!el) return;
-                el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
-            };
+            const isNearBottom = () => { const el = messagesRef.current; if (!el) return true; return el.scrollHeight - el.scrollTop - el.clientHeight < 120; };
+            const scrollToBottom = (smooth) => { const el = messagesRef.current; if (!el) return; el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' }); };
 
             useEffect(() => {
                 const unsub = db.collection('messages').where('participants','==',participants).onSnapshot(snap => {
@@ -1572,10 +1583,7 @@
                     const grew = arr.length > prevLen.current;
                     const wasBottom = isNearBottom();
                     setMessages(arr);
-                    if (grew) {
-                        prevLen.current = arr.length;
-                        if (wasBottom) setTimeout(() => scrollToBottom(true), 80);
-                    }
+                    if (grew) { prevLen.current = arr.length; if (wasBottom) setTimeout(() => scrollToBottom(true), 80); }
                     arr.filter(m => m.senderId === other.uid && !(m.readBy||[]).includes(user.uid))
                        .forEach(m => db.collection('messages').doc(m.id).update({readBy: firebase.firestore.FieldValue.arrayUnion(user.uid)}).catch(()=>{}));
                 });
@@ -1583,8 +1591,8 @@
             }, [participants.join(',')]);
 
             useEffect(() => { setTimeout(() => scrollToBottom(false), 100); }, []);
-
             useEffect(() => () => { db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{}); clearTimeout(typingClear.current); }, [user.uid]);
+
             const delMsg = async (id) => { if (!window.confirm('Удалить сообщение?')) return; await db.collection('messages').doc(id).delete(); };
             const toggleReaction = async (msg, emoji) => {
                 const cur = msg.reactions || {}; const users = cur[emoji] || []; const has = users.includes(user.uid);
@@ -1607,6 +1615,7 @@
                 e.preventDefault(); if (!text.trim()) return;
                 await db.collection('messages').add({ participants, text: text.trim(), senderId: user.uid, readBy: [user.uid], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 await db.collection('users').doc(other.uid).update({ [`unreadCounts.${user.uid}`]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
+                await addGoCoins(user.uid, 3);
                 if (other.uid !== user.uid) sendNotification(other.uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'message', text.trim().slice(0,60));
                 setText('');
                 db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{});
@@ -1635,7 +1644,7 @@
                         </div>
                     </div>
                     <div ref={messagesRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-2 messages-scroll">
-                        {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните диалог 👋</p>}
+                        {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните диалог 👋 (+3 GoCoin за сообщение)</p>}
                         {messages.map(m => {
                             const mine = m.senderId === user.uid;
                             const reactions = m.reactions || {};
@@ -1678,7 +1687,7 @@
                         <div ref={endRef} />
                     </div>
                     <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center flex-shrink-0">
-                        <input value={text} onChange={e=>handleChange(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium min-w-0" />
+                        <input value={text} onChange={e=>handleChange(e.target.value)} placeholder="Сообщение... (+3 🪙)" className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium min-w-0" />
                         <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50 flex-shrink-0"><I.Send/></button>
                     </form>
                 </div>
@@ -1694,10 +1703,7 @@
             const endRef = useRef(null);
             const prevLen = useRef(0);
             useEffect(() => { const unsub = db.collection('groups').doc(group.id).onSnapshot(d => { if(d.exists) setLiveGroup(d.data()); }); return () => unsub(); }, [group.id]);
-
-            useEffect(() => {
-                db.collection('users').doc(user.uid).update({ [`unreadGroupCounts.${group.id}`]: 0 }).catch(()=>{});
-            }, [user.uid, group.id]);
+            useEffect(() => { db.collection('users').doc(user.uid).update({ [`unreadGroupCounts.${group.id}`]: 0 }).catch(()=>{}); }, [user.uid, group.id]);
 
             const scrollToBottom = (smooth) => { const el = messagesRef.current; if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' }); };
             const isNearBottom = () => { const el = messagesRef.current; if (!el) return true; return el.scrollHeight - el.scrollTop - el.clientHeight < 120; };
@@ -1719,11 +1725,8 @@
                 e.preventDefault(); if (!text.trim()) return;
                 await db.collection('groups').doc(group.id).collection('messages').add({ senderId: user.uid, senderName: profile.username, senderAvatar: profile.avatar, text: text.trim(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 await db.collection('groups').doc(group.id).update({lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()});
-                (liveGroup.members || []).forEach(uid => {
-                    if (uid !== user.uid) {
-                        db.collection('users').doc(uid).update({ [`unreadGroupCounts.${group.id}`]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
-                    }
-                });
+                await addGoCoins(user.uid, 3);
+                (liveGroup.members || []).forEach(uid => { if (uid !== user.uid) db.collection('users').doc(uid).update({ [`unreadGroupCounts.${group.id}`]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{}); });
                 setText('');
             };
             const delMsg = async (m) => {
@@ -1739,14 +1742,10 @@
                 catch(e){ prompt('Скопируй ссылку:', inviteLink); }
             };
             const kickMember = async (uid, name) => {
-                if (!isAdmin) return;
-                if (uid === user.uid) return;
+                if (!isAdmin || uid === user.uid) return;
                 if (!window.confirm(`Исключить @${name} из группы?`)) return;
                 try {
-                    await db.collection('groups').doc(group.id).update({
-                        members: firebase.firestore.FieldValue.arrayRemove(uid),
-                        admins: firebase.firestore.FieldValue.arrayRemove(uid)
-                    });
+                    await db.collection('groups').doc(group.id).update({ members: firebase.firestore.FieldValue.arrayRemove(uid), admins: firebase.firestore.FieldValue.arrayRemove(uid) });
                     await sendNotification(uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'group_invite', `Вас исключили из группы «${liveGroup.name}»`);
                 } catch(e){ alert(e.message); }
             };
@@ -1765,7 +1764,7 @@
                         <button onClick={leave} className="text-xs font-bold text-red-500 px-2 py-1 rounded-lg hover:bg-red-50">Выйти</button>
                     </div>
                     <div ref={messagesRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-2 messages-scroll">
-                        {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните общение 👋</p>}
+                        {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните общение 👋 (+3 GoCoin за сообщение)</p>}
                         {messages.map(m => {
                             const mine = m.senderId === user.uid;
                             return (
@@ -1784,16 +1783,13 @@
                         <div ref={endRef} />
                     </div>
                     <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center flex-shrink-0">
-                        <input value={text} onChange={e=>setText(e.target.value)} placeholder="Сообщение..." className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium min-w-0" />
+                        <input value={text} onChange={e=>setText(e.target.value)} placeholder="Сообщение... (+3 🪙)" className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium min-w-0" />
                         <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50 flex-shrink-0"><I.Send/></button>
                     </form>
                     {showMembers && (
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
                             <div className="bg-white rounded-3xl p-5 w-full max-w-sm max-h-[80vh] overflow-y-auto">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h3 className="font-black text-lg">Участники ({membersList.length})</h3>
-                                    <button onClick={()=>setShowMembers(false)} className="p-2 text-slate-400"><I.X/></button>
-                                </div>
+                                <div className="flex justify-between items-center mb-3"><h3 className="font-black text-lg">Участники ({membersList.length})</h3><button onClick={()=>setShowMembers(false)} className="p-2 text-slate-400"><I.X/></button></div>
                                 <button onClick={copyInvite} className="w-full bg-gopo text-white font-bold py-2.5 rounded-xl mb-3 flex items-center justify-center gap-2 text-sm"><I.Link/>Скопировать приглашение</button>
                                 <div className="space-y-1">
                                     {membersList.map(m => {
@@ -1828,6 +1824,7 @@
             const [saving, setSaving] = useState(false);
             const [userPosts, setUserPosts] = useState([]);
             const [verifyStatus, setVerifyStatus] = useState('');
+            const [profileView, setProfileView] = useState('posts');
             const bannerRef = useRef(null);
             useEffect(() => {
                 const unsub = db.collection('posts').where('authorId','==',user.uid).onSnapshot(s => {
@@ -1853,24 +1850,33 @@
                 } catch(err) { alert(err.message); }
                 setSaving(false);
             };
+            const owned = profile.ownedCosmetics || [];
+            const equipItem = async (item) => {
+                const updates = {};
+                if (item.type === 'frame') updates.halloweenFrameId = profile.halloweenFrameId === item.id ? null : item.id;
+                if (item.type === 'badge') updates.halloweenBadgeId = profile.halloweenBadgeId === item.id ? null : item.id;
+                if (item.type === 'post') {
+                    const cur = profile.halloweenPostStyle;
+                    const isAct = cur === item.id || (cur === true && item.id === 'post_halloween');
+                    updates.halloweenPostStyle = isAct ? null : item.id;
+                }
+                try { await db.collection('users').doc(user.uid).update(updates); } catch(e) { alert(e.message); }
+            };
             const badge = profile.halloweenBadgeId ? getItemById(profile.halloweenBadgeId) : null;
             const ps = getPostStyleClass(profile.halloweenPostStyle);
             const resendVerify = async () => {
                 setVerifyStatus('Отправляем...');
-                try {
-                    await user.reload();
-                    if (user.emailVerified) { setVerifyStatus('✅ Почта подтверждена'); return; }
-                    await user.sendEmailVerification();
-                    setVerifyStatus('✉️ Письмо отправлено. Проверь папку Спам!');
-                } catch(e) {
-                    setVerifyStatus('❌ ' + (e.message || e.code));
-                }
+                try { await user.reload(); if (user.emailVerified) { setVerifyStatus('✅ Почта подтверждена'); return; } await user.sendEmailVerification(); setVerifyStatus('✉️ Письмо отправлено. Проверь папку Спам!'); }
+                catch(e) { setVerifyStatus('❌ ' + (e.message || e.code)); }
             };
             const checkVerified = async () => {
                 setVerifyStatus('Проверяем...');
                 try { await user.reload(); if (user.emailVerified) setVerifyStatus('✅ Почта подтверждена! Обнови страницу'); else setVerifyStatus('❌ Пока не подтверждено'); }
                 catch(e) { setVerifyStatus('❌ ' + e.message); }
             };
+            const ownedItems = SHOP_ITEMS.filter(i => owned.includes(i.id));
+            const ownedW = ownedItems.filter(i => i.season !== 'halloween');
+            const ownedH = ownedItems.filter(i => i.season === 'halloween');
             return (
                 <div className="fade-in max-w-xl mx-auto">
                     {!user.emailVerified && user.email !== ADMIN_EMAIL && (
@@ -1911,7 +1917,9 @@
                                     <p className="text-slate-500 font-medium">@{profile.username}</p>
                                     <p className={`text-xs font-bold mt-1 ${isReallyOnline(profile)?'text-green-600':'text-slate-400'}`}>{formatLastSeen(profile)}</p>
                                     {profile.bio && <p className="text-slate-700 mt-2 text-sm">{profile.bio}</p>}
-                                    {profile.halloweenCandies > 0 && <p className="text-xs font-black text-orange-500 mt-1">🍬 {profile.halloweenCandies} конфет</p>}
+                                    <div className="mt-2 inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
+                                        <I.Coin /><span className="font-black text-amber-700 text-sm">{profile.goCoins || 0}</span><span className="text-[10px] text-amber-600 font-bold">GoCoin</span>
+                                    </div>
                                 </div>
                                 <button onClick={()=>setEditing(true)} className="border-2 border-slate-200 hover:border-slate-300 font-bold px-4 py-2 rounded-xl text-sm transition">Изменить</button>
                             </div>
@@ -1922,25 +1930,85 @@
                             </div>
                         </div>
                     </div>
-                    <h3 className="font-black text-lg mb-3 ml-2">Мои пузыри</h3>
-                    <div className="space-y-4">
-                        {userPosts.map(post => {
-                            const mood = MOODS[post.mood] || MOODS.neutral;
-                            return (
-                                <div key={post.id} className={`relative rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border} ${ps}`}>
-                                    <button onClick={()=>deletePost(post.id)} className="absolute top-3 right-3 p-2 rounded-full bg-white/70 text-slate-400 hover:text-red-500 backdrop-blur-sm shadow-sm z-10"><I.Trash/></button>
-                                    <div className="flex items-center justify-between mb-2 pr-10">
-                                        <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
-                                        <span className="text-xl">{mood.emoji}</span>
-                                    </div>
-                                    {post.text && <p className={`text-sm mb-2 ${mood.text}`}>{post.text}</p>}
-                                    {post.poll && <div className="bg-white/60 rounded-xl p-2 mb-2"><p className="font-bold text-xs">📊 {post.poll.question}</p><p className="text-[10px] text-slate-500 mt-1">{Object.keys(post.poll.votes || {}).length} голосов</p></div>}
-                                    {post.image && <img src={post.image} className="rounded-xl max-h-60 w-full object-cover shadow-sm" />}
-                                </div>
-                            );
-                        })}
-                        {userPosts.length===0 && <p className="text-center text-slate-400 font-bold text-sm py-8">У вас пока нет пузырей</p>}
+                    <div className="flex gap-2 mb-3">
+                        <button onClick={() => setProfileView('posts')} className={`px-4 py-2 rounded-xl text-sm font-bold ${profileView === 'posts' ? 'bg-gopo text-white shadow' : 'bg-white text-slate-600'}`}>Мои пузыри</button>
+                        <button onClick={() => setProfileView('inventory')} className={`px-4 py-2 rounded-xl text-sm font-bold ${profileView === 'inventory' ? 'bg-gopo text-white shadow' : 'bg-white text-slate-600'}`}>Инвентарь 🎒 {owned.length > 0 && `(${owned.length})`}</button>
                     </div>
+                    {profileView === 'posts' && (
+                        <div className="space-y-4">
+                            {userPosts.map(post => {
+                                const mood = MOODS[post.mood] || MOODS.neutral;
+                                return (
+                                    <div key={post.id} className={`relative rounded-[2rem] p-4 border-2 ${mood.bg} ${mood.border} ${ps}`}>
+                                        <button onClick={()=>deletePost(post.id)} className="absolute top-3 right-3 p-2 rounded-full bg-white/70 text-slate-400 hover:text-red-500 backdrop-blur-sm shadow-sm z-10"><I.Trash/></button>
+                                        <div className="flex items-center justify-between mb-2 pr-10">
+                                            <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
+                                            <span className="text-xl">{mood.emoji}</span>
+                                        </div>
+                                        {post.text && <p className={`text-sm mb-2 ${mood.text}`}>{post.text}</p>}
+                                        {post.poll && <div className="bg-white/60 rounded-xl p-2 mb-2"><p className="font-bold text-xs">📊 {post.poll.question}</p><p className="text-[10px] text-slate-500 mt-1">{Object.keys(post.poll.votes || {}).length} голосов</p></div>}
+                                        {post.image && <img src={post.image} className="rounded-xl max-h-60 w-full object-cover shadow-sm" />}
+                                    </div>
+                                );
+                            })}
+                            {userPosts.length===0 && <p className="text-center text-slate-400 font-bold text-sm py-8">У вас пока нет пузырей</p>}
+                        </div>
+                    )}
+                    {profileView === 'inventory' && (
+                        <div className="space-y-4">
+                            {owned.length === 0 && (
+                                <div className="text-center p-10 bg-white rounded-3xl text-slate-400">
+                                    <div className="text-5xl mb-2">🎒</div>
+                                    <p className="font-bold">Инвентарь пуст</p>
+                                    <p className="text-xs mt-1">Купи косметику в магазине</p>
+                                </div>
+                            )}
+                            {ownedW.length > 0 && (
+                                <div>
+                                    <p className="text-xs font-black text-slate-500 uppercase mb-2 ml-1">Активная косметика ({ownedW.length})</p>
+                                    <div className="space-y-2">
+                                        {ownedW.map(item => {
+                                            const isEq = (item.type === 'frame' && profile.halloweenFrameId === item.id)
+                                                || (item.type === 'badge' && profile.halloweenBadgeId === item.id)
+                                                || (item.type === 'post' && (profile.halloweenPostStyle === item.id || (profile.halloweenPostStyle === true && item.id === 'post_halloween')));
+                                            return (
+                                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
+                                                    <div className="text-3xl">{item.emoji}</div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-black text-sm">{item.name}</div>
+                                                        <div className="text-[10px] text-slate-400 font-bold uppercase">{RARITY_LABEL[item.rarity]} · {item.type === 'frame' ? 'Рамка' : item.type === 'badge' ? 'Бейдж' : 'Стиль постов'}</div>
+                                                    </div>
+                                                    <button onClick={() => equipItem(item)} className={`text-xs font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-200 text-slate-700' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                            {ownedH.length > 0 && (
+                                <div>
+                                    <p className="text-xs font-black text-slate-400 uppercase mb-2 ml-1">Архив Хэллоуина ({ownedH.length})</p>
+                                    <div className="space-y-2 opacity-80">
+                                        {ownedH.map(item => {
+                                            const isEq = (item.type === 'frame' && profile.halloweenFrameId === item.id)
+                                                || (item.type === 'badge' && profile.halloweenBadgeId === item.id)
+                                                || (item.type === 'post' && (profile.halloweenPostStyle === item.id || (profile.halloweenPostStyle === true && item.id === 'post_halloween')));
+                                            return (
+                                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
+                                                    <div className="text-3xl">{item.emoji}</div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-black text-sm">{item.name}</div>
+                                                        <div className="text-[10px] text-slate-400 font-bold uppercase">{RARITY_LABEL[item.rarity]} · {item.type === 'frame' ? 'Рамка' : item.type === 'badge' ? 'Бейдж' : 'Стиль постов'}</div>
+                                                    </div>
+                                                    <button onClick={() => equipItem(item)} className={`text-xs font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-200 text-slate-700' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                     {editing && (
                         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                             <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
@@ -2022,7 +2090,6 @@
                                     <p className="text-slate-500 font-medium">@{liveUser.username}</p>
                                     <p className={`text-xs font-bold mt-1 ${isReallyOnline(liveUser)?'text-green-600':'text-slate-400'}`}>{formatLastSeen(liveUser)}</p>
                                     {liveUser.bio && <p className="text-slate-700 mt-2 text-sm">{liveUser.bio}</p>}
-                                    {liveUser.halloweenCandies > 0 && <p className="text-xs font-black text-orange-500 mt-1">🍬 {liveUser.halloweenCandies} конфет</p>}
                                 </div>
                                 {!isSelf && (
                                     <button onClick={toggleFollow} className={`font-bold px-6 py-2 rounded-xl text-sm transition ${isFollowing?'bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-500':'bg-gopo text-white shadow-md'}`}>
@@ -2069,7 +2136,6 @@
             const audioRefs = useRef({});
             const [, tick] = useState(0);
             useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 5000); return () => clearInterval(t); }, []);
-
             useEffect(() => {
                 const unsub = db.collection('tracks').onSnapshot(snap => {
                     const arr = snap.docs.map(d => ({id:d.id, ...d.data()})).filter(t => t.status === 'pending');
@@ -2078,22 +2144,18 @@
                 });
                 return () => unsub();
             }, []);
-
             const toggleVerify = async (id, cur) => await db.collection('users').doc(id).update({isVerified:!cur});
             const toggleBan = async (id, cur) => { if (window.confirm(cur?'Разбанить?':'Забанить?')) await db.collection('users').doc(id).update({isBanned:!cur}); };
             const toggleTyping = async () => await db.collection('users').doc(user.uid).update({showTypingFeed:!showTyping});
-
             const playTrackPreview = (t) => {
                 if (playingId === t.id) { audioRefs.current[t.id]?.pause(); setPlayingId(null); return; }
                 Object.values(audioRefs.current).forEach(a => a?.pause());
                 const a = new Audio(t.audioUrl); audioRefs.current[t.id] = a; a.onended = () => setPlayingId(null); a.play().catch(()=>{}); setPlayingId(t.id);
             };
-
             const approveTrack = async (t) => {
                 await db.collection('tracks').doc(t.id).update({ status: 'approved', rejectionReason: '', moderatedBy: user.uid, moderatedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 sendNotification(t.uploadedBy, {uid:user.uid, username:'admin', avatar:null}, 'music_approved', `Трек «${t.title}» опубликован`, {trackId: t.id});
             };
-
             const confirmReject = async () => {
                 if (!rejectingTrack) return;
                 if (!rejectReason.trim()) { alert('Укажите причину'); return; }
@@ -2101,10 +2163,8 @@
                 sendNotification(rejectingTrack.uploadedBy, {uid:user.uid, username:'admin', avatar:null}, 'music_rejected', rejectReason.trim(), {trackId: rejectingTrack.id});
                 setRejectingTrack(null); setRejectReason('');
             };
-
             const typingUsers = users.filter(u => { if (!u.typingIn) return false; if (!u.typingAt) return true; try { return (Date.now()-u.typingAt.toDate().getTime()) < 6000; } catch { return true; } });
             const onlineCount = users.filter(u => isReallyOnline(u)).length;
-
             return (
                 <div className="fade-in space-y-6">
                     <div className="flex items-center space-x-2 text-red-500"><I.Shield/><h1 className="text-2xl font-black">Админ-панель</h1></div>
@@ -2115,7 +2175,6 @@
                             {pendingTracks.length > 0 && <span className={`ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full ${adminTab==='music'?'bg-white text-gopo':'bg-gopo text-white'}`}>{pendingTracks.length}</span>}
                         </button>
                     </div>
-
                     {adminTab === 'users' && (
                         <>
                             <div className="grid grid-cols-2 gap-3">
@@ -2159,11 +2218,8 @@
                                                 <div className="flex items-center space-x-3 mb-2">
                                                     <Avatar src={u.avatar} name={u.username} size={42} showStatus isOnline={online} halloweenFrame={u.halloweenFrameId} />
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center">
-                                                            <span className="font-black text-sm truncate">{u.displayName || u.username}</span>
-                                                            {u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}
-                                                        </div>
-                                                        <p className="text-xs text-slate-400 truncate">@{u.username}</p>
+                                                        <div className="flex items-center"><span className="font-black text-sm truncate">{u.displayName || u.username}</span>{u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}</div>
+                                                        <p className="text-xs text-slate-400 truncate">@{u.username} • 🪙 {u.goCoins || 0}</p>
                                                         <p className={`text-[10px] font-bold ${online?'text-green-600':'text-slate-400'}`}>{formatLastSeen(u)}</p>
                                                         {u.isBanned && <p className="text-[10px] text-red-500 font-bold">ЗАБАНЕН</p>}
                                                     </div>
@@ -2181,7 +2237,6 @@
                             </div>
                         </>
                     )}
-
                     {adminTab === 'music' && (
                         <div>
                             <p className="text-slate-500 text-sm font-medium mb-3">Треки на проверке ({pendingTracks.length})</p>
@@ -2213,7 +2268,6 @@
                             )}
                         </div>
                     )}
-
                     {rejectingTrack && (
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
                             <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
@@ -2270,9 +2324,7 @@
                 <div className="fade-in">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2"><I.Music/><h1 className="text-2xl font-black">Музыка</h1></div>
-                        <button onClick={()=>setShowUpload(true)} className="bg-gopo text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center space-x-2">
-                            <I.Upload/><span className="hidden sm:inline">Загрузить</span>
-                        </button>
+                        <button onClick={()=>setShowUpload(true)} className="bg-gopo text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center space-x-2"><I.Upload/><span className="hidden sm:inline">Загрузить</span></button>
                     </div>
                     <div className="relative mb-4">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><I.Search/></div>
@@ -2301,10 +2353,7 @@
                                         </button>
                                         {t.cover ? <img src={t.cover} className="w-11 h-11 rounded-lg object-cover flex-shrink-0" /> : <div className="w-11 h-11 rounded-lg bg-gopo text-white flex items-center justify-center flex-shrink-0"><I.Music/></div>}
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center space-x-2">
-                                                <p className="font-black text-sm truncate">{t.title}</p>
-                                                {tab === 'mine' && statusBadge(t.status)}
-                                            </div>
+                                            <div className="flex items-center space-x-2"><p className="font-black text-sm truncate">{t.title}</p>{tab === 'mine' && statusBadge(t.status)}</div>
                                             <p className="text-xs text-slate-500 truncate">{t.artist} · @{t.uploaderName}</p>
                                             {isRejected && t.rejectionReason && <p className="text-[10px] text-red-500 font-bold mt-0.5">Причина: {t.rejectionReason}</p>}
                                         </div>
@@ -2330,54 +2379,31 @@
             const [progress, setProgress] = useState('');
             const audioRef = useRef(null);
             const coverRef = useRef(null);
-
             const pickCover = async (e) => { const f = e.target.files[0]; if (!f) return; setCoverFile(f); setCoverPreview(await compressImage(f, 400, 0.7)); };
-
             const getUploadUrl = async (fileName, fileType, folder) => {
-                const res = await fetch('https://gopo-web.vercel.app/api/yandex-auth', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fileName, fileType, folder }),
-                });
-                if (!res.ok) throw new Error('Не удалось получить ссылку');
+                const res = await fetch(`${WORKER_BASE}/api/presign`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileName, fileType, folder }) });
+                if (!res.ok) throw new Error('Не удалось получить ссылку (' + res.status + ')');
                 return res.json();
             };
-
-            const uploadFileDirect = async (file, uploadUrl, onProgress) => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                        try {
-                            const base64 = reader.result.split(',')[1];
-                            if (onProgress) onProgress(20);
-                            const res = await fetch('/api/upload-proxy', {
-                                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ uploadUrl, fileBase64: base64, contentType: file.type || 'application/octet-stream' }),
-                            });
-                            if (!res.ok) { const j = await res.json().catch(() => ({})); reject(new Error(j.error || 'HTTP ' + res.status)); return; }
-                            if (onProgress) onProgress(100);
-                            resolve();
-                        } catch (e) { reject(e); }
-                    };
-                    reader.onerror = () => reject(new Error('read error'));
-                    reader.readAsDataURL(file);
-                });
-            };
-
+            const uploadFileDirect = async (file, uploadUrl, onProgress) => new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('PUT', uploadUrl);
+                xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+                xhr.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100)); };
+                xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error('HTTP ' + xhr.status));
+                xhr.onerror = () => reject(new Error('network error'));
+                xhr.send(file);
+            });
             const notifyAdmin = async (trackTitle) => {
                 try {
                     const adminSnap = await db.collection('users').where('email','==',ADMIN_EMAIL).limit(1).get();
-                    if (!adminSnap.empty) {
-                        const adminDoc = adminSnap.docs[0];
-                        await sendNotification(adminDoc.id, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'music_pending', `${trackTitle}`, {});
-                    }
+                    if (!adminSnap.empty) await sendNotification(adminSnap.docs[0].id, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'music_pending', `${trackTitle}`, {});
                 } catch(e){ console.warn('notify admin err', e); }
             };
-
             const submit = async () => {
                 if (!audioFile || !title.trim()) { alert('Введите название и загрузите аудио'); return; }
                 if (audioFile.size > 50 * 1024 * 1024) { alert('Файл больше 50 МБ'); return; }
-                setUploading(true);
-                setProgress('Подготовка...');
+                setUploading(true); setProgress('Подготовка...');
                 try {
                     let coverUrl = '';
                     if (coverFile) {
@@ -2390,29 +2416,16 @@
                     const { uploadUrl: audioUploadUrl, key: audioKey } = await getUploadUrl(audioFile.name, audioFile.type, 'audio');
                     await uploadFileDirect(audioFile, audioUploadUrl, (p) => setProgress(`Аудио: ${p}%`));
                     const audioUrl = `https://gopo-music.storage.yandexcloud.net/${audioKey}`;
-                    await db.collection('tracks').add({
-                        title: title.trim(), artist: artist.trim() || 'Неизвестен',
-                        cover: coverUrl, audioUrl,
-                        uploadedBy: user.uid, uploaderName: profile.username,
-                        status: 'pending', rejectionReason: '', plays: 0,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    await db.collection('tracks').add({ title: title.trim(), artist: artist.trim() || 'Неизвестен', cover: coverUrl, audioUrl, uploadedBy: user.uid, uploaderName: profile.username, status: 'pending', rejectionReason: '', plays: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     await notifyAdmin(title.trim());
                     onClose();
-                } catch (e) {
-                    console.error('Upload error:', e);
-                    alert('Ошибка загрузки: ' + e.message);
-                }
+                } catch (e) { console.error('Upload error:', e); alert('Ошибка загрузки: ' + e.message); }
                 setUploading(false); setProgress('');
             };
-
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-black">Загрузить трек</h2>
-                            <button onClick={onClose} className="p-2 text-slate-400"><I.X/></button>
-                        </div>
+                        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-black">Загрузить трек</h2><button onClick={onClose} className="p-2 text-slate-400"><I.X/></button></div>
                         <div className="flex flex-col items-center mb-4">
                             <div onClick={()=>coverRef.current.click()} className="w-32 h-32 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200 transition">
                                 {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Image/><p className="text-xs font-bold mt-1">Обложка</p></div>}
@@ -2429,11 +2442,173 @@
                         </div>
                         <input ref={audioRef} type="file" accept="audio/*" className="hidden" onChange={e=>setAudioFile(e.target.files[0])} />
                         {uploading && <p className="text-sm font-bold text-gopo text-center mb-3">{progress || 'Загрузка...'}</p>}
-                        <button onClick={submit} disabled={uploading} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">
-                            {uploading ? 'Загрузка...' : 'Отправить на проверку'}
-                        </button>
+                        <button onClick={submit} disabled={uploading} className="w-full bg-gopo text-white font-bold py-3 rounded-xl disabled:opacity-50">{uploading ? 'Загрузка...' : 'Отправить на проверку'}</button>
                         <p className="text-[10px] text-slate-400 font-bold text-center mt-2">Трек появится в ленте после одобрения админом</p>
                     </div>
+                </div>
+            );
+        };
+
+        // ================= МАГАЗИН =================
+        const ShopTab = ({ user, profile }) => {
+            const [filter, setFilter] = useState('all');
+            const goCoins = profile.goCoins || 0;
+            const owned = profile.ownedCosmetics || [];
+            const forSale = SHOP_ITEMS.filter(i => i.season !== 'halloween');
+            const filtered = forSale.filter(i => filter === 'all' || i.type === filter);
+            const buy = async (item) => {
+                if (owned.includes(item.id)) return;
+                if (goCoins < item.price) { alert('Недостаточно GoCoin 🪙'); return; }
+                if (!window.confirm(`Купить «${item.name}» за ${item.price} 🪙?`)) return;
+                try {
+                    await db.collection('users').doc(user.uid).update({
+                        goCoins: firebase.firestore.FieldValue.increment(-item.price),
+                        ownedCosmetics: firebase.firestore.FieldValue.arrayUnion(item.id)
+                    });
+                } catch (e) { alert('Ошибка: ' + e.message); }
+            };
+            const equipItem = async (item) => {
+                const updates = {};
+                if (item.type === 'frame') updates.halloweenFrameId = profile.halloweenFrameId === item.id ? null : item.id;
+                if (item.type === 'badge') updates.halloweenBadgeId = profile.halloweenBadgeId === item.id ? null : item.id;
+                if (item.type === 'post') updates.halloweenPostStyle = (profile.halloweenPostStyle === item.id) ? null : item.id;
+                try { await db.collection('users').doc(user.uid).update(updates); } catch(e) { alert(e.message); }
+            };
+            return (
+                <div className="fade-in">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2"><I.Cart/><h1 className="text-2xl font-black">Магазин</h1></div>
+                        <div className="liquid-glass px-4 py-2 rounded-full flex items-center gap-2">
+                            <I.Coin /><span className="font-black text-amber-700">{goCoins}</span>
+                        </div>
+                    </div>
+                    <div className="flex space-x-2 mb-4 flex-wrap gap-y-2">
+                        <button onClick={()=>setFilter('all')} className={`px-4 py-2 rounded-xl text-sm font-bold ${filter==='all'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Всё</button>
+                        <button onClick={()=>setFilter('frame')} className={`px-4 py-2 rounded-xl text-sm font-bold ${filter==='frame'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Рамки</button>
+                        <button onClick={()=>setFilter('badge')} className={`px-4 py-2 rounded-xl text-sm font-bold ${filter==='badge'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Бейджи</button>
+                        <button onClick={()=>setFilter('post')} className={`px-4 py-2 rounded-xl text-sm font-bold ${filter==='post'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Стили постов</button>
+                    </div>
+                    <div className="space-y-2">
+                        {filtered.map(item => {
+                            const has = owned.includes(item.id);
+                            const canAfford = goCoins >= item.price;
+                            const isEq = (item.type === 'frame' && profile.halloweenFrameId === item.id) || (item.type === 'badge' && profile.halloweenBadgeId === item.id) || (item.type === 'post' && profile.halloweenPostStyle === item.id);
+                            return (
+                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
+                                    <div className="text-3xl">{item.emoji}</div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-black text-sm">{item.name}</div>
+                                        <div className="text-[10px] text-slate-400 font-bold uppercase">{RARITY_LABEL[item.rarity]} · {item.type === 'frame' ? 'Рамка' : item.type === 'badge' ? 'Бейдж' : 'Стиль постов'}</div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <div className={`text-xs font-black ${canAfford ? 'text-amber-600' : 'text-slate-500'}`}>🪙 {item.price.toLocaleString('ru')}</div>
+                                        {has ? <button onClick={()=>equipItem(item)} className={`text-[10px] font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-700 text-white' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
+                                            : <button onClick={()=>buy(item)} disabled={!canAfford} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black px-3 py-1.5 rounded-lg disabled:opacity-40">Купить</button>}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <p className="text-center text-[10px] text-slate-400 font-bold mt-4">Зарабатывай GoCoin: пост +25 · коммент +10 · сообщение +3 · 10 мин онлайн +10</p>
+                </div>
+            );
+        };
+
+        // ================= АДВЕНТ =================
+        const AdventTab = ({ user, profile }) => {
+            const [openingDay, setOpeningDay] = useState(null);
+            const [showReward, setShowReward] = useState(null);
+            const now = Date.now();
+            const opened = profile.adventOpened || [];
+            const rewards = profile.adventRewards || {};
+            const getTodayDay = () => {
+                if (now < ADVENT_START) return 0;
+                if (now > ADVENT_END) return 31;
+                return Math.min(31, new Date().getDate());
+            };
+            const todayDay = getTodayDay();
+            const getReward = (day) => {
+                if (day === 31) return ADVENT_FINAL;
+                const seed = `${user.uid}_${day}_gopo_winter`;
+                let h = 0;
+                for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+                const r = ADVENT_POOL[h % ADVENT_POOL.length];
+                if (r.type === 'cosmetic' && (profile.ownedCosmetics || []).includes(r.itemId)) {
+                    return { type: 'coins', amount: 150, name: '150 GoCoin (повтор)', emoji: '🪙' };
+                }
+                return r;
+            };
+            const openDay = async (day) => {
+                if (day > todayDay) return;
+                if (opened.includes(day)) return;
+                if (openingDay) return;
+                setOpeningDay(day);
+                const reward = getReward(day);
+                try {
+                    const updates = {
+                        adventOpened: firebase.firestore.FieldValue.arrayUnion(day),
+                        [`adventRewards.${day}`]: reward
+                    };
+                    let coinsToAdd = 0;
+                    if (reward.type === 'coins') coinsToAdd += reward.amount;
+                    if (reward.bonusCoins) coinsToAdd += reward.bonusCoins;
+                    if (coinsToAdd > 0) updates.goCoins = firebase.firestore.FieldValue.increment(coinsToAdd);
+                    if (reward.type === 'cosmetic') updates.ownedCosmetics = firebase.firestore.FieldValue.arrayUnion(reward.itemId);
+                    await db.collection('users').doc(user.uid).update(updates);
+                    setTimeout(() => { setShowReward({ day, ...reward }); setOpeningDay(null); }, 300);
+                } catch (e) { alert(e.message); setOpeningDay(null); }
+            };
+            return (
+                <div className="fade-in rounded-3xl p-5 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a1a2f 0%, #1e3a5f 50%, #0a1a2f 100%)' }}>
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                        <div className="absolute text-3xl opacity-30" style={{top:'8%', animation:'snowFall 20s linear infinite'}}>❄️</div>
+                        <div className="absolute text-2xl opacity-20" style={{top:'55%', animation:'snowFall 26s linear infinite', animationDelay:'-7s'}}>❄️</div>
+                    </div>
+                    <div className="relative z-10 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2"><span className="text-2xl">🎄</span><h1 className="text-2xl font-black">Адвент-календарь</h1></div>
+                            <div className="flex items-center gap-2 bg-black/40 rounded-full px-4 py-2 border border-amber-500/40"><I.Coin /><span className="font-black text-amber-300">{profile.goCoins || 0}</span></div>
+                        </div>
+                        <p className="text-sm text-slate-300 mb-4">Открывай по одному подарку каждый день с 1 по 31 декабря. Что внутри — сюрприз!</p>
+                        {now < ADVENT_START && <div className="winter-event-pill mb-4 w-full">⏰ Адвент начнётся 1 декабря</div>}
+                        {now > ADVENT_END && <div className="bg-red-500/20 border border-red-500/40 rounded-full px-4 py-2 text-sm font-bold mb-4 text-red-300 text-center">🎄 Адвент завершён</div>}
+                        <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+                            {Array.from({length: ADVENT_DAYS}, (_, i) => i + 1).map(day => {
+                                const isOpened = opened.includes(day);
+                                const isToday = day === todayDay;
+                                const isAvailable = day <= todayDay;
+                                const isFinal = day === 31;
+                                const locked = !isAvailable;
+                                return (
+                                    <div key={day}
+                                        onClick={() => { if (isAvailable && !isOpened && !openingDay) openDay(day); }}
+                                        className={`advent-day ${locked?'locked':''} ${isOpened?'opened':''} ${isToday && !isOpened?'today':''} bg-white/10 border border-white/20 text-white`}>
+                                        {isFinal && <div className="absolute -top-2 -right-2 text-lg">👑</div>}
+                                        {isOpened ? (
+                                            <div className="gift-pop text-2xl">{rewards[day]?.emoji || '🎁'}</div>
+                                        ) : (
+                                            <div className="text-center">
+                                                <div className="text-xl">{openingDay === day ? '✨' : (isFinal ? '🎁' : (locked ? '🔒' : '🎁'))}</div>
+                                                <div className={`text-[10px] font-black mt-0.5 ${isFinal ? 'text-amber-300' : ''}`}>{day}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <p className="text-center text-[10px] text-slate-400 font-bold mt-4">День 31 — особый приз: легендарная косметика + 1000 GoCoin</p>
+                    </div>
+                    {showReward && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[80] flex items-center justify-center p-4" onClick={()=>setShowReward(null)}>
+                            <div className="bg-gradient-to-br from-sky-400 via-blue-500 to-purple-600 rounded-3xl p-8 max-w-sm w-full text-center gift-pop shadow-2xl" onClick={e=>e.stopPropagation()}>
+                                <div className="text-7xl mb-3">{showReward.emoji}</div>
+                                <h3 className="text-2xl font-black text-white mb-1">День {showReward.day} открыт!</h3>
+                                <p className="text-lg font-black text-amber-200 mt-3">{showReward.name}</p>
+                                {showReward.type === 'cosmetic' && showReward.bonusCoins && <p className="text-amber-100 font-bold mt-1">+ {showReward.bonusCoins} 🪙</p>}
+                                <button onClick={()=>setShowReward(null)} className="mt-5 bg-white text-blue-600 font-black px-6 py-2.5 rounded-xl shadow-md">Забрать</button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
