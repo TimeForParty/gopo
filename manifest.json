@@ -1,25 +1,23 @@
 {
   "name": "GoPo",
   "short_name": "GoPo",
-  "description": "Соцсеть с пузырями, чатами и музыкой",
+  "description": "Социальная сеть GoPo",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#f0f2f5",
+  "background_color": "#eef4fb",
   "theme_color": "#FF0055",
-  "lang": "ru",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/icon-192.png",
-      "sizes": "192x192",
       "type": "image/png",
+      "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
-      "sizes": "512x512",
       "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any maskable"
     }
   ]
