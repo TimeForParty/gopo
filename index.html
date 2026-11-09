@@ -145,7 +145,7 @@
         try { const app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e){ console.error(e); }
 
         const ADMIN_EMAIL = 'hvadim439@gmail.com';
-        const APP_VERSION = '2.0.0';
+        const APP_VERSION = '2.1.0';
         const WORKER_BASE = 'https://gopo-proxy.gopo.workers.dev';
         const FCM_VAPID_KEY = 'BInOM81hTsZ-8g-3MgZ9nuxW-DJUjPFbcYjzSzuYlRrTtvylyHD_DCetF0yASOyCxKAg-5emjehD32eEZb_FD7Y';
 
@@ -156,11 +156,7 @@
         const PASSIVE_INTERVAL_MS = 10 * 60 * 1000;
         const PASSIVE_REWARD = 10;
 
-        // ============ КАТАЛОГ КОСМЕТИКИ ============
-        // season: 'halloween' — архив (не продаётся, но остаётся у купивших)
-        // season: 'winter' / 'all' — продаётся за GoCoin
         const SHOP_ITEMS = [
-            // ---------- ХЭЛЛОУИН (архив, только в инвентаре у купивших) ----------
             { id: 'frame_orange',   type: 'frame', season: 'halloween', name: 'Тыквенная рамка',   emoji: '🎃', price: 75,   rarity: 'common',    color: '#FF8C00' },
             { id: 'frame_purple',   type: 'frame', season: 'halloween', name: 'Ведьминская рамка', emoji: '🔮', price: 225,  rarity: 'rare',      color: '#8B5CF6' },
             { id: 'frame_green',    type: 'frame', season: 'halloween', name: 'Ядовитая рамка',    emoji: '🧪', price: 450,  rarity: 'epic',      color: '#22C55E' },
@@ -178,7 +174,6 @@
             { id: 'frame_ghost',    type: 'frame', season: 'halloween', name: 'Призрачная рамка',  emoji: '👻', price: 2200, rarity: 'mythic',    color: '#B8C2FF' },
             { id: 'post_cursed',    type: 'post',  season: 'halloween', name: 'Проклятый стиль',   emoji: '🔮', price: 2500, rarity: 'mythic' },
 
-            // ---------- ЗИМА (за GoCoin) ----------
             { id: 'w_frame_snow',    type: 'frame', season: 'winter', name: 'Снежная рамка',      emoji: '❄️', price: 1000,  rarity: 'common',    color: '#B8E6FF' },
             { id: 'w_frame_ice',     type: 'frame', season: 'winter', name: 'Ледяная рамка',      emoji: '🧊', price: 2500,  rarity: 'rare',      color: '#4DD0E1' },
             { id: 'w_frame_aurora',  type: 'frame', season: 'winter', name: 'Северное сияние',    emoji: '🌌', price: 5000,  rarity: 'epic',      color: '#9C27B0' },
@@ -198,7 +193,6 @@
             { id: 'w_post_winter',   type: 'post',  season: 'winter', name: 'Зимний стиль',       emoji: '❄️', price: 10000, rarity: 'mythic' },
             { id: 'w_post_frozen',   type: 'post',  season: 'winter', name: 'Ледяной стиль',      emoji: '🧊', price: 50000, rarity: 'mythic' },
 
-            // ---------- УНИВЕРСАЛЬНЫЕ (за GoCoin) ----------
             { id: 'u_frame_gold',   type: 'frame', season: 'all', name: 'Золотая рамка',    emoji: '🥇', price: 50000,  rarity: 'legendary', color: '#FFD700' },
             { id: 'u_frame_diamond',type: 'frame', season: 'all', name: 'Алмазная рамка',   emoji: '💎', price: 100000, rarity: 'mythic',    color: '#B2EBF2' },
             { id: 'u_badge_fire',   type: 'badge', season: 'all', name: 'Огонь',            emoji: '🔥', price: 5000,   rarity: 'epic' },
@@ -216,7 +210,6 @@
             return '';
         };
 
-        // Награды адвента (дни 1-30)
         const ADVENT_POOL = [
             { type: 'coins', amount: 50,    name: '50 GoCoin',  emoji: '🪙' },
             { type: 'coins', amount: 75,    name: '75 GoCoin',  emoji: '🪙' },
@@ -233,7 +226,6 @@
             { type: 'cosmetic', itemId: 'w_frame_ice',    name: 'Ледяная рамка',  emoji: '🧊' },
             { type: 'cosmetic', itemId: 'w_badge_deer',   name: 'Олень',          emoji: '🦌' },
         ];
-        // День 31 — финал
         const ADVENT_FINAL = { type: 'cosmetic', itemId: 'w_frame_gift', name: 'Подарочная рамка', emoji: '🎁', rarity: 'legendary', bonusCoins: 1000 };
 
         const MOODS = {
@@ -294,17 +286,16 @@
             } catch { return 'не в сети'; }
         };
         const isTypingNow = (u, targetId) => { if(!u?.typingIn||u.typingIn!==targetId) return false; if(!u.typingAt) return true; try{return (Date.now()-u.typingAt.toDate().getTime())<6000;}catch{return true;} };
-                const sendNotification = async (recipientId, sender, type, text, extra={}) => {
+        
+        const sendNotification = async (recipientId, sender, type, text, extra={}) => {
             if (!recipientId || recipientId === sender.uid) return;
             try { 
-                // 1. Записываем в базу (для колокольчика)
                 await db.collection('notifications').add({ 
                     recipientId, senderId: sender.uid, senderName: sender.username, 
                     senderAvatar: sender.avatar, type, text, read:false, 
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(), ...extra 
                 });
                 
-                // 2. Стучимся на сервер Layero для отправки пуша
                 fetch('/api/push', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -313,6 +304,7 @@
 
             } catch(e){ console.error('notif:', e); }
         };
+
         const renderTextWithHashtags = (text, onHashtagClick) => {
             if (!text) return null;
             const parts = text.split(/(#[\wа-яА-ЯёЁ]+)/g);
@@ -513,7 +505,6 @@
                 return () => { try { unsub && unsub(); } catch {} };
             }, [user, profile, notifPermission]);
 
-            // Пассивный заработок: +10 GoCoin за каждые 10 минут активности
             useEffect(() => {
                 if (!user) return;
                 const tick = async () => {
@@ -565,7 +556,6 @@
                 const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
                     if (doc.exists) {
                         const data = doc.data();
-                        // Миграция: объединяем halloweenOwned → ownedCosmetics
                         if (!data.ownedCosmetics && Array.isArray(data.halloweenOwned) && data.halloweenOwned.length > 0) {
                             db.collection('users').doc(user.uid).update({ ownedCosmetics: data.halloweenOwned }).catch(()=>{});
                         }
@@ -714,6 +704,7 @@
                             {activeTab==='admin' && isAdmin && <AdminTab user={user} usersMap={usersMap} />}
                             {activeTab==='music' && <MusicTab user={user} profile={profile} playerTrack={playerTrack} playerPlaying={playerPlaying} playTrack={playTrack} />}
                             {activeTab==='shop' && <ShopTab user={user} profile={profile} />}
+                            {activeTab==='premium' && <PremiumTab user={user} profile={profile} />}
                             {activeTab==='advent' && <AdventTab user={user} profile={profile} />}
                         </div>
                     </main>
@@ -830,6 +821,7 @@
                     <NavItem active={activeTab==='dm'} onClick={()=>setActiveTab('dm')} icon={<I.Msg/>} label="Чаты" badge={unreadMsgs} />
                     <NavItem active={activeTab==='search'} onClick={()=>setActiveTab('search')} icon={<I.Search/>} label="Поиск" />
                     <NavItem active={activeTab==='shop'} onClick={()=>setActiveTab('shop')} icon={<I.Cart/>} label="Магазин" />
+                    <NavItem active={activeTab==='premium'} onClick={()=>setActiveTab('premium')} icon={<I.Crown/>} label="Premium" color="text-amber-500" />
                     {adventAvailable && <NavItem active={activeTab==='advent'} onClick={()=>setActiveTab('advent')} icon={<I.Gift/>} label="Адвент ❄️" color="text-sky-500" />}
                     <NavItem active={activeTab==='profile'} onClick={()=>setActiveTab('profile')} icon={<I.User/>} label="Профиль" />
                     <NavItem active={activeTab==='music'} onClick={()=>setActiveTab('music')} icon={<I.Music/>} label="Музыка" />
@@ -859,6 +851,7 @@
                         <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60] w-60 fade-in">
                             <button onClick={()=>go('search')} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700"><span className="text-slate-500"><I.Search /></span><span>Поиск</span></button>
                             <button onClick={()=>go('shop')} className="w-full flex items-center space-x-3 p-4 hover:bg-amber-50 font-bold text-sm text-amber-600 border-t border-slate-100"><span><I.Cart /></span><span>Магазин</span></button>
+                            <button onClick={()=>go('premium')} className="w-full flex items-center space-x-3 p-4 hover:bg-amber-50 font-bold text-sm text-amber-600 border-t border-slate-100"><span><I.Crown /></span><span>Premium 👑</span></button>
                             {adventAvailable && <button onClick={()=>go('advent')} className="w-full flex items-center space-x-3 p-4 hover:bg-sky-50 font-bold text-sm text-sky-600 border-t border-slate-100"><span><I.Gift /></span><span>Адвент ❄️</span></button>}
                             <button onClick={()=>go('music')} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 font-bold text-sm text-slate-700 border-t border-slate-100"><span className="text-slate-500"><I.Music /></span><span>Музыка</span></button>
                             {isAdmin && <button onClick={()=>go('admin')} className="w-full flex items-center space-x-3 p-4 hover:bg-red-50 font-bold text-sm text-red-500 border-t border-slate-100"><span><I.Shield /></span><span>Админ</span></button>}
@@ -1650,13 +1643,13 @@
                             const reactions = m.reactions || {};
                             const wf = waveBars(m.id);
                             return (
-                                <div key={m.id} className={`flex flex-col ${mine?'items-end':'items-start'} group`}>
-                                    <div className={`flex items-center ${mine?'flex-row':'flex-row-reverse'} space-x-1`}>
-                                        <div className="flex items-center space-x-1">
-                                            {mine && <button onClick={()=>delMsg(m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100"><I.Trash size={14}/></button>}
-                                            <button onClick={()=>setShowEmojiPicker(showEmojiPicker===m.id?null:m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-gopo opacity-0 group-hover:opacity-100 text-sm">😊</button>
+                                <div key={m.id} className={`flex w-full ${mine ? 'justify-end' : 'justify-start'} group mb-2`}>
+                                    <div className={`flex items-end gap-1.5 ${mine ? 'flex-row-reverse' : 'flex-row'}`}>
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                            {mine && <button onClick={()=>delMsg(m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50"><I.Trash size={14}/></button>}
+                                            <button onClick={()=>setShowEmojiPicker(showEmojiPicker===m.id?null:m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-gopo text-sm">😊</button>
                                         </div>
-                                        <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm break-words ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
+                                        <div className={`max-w-[75vw] md:max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm break-words ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
                                             {m.audio ? (
                                                 <button onClick={()=>playAudio(m)} className="flex items-center space-x-2">
                                                     {playingId===m.id ? <I.Pause size={16}/> : <I.Play size={16}/>}
@@ -1668,7 +1661,7 @@
                                         </div>
                                     </div>
                                     {Object.keys(reactions).length > 0 && (
-                                        <div className="flex space-x-1 mt-1">
+                                        <div className={`flex space-x-1 mt-1 ${mine ? 'justify-end' : 'justify-start'}`}>
                                             {Object.entries(reactions).map(([emoji, users]) => users.length > 0 && (
                                                 <button key={emoji} onClick={()=>toggleReaction(m, emoji)} className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center space-x-1 ${users.includes(user.uid)?'bg-gopo/15 text-gopo':'bg-white border border-slate-200 text-slate-600'}`}>
                                                     <span>{emoji}</span><span>{users.length}</span>
@@ -1677,7 +1670,7 @@
                                         </div>
                                     )}
                                     {showEmojiPicker === m.id && (
-                                        <div className="mt-1 bg-white border border-slate-200 rounded-full shadow-lg px-2 py-1 flex space-x-1 z-10">
+                                        <div className={`mt-1 bg-white border border-slate-200 rounded-full shadow-lg px-2 py-1 flex space-x-1 z-10 ${mine ? 'self-end' : 'self-start'}`}>
                                             {EMOJI_REACTIONS.map(e => <button key={e} onClick={()=>toggleReaction(m, e)} className="p-1.5 text-lg hover:scale-125 transition">{e}</button>)}
                                         </div>
                                     )}
@@ -1768,10 +1761,10 @@
                         {messages.map(m => {
                             const mine = m.senderId === user.uid;
                             return (
-                                <div key={m.id} className={`flex flex-col ${mine?'items-end':'items-start'} group`}>
-                                    <div className={`flex ${mine?'flex-row':'flex-row-reverse'} items-end space-x-1.5`}>
+                                <div key={m.id} className={`flex w-full ${mine ? 'justify-end' : 'justify-start'} group mb-2`}>
+                                    <div className={`flex items-end gap-1.5 ${mine ? 'flex-row-reverse' : 'flex-row'}`}>
                                         {!mine && <Avatar src={m.senderAvatar} name={m.senderName} size={28} />}
-                                        <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm font-medium shadow-sm break-words ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
+                                        <div className={`max-w-[75vw] md:max-w-[75%] px-3 py-2 rounded-2xl text-sm font-medium shadow-sm break-words ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
                                             {!mine && <p className="text-[10px] font-black text-gopo mb-0.5">@{m.senderName}</p>}
                                             {m.text}
                                         </div>
@@ -1966,19 +1959,19 @@
                             {ownedW.length > 0 && (
                                 <div>
                                     <p className="text-xs font-black text-slate-500 uppercase mb-2 ml-1">Активная косметика ({ownedW.length})</p>
-                                    <div className="space-y-2">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                         {ownedW.map(item => {
                                             const isEq = (item.type === 'frame' && profile.halloweenFrameId === item.id)
                                                 || (item.type === 'badge' && profile.halloweenBadgeId === item.id)
                                                 || (item.type === 'post' && (profile.halloweenPostStyle === item.id || (profile.halloweenPostStyle === true && item.id === 'post_halloween')));
                                             return (
-                                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
-                                                    <div className="text-3xl">{item.emoji}</div>
+                                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex flex-col items-center text-center gap-2`}>
+                                                    <div className="text-4xl">{item.emoji}</div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="font-black text-sm">{item.name}</div>
-                                                        <div className="text-[10px] text-slate-400 font-bold uppercase">{RARITY_LABEL[item.rarity]} · {item.type === 'frame' ? 'Рамка' : item.type === 'badge' ? 'Бейдж' : 'Стиль постов'}</div>
+                                                        <div className="font-black text-sm line-clamp-2">{item.name}</div>
+                                                        <div className="text-[10px] text-slate-400 font-bold uppercase mt-1">{RARITY_LABEL[item.rarity]}</div>
                                                     </div>
-                                                    <button onClick={() => equipItem(item)} className={`text-xs font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-200 text-slate-700' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
+                                                    <button onClick={() => equipItem(item)} className={`w-full text-[11px] font-black px-2 py-1.5 rounded-lg mt-auto ${isEq ? 'bg-slate-200 text-slate-700' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
                                                 </div>
                                             );
                                         })}
@@ -1988,19 +1981,19 @@
                             {ownedH.length > 0 && (
                                 <div>
                                     <p className="text-xs font-black text-slate-400 uppercase mb-2 ml-1">Архив Хэллоуина ({ownedH.length})</p>
-                                    <div className="space-y-2 opacity-80">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 opacity-80">
                                         {ownedH.map(item => {
                                             const isEq = (item.type === 'frame' && profile.halloweenFrameId === item.id)
                                                 || (item.type === 'badge' && profile.halloweenBadgeId === item.id)
                                                 || (item.type === 'post' && (profile.halloweenPostStyle === item.id || (profile.halloweenPostStyle === true && item.id === 'post_halloween')));
                                             return (
-                                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
-                                                    <div className="text-3xl">{item.emoji}</div>
+                                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex flex-col items-center text-center gap-2`}>
+                                                    <div className="text-4xl">{item.emoji}</div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="font-black text-sm">{item.name}</div>
-                                                        <div className="text-[10px] text-slate-400 font-bold uppercase">{RARITY_LABEL[item.rarity]} · {item.type === 'frame' ? 'Рамка' : item.type === 'badge' ? 'Бейдж' : 'Стиль постов'}</div>
+                                                        <div className="font-black text-sm line-clamp-2">{item.name}</div>
+                                                        <div className="text-[10px] text-slate-400 font-bold uppercase mt-1">{RARITY_LABEL[item.rarity]}</div>
                                                     </div>
-                                                    <button onClick={() => equipItem(item)} className={`text-xs font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-200 text-slate-700' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
+                                                    <button onClick={() => equipItem(item)} className={`w-full text-[11px] font-black px-2 py-1.5 rounded-lg mt-auto ${isEq ? 'bg-slate-200 text-slate-700' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
                                                 </div>
                                             );
                                         })}
@@ -2324,7 +2317,10 @@
                 <div className="fade-in">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2"><I.Music/><h1 className="text-2xl font-black">Музыка</h1></div>
-                        <button onClick={()=>setShowUpload(true)} className="bg-gopo text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center space-x-2"><I.Upload/><span className="hidden sm:inline">Загрузить</span></button>
+                        <button onClick={() => { 
+                            if (window.innerWidth < 768) { alert('Загрузка музыки доступна пока только на ПК 💻'); return; } 
+                            setShowUpload(true); 
+                        }} className="bg-gopo text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center space-x-2"><I.Upload/><span className="hidden sm:inline">Загрузить</span></button>
                     </div>
                     <div className="relative mb-4">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><I.Search/></div>
@@ -2449,7 +2445,56 @@
             );
         };
 
-        // ================= МАГАЗИН =================
+        const PremiumTab = ({ user, profile }) => {
+            return (
+                <div className="fade-in max-w-2xl mx-auto">
+                    <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
+                        <div className="absolute top-0 right-0 opacity-10 text-9xl pointer-events-none" style={{transform: 'translate(20%, -20%)'}}>👑</div>
+                        
+                        <div className="flex items-center gap-3 mb-2">
+                            <span className="bg-purple-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full tracking-wider">Beta</span>
+                            <h1 className="text-3xl font-black">GoPo Premium</h1>
+                        </div>
+                        <p className="text-purple-200 font-medium mb-8">Поддержи проект и получи крутые плюшки. Без золотых галочек, только польза.</p>
+
+                        <div className="space-y-4 mb-8">
+                            <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                                <div className="text-3xl">💰</div>
+                                <div>
+                                    <h3 className="font-black text-lg">x2 GoCoin</h3>
+                                    <p className="text-xs text-purple-200 font-medium">Все начисления (посты, комменты, сообщения) умножаются на 2.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                                <div className="text-3xl">🎨</div>
+                                <div>
+                                    <h3 className="font-black text-lg">Эксклюзивный стиль</h3>
+                                    <p className="text-xs text-purple-200 font-medium">Доступ к уникальным премиум-рамкам и стилям постов.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                                <div className="text-3xl">🚀</div>
+                                <div>
+                                    <h3 className="font-black text-lg">Приоритет в ленте</h3>
+                                    <p className="text-xs text-purple-200 font-medium">Твои пузыри видит больше людей.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between bg-black/40 p-4 rounded-2xl border border-white/10">
+                            <div>
+                                <p className="text-sm text-purple-300 font-bold">Стоимость</p>
+                                <p className="text-3xl font-black">99 ₽ <span className="text-sm text-slate-400 font-medium">/ мес</span></p>
+                            </div>
+                            <button onClick={() => alert('Оплата пока находится в разработке. Скоро всё будет! 🚀')} className="bg-white text-purple-900 font-black px-6 py-3 rounded-xl hover:bg-purple-50 transition shadow-lg shadow-purple-500/30">
+                                Оформить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const ShopTab = ({ user, profile }) => {
             const [filter, setFilter] = useState('all');
             const goCoins = profile.goCoins || 0;
@@ -2488,22 +2533,22 @@
                         <button onClick={()=>setFilter('badge')} className={`px-4 py-2 rounded-xl text-sm font-bold ${filter==='badge'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Бейджи</button>
                         <button onClick={()=>setFilter('post')} className={`px-4 py-2 rounded-xl text-sm font-bold ${filter==='post'?'bg-gopo text-white shadow':'bg-white text-slate-600'}`}>Стили постов</button>
                     </div>
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {filtered.map(item => {
                             const has = owned.includes(item.id);
                             const canAfford = goCoins >= item.price;
                             const isEq = (item.type === 'frame' && profile.halloweenFrameId === item.id) || (item.type === 'badge' && profile.halloweenBadgeId === item.id) || (item.type === 'post' && profile.halloweenPostStyle === item.id);
                             return (
-                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex items-center gap-3`}>
-                                    <div className="text-3xl">{item.emoji}</div>
+                                <div key={item.id} className={`bg-white rounded-2xl p-3 border-2 rarity-${item.rarity} flex flex-col items-center text-center gap-2`}>
+                                    <div className="text-4xl">{item.emoji}</div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="font-black text-sm">{item.name}</div>
-                                        <div className="text-[10px] text-slate-400 font-bold uppercase">{RARITY_LABEL[item.rarity]} · {item.type === 'frame' ? 'Рамка' : item.type === 'badge' ? 'Бейдж' : 'Стиль постов'}</div>
+                                        <div className="font-black text-sm line-clamp-2">{item.name}</div>
+                                        <div className="text-[10px] text-slate-400 font-bold uppercase mt-1">{RARITY_LABEL[item.rarity]}</div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-1">
-                                        <div className={`text-xs font-black ${canAfford ? 'text-amber-600' : 'text-slate-500'}`}>🪙 {item.price.toLocaleString('ru')}</div>
-                                        {has ? <button onClick={()=>equipItem(item)} className={`text-[10px] font-black px-3 py-1.5 rounded-lg ${isEq ? 'bg-slate-700 text-white' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
-                                            : <button onClick={()=>buy(item)} disabled={!canAfford} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black px-3 py-1.5 rounded-lg disabled:opacity-40">Купить</button>}
+                                    <div className="w-full mt-auto">
+                                        <div className={`text-xs font-black mb-1.5 ${canAfford ? 'text-amber-600' : 'text-slate-500'}`}>🪙 {item.price.toLocaleString('ru')}</div>
+                                        {has ? <button onClick={()=>equipItem(item)} className={`w-full text-[11px] font-black px-2 py-1.5 rounded-lg ${isEq ? 'bg-slate-700 text-white' : 'bg-gopo text-white'}`}>{isEq ? 'Снять' : 'Надеть'}</button>
+                                            : <button onClick={()=>buy(item)} disabled={!canAfford} className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-black px-2 py-1.5 rounded-lg disabled:opacity-40">Купить</button>}
                                     </div>
                                 </div>
                             );
@@ -2514,7 +2559,6 @@
             );
         };
 
-        // ================= АДВЕНТ =================
         const AdventTab = ({ user, profile }) => {
             const [openingDay, setOpeningDay] = useState(null);
             const [showReward, setShowReward] = useState(null);
