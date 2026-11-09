@@ -26,6 +26,7 @@
                 'mood-joy':'moodJoy 2s ease-in-out infinite','mood-anger':'moodAnger .3s ease-in-out infinite','mood-sad':'moodSad 4s ease-in-out infinite',
                 'mood-think':'moodThink 4s ease-in-out infinite','mood-party':'moodParty 1.5s ease-in-out infinite','mood-pain':'moodPain 3s ease-in-out infinite',
                 'ripple':'ripple .6s ease-out forwards','post-pulse':'postPulse .6s ease-out','gold-glow':'goldGlow 3s ease-in-out infinite',
+                'spin-slow':'spinSlow 4s linear infinite',
             },
             keyframes: {
                 moodJoy:{'0%,100%':{transform:'translateY(0)'},'50%':{transform:'translateY(-4px)'}},
@@ -37,6 +38,7 @@
                 ripple:{'0%':{transform:'scale(0)',opacity:.4},'100%':{transform:'scale(4)',opacity:0}},
                 postPulse:{'0%':{transform:'scale(1)',boxShadow:'0 0 0 0 rgba(255,0,85,.4)'},'50%':{transform:'scale(1.025)',boxShadow:'0 0 30px 10px rgba(255,0,85,.15)'},'100%':{transform:'scale(1)',boxShadow:'0 0 0 0 rgba(255,0,85,0)'}},
                 goldGlow:{'0%,100%':{boxShadow:'0 0 20px 4px rgba(255,193,7,.4)'},'50%':{boxShadow:'0 0 35px 12px rgba(255,193,7,.6)'}},
+                spinSlow:{'100%':{transform:'rotate(360deg)'}},
             }
         } } }
     </script>
@@ -58,8 +60,6 @@
         .story-ring { background: linear-gradient(45deg,#FF0055,#4FC3F7,#FF0055); padding:3px; border-radius:50%; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .blown-post { opacity:.4; transform:scale(.96); filter:grayscale(.6); }
-        @keyframes recordingPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
-        .rec-pulse { animation: recordingPulse 1s ease-in-out infinite; }
         .hashtag { color: #FF0055; font-weight: 700; cursor: pointer; }
         .hashtag:hover { text-decoration: underline; }
         @keyframes popIn { 0%{transform:scale(.3) translateY(40px);opacity:0} 60%{transform:scale(1.08) translateY(-5px);opacity:1} 100%{transform:scale(1) translateY(0);opacity:1} }
@@ -69,7 +69,6 @@
         .mini-player { animation: slideUp .3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        /* ================= ЗИМНЯЯ ТЕМА ================= */
         .winter-tint { background-image: radial-gradient(circle at 0% 0%, rgba(120,180,255,0.10) 0%, transparent 45%), radial-gradient(circle at 100% 100%, rgba(180,140,255,0.10) 0%, transparent 45%); background-attachment: fixed; }
         .gopo-logo-winter::before { content: '❄️'; position: absolute; top: -12px; right: -14px; font-size: 26px; filter: drop-shadow(0 0 8px rgba(120,190,255,0.9)); animation: snowGlow 2.8s ease-in-out infinite; z-index: 10; }
         @keyframes snowGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(150,210,255,0.7)); transform: rotate(-8deg) scale(1); } 50% { filter: drop-shadow(0 0 18px rgba(200,230,255,1)); transform: rotate(8deg) scale(1.12); } }
@@ -89,6 +88,9 @@
         .post-halloween-style p, .post-halloween-style span:not(.hashtag), .post-halloween-style div:not(.hashtag) { color: #e8d8f0 !important; }
         .post-halloween-style .hashtag { color: #FF6B00 !important; }
         .post-halloween-style img { border: 1px solid rgba(255,107,0,0.4); }
+        .post-halloween-style .poll-option { background: rgba(60,20,50,0.7) !important; border-color: rgba(255,107,0,0.4) !important; }
+        .post-halloween-style .poll-bar { background: rgba(255,107,0,0.3) !important; }
+        .post-halloween-style .poll-option span { color: #e8d8f0 !important; }
 
         .post-winter-style { background: linear-gradient(135deg, #0a1a2f 0%, #1e3a5f 50%, #0a1a2f 100%) !important; border-color: #4FC3F7 !important; position: relative; overflow: hidden; }
         .post-winter-style::before { content: '❄️'; position: absolute; top: 10px; right: 60px; font-size: 22px; opacity: 0.85; animation: snowGlow 3s ease-in-out infinite; pointer-events: none; }
@@ -108,17 +110,18 @@
         .post-cursed-style img { border: 1px solid rgba(220,38,38,0.5); }
         @keyframes cursedPulse { 0%,100% { box-shadow: 0 0 0 rgba(220,38,38,0.2); } 50% { box-shadow: 0 0 20px rgba(220,38,38,0.5); } }
         @keyframes skullFloat { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-5px) rotate(5deg); } }
-        .post-cursed-style .bg-white, .post-cursed-style .bg-white\/50, .post-cursed-style .bg-white\/60, .post-cursed-style .bg-white\/70 { background: rgba(60,10,10,0.82) !important; }
+        .post-cursed-style .bg-white, .post-cursed-style .bg-white\/50, .post-cursed-style .bg-white\/60, .post-cursed-style .bg-white\/70 { background: rgba(60,10,10,0.85) !important; }
         .post-cursed-style button, .post-cursed-style input, .post-cursed-style textarea { color: #ffe0e0 !important; }
         .post-cursed-style .poll-bar { background: rgba(220,38,38,0.35) !important; }
         .post-cursed-style .text-slate-800, .post-cursed-style .text-slate-700, .post-cursed-style .text-slate-600, .post-cursed-style .text-slate-500, .post-cursed-style .text-slate-400, .post-cursed-style .text-black { color: #ffe0e0 !important; }
         .post-cursed-style .border-slate-200 { border-color: rgba(220,38,38,0.55) !important; }
+        .post-cursed-style .poll-option { background: rgba(60,10,10,0.85) !important; }
+        .post-cursed-style .poll-option span { color: #ffe0e0 !important; }
 
         .poll-option { position: relative; overflow: hidden; }
         .poll-bar { position: absolute; inset: 0; background: rgba(255,0,85,0.15); transition: width 0.3s; }
         .messages-scroll { overflow-y: auto; overflow-x: hidden; }
 
-        /* Адвент */
         .advent-day { position: relative; aspect-ratio: 1/1; border-radius: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform .15s; cursor: pointer; }
         .advent-day:active:not(.locked):not(.opened) { transform: scale(.95); }
         .advent-day.locked { opacity: .45; cursor: not-allowed; }
@@ -127,6 +130,13 @@
         @keyframes adventTodayPulse { 0%,100% { box-shadow: 0 0 20px rgba(79,195,247,0.5), 0 0 0 3px #4FC3F7; } 50% { box-shadow: 0 0 30px rgba(79,195,247,0.9), 0 0 0 3px #7C4DFF; } }
         @keyframes giftPop { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 60% { transform: scale(1.2) rotate(10deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
         .gift-pop { animation: giftPop .5s cubic-bezier(.175,.885,.32,1.275) forwards; }
+
+        img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        
+        /* Premium Gold Styles */
+        .text-gold { background: linear-gradient(to right, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+        .premium-bubble { background: linear-gradient(135deg, #FFD700, #FFA500) !important; color: #000 !important; border-color: #B8860B !important; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4) !important; }
+        .premium-bubble span { color: #000 !important; }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
@@ -145,7 +155,7 @@
         try { const app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e){ console.error(e); }
 
         const ADMIN_EMAIL = 'hvadim439@gmail.com';
-        const APP_VERSION = '2.1.0';
+        const APP_VERSION = '2.3.0';
         const WORKER_BASE = 'https://gopo-proxy.gopo.workers.dev';
         const FCM_VAPID_KEY = 'BInOM81hTsZ-8g-3MgZ9nuxW-DJUjPFbcYjzSzuYlRrTtvylyHD_DCetF0yASOyCxKAg-5emjehD32eEZb_FD7Y';
 
@@ -155,6 +165,14 @@
         const ADVENT_DAYS  = 31;
         const PASSIVE_INTERVAL_MS = 10 * 60 * 1000;
         const PASSIVE_REWARD = 10;
+
+        const RARITY_GRADIENTS = {
+            common: 'from-slate-400 to-slate-500',
+            rare: 'from-blue-400 to-blue-600',
+            epic: 'from-purple-400 to-purple-600',
+            legendary: 'from-amber-400 to-orange-500',
+            mythic: 'from-red-500 to-rose-600'
+        };
 
         const SHOP_ITEMS = [
             { id: 'frame_orange',   type: 'frame', season: 'halloween', name: 'Тыквенная рамка',   emoji: '🎃', price: 75,   rarity: 'common',    color: '#FF8C00' },
@@ -168,7 +186,7 @@
             { id: 'post_halloween', type: 'post',  season: 'halloween', name: 'Хэллоуин-посты',    emoji: '🕸️', price: 1000, rarity: 'mythic' },
             { id: 'badge_bat',      type: 'badge', season: 'halloween', name: 'Летучая мышь',      emoji: '🦇', price: 280,  rarity: 'common' },
             { id: 'badge_skull',    type: 'badge', season: 'halloween', name: 'Светящийся череп',  emoji: '💀', price: 900,  rarity: 'legendary' },
-            { id: 'badge_crown',    type: 'badge', season: 'halloween', name: 'Корона тьмы',       emoji: '👑', price: 1500, rarity: 'mythic' },
+            { id: 'badge_crown',    type: 'badge', season: 'halloween', name: 'Корона 💩',         emoji: '💩', price: 1500, rarity: 'mythic' },
             { id: 'frame_spider',   type: 'frame', season: 'halloween', name: 'Паутинная рамка',   emoji: '🕸️', price: 1100, rarity: 'epic',      color: '#475569' },
             { id: 'frame_cauldron', type: 'frame', season: 'halloween', name: 'Рамка-котёл',       emoji: '🧙', price: 1600, rarity: 'legendary', color: '#84CC16' },
             { id: 'frame_ghost',    type: 'frame', season: 'halloween', name: 'Призрачная рамка',  emoji: '👻', price: 2200, rarity: 'mythic',    color: '#B8C2FF' },
@@ -226,7 +244,7 @@
             { type: 'cosmetic', itemId: 'w_frame_ice',    name: 'Ледяная рамка',  emoji: '🧊' },
             { type: 'cosmetic', itemId: 'w_badge_deer',   name: 'Олень',          emoji: '🦌' },
         ];
-        const ADVENT_FINAL = { type: 'cosmetic', itemId: 'w_frame_gift', name: 'Подарочная рамка', emoji: '🎁', rarity: 'legendary', bonusCoins: 1000 };
+        const ADVENT_FINAL = { type: 'cosmetic', itemId: 'w_frame_gift', name: 'Подарочная рамка', emoji: '🎁', rarity: 'legendary', bonusCoins: 1000, premiumDays: 7 };
 
         const MOODS = {
             neutral:{emoji:'💬',name:'Обычный',bg:'bg-white',border:'border-slate-200',text:'text-slate-800',anim:''},
@@ -287,6 +305,8 @@
         };
         const isTypingNow = (u, targetId) => { if(!u?.typingIn||u.typingIn!==targetId) return false; if(!u.typingAt) return true; try{return (Date.now()-u.typingAt.toDate().getTime())<6000;}catch{return true;} };
         
+        const checkPremium = (u) => u && (u.premiumUntil > Date.now() || u.email === ADMIN_EMAIL);
+
         const sendNotification = async (recipientId, sender, type, text, extra={}) => {
             if (!recipientId || recipientId === sender.uid) return;
             try { 
@@ -310,7 +330,11 @@
             const parts = text.split(/(#[\wа-яА-ЯёЁ]+)/g);
             return parts.map((p, i) => p.startsWith('#') ? <span key={i} className="hashtag" onClick={(e)=>{e.stopPropagation(); onHashtagClick&&onHashtagClick(p);}}>{p}</span> : <span key={i}>{p}</span>);
         };
-        const addGoCoins = (uid, amount) => db.collection('users').doc(uid).update({ goCoins: firebase.firestore.FieldValue.increment(amount) }).catch(()=>{});
+        
+        const addGoCoins = (uid, amount, isPremium) => {
+            const finalAmount = isPremium ? amount * 2 : amount;
+            db.collection('users').doc(uid).update({ goCoins: firebase.firestore.FieldValue.increment(finalAmount) }).catch(()=>{});
+        };
 
         const notifBodyText = (n) => {
             const map = {
@@ -386,15 +410,42 @@
             </div>
         );
 
-        const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false, halloweenFrame }) => {
-            const inner = src ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} /> : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
-            const frameColor = halloweenFrame ? (FRAME_COLORS[halloweenFrame] || null) : null;
-            const wrapped = frameColor ? <div style={{ padding: 3, borderRadius: '50%', display: 'inline-block', background: `linear-gradient(135deg, ${frameColor}, #B3E5FC)`, boxShadow: `0 0 12px ${frameColor}80` }}>{inner}</div> : inner;
+        const Avatar = memo(({ src, name, size=40, isOnline, showStatus=false, halloweenFrame, isPremium }) => {
+            const inner = src ? <img src={src} alt="" className="rounded-full object-cover" style={{width:size, height:size}} onContextMenu={e=>e.preventDefault()} /> : <div className="rounded-full bg-gopo text-white flex items-center justify-center font-black" style={{width:size, height:size, fontSize:size*0.4}}>{(name||'?')[0].toUpperCase()}</div>;
+            
+            let wrapped = inner;
+            if (halloweenFrame && FRAME_COLORS[halloweenFrame]) {
+                const color = FRAME_COLORS[halloweenFrame];
+                wrapped = <div style={{ padding: 3, borderRadius: '50%', display: 'inline-block', background: `linear-gradient(135deg, ${color}, #B3E5FC)`, boxShadow: `0 0 12px ${color}80` }}>{inner}</div>;
+            } else if (isPremium) {
+                wrapped = <div className="p-[3px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-spin-slow">{inner}</div>;
+            } else {
+                wrapped = <div style={{ padding: 2, borderRadius: '50%' }}>{inner}</div>;
+            }
+
             if (!showStatus) return <div className="flex-shrink-0">{wrapped}</div>;
             const dot = Math.max(10, Math.round(size*0.28));
-            const extra = frameColor ? 6 : 0;
+            const extra = (halloweenFrame || isPremium) ? 6 : 4;
             return (<div className="relative flex-shrink-0" style={{width:size+extra, height:size+extra}}>{wrapped}<span className={`absolute bottom-0 right-0 rounded-full border-2 border-white shadow-sm ${isOnline?'bg-green-500':'bg-slate-300'}`} style={{width:dot, height:dot}} /></div>);
         });
+
+        const renderName = (u, textColorClass) => {
+            if (!u) return null;
+            const prem = checkPremium(u);
+            const badgeObj = u.halloweenBadgeId ? getItemById(u.halloweenBadgeId) : null;
+            return (
+                <div className="flex items-center flex-wrap min-w-0">
+                    <span className={`font-black text-sm truncate hover:underline ${prem ? 'text-gold' : textColorClass}`}>{u.displayName || u.username}</span>
+                    {u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}
+                    {prem && <span className="ml-1 text-sm" title="Premium">💰</span>}
+                    {badgeObj && (
+                        <span className={`ml-1.5 inline-flex items-center justify-center rounded-full w-[18px] h-[18px] shadow-sm bg-gradient-to-br ${RARITY_GRADIENTS[badgeObj.rarity]}`} title={badgeObj.name}>
+                            <span className="text-[10px] leading-none">{badgeObj.emoji}</span>
+                        </span>
+                    )}
+                </div>
+            );
+        };
 
         const TypingDots = ({ className="" }) => (<span className={`inline-flex items-center space-x-1 ${className}`}><span className="typing-dot"></span><span className="typing-dot"></span><span className="typing-dot"></span></span>);
         const Logo = ({ small }) => <div className={`gopo-logo gopo-logo-winter ${small?'scale-75 origin-left':''}`}><span>GoPo</span></div>;
@@ -408,6 +459,13 @@
             </div>
         );
 
+        const ImageViewer = ({ src, onClose }) => (
+            <div className="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-4 fade-in" onClick={onClose}>
+                <img src={src} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" onContextMenu={e=>e.preventDefault()} onClick={e=>e.stopPropagation()} />
+                <button className="absolute top-4 right-4 bg-white/20 text-white p-3 rounded-full hover:bg-white/40 transition" onClick={onClose}><I.X/></button>
+            </div>
+        );
+
         function App() {
             const [splashDone, setSplashDone] = useState(false);
             const [user, setUser] = useState(null);
@@ -418,6 +476,7 @@
             const [showCreate, setShowCreate] = useState(false);
             const [viewingProfile, setViewingProfile] = useState(null);
             const [viewingPost, setViewingPost] = useState(null);
+            const [viewingImage, setViewingImage] = useState(null);
             const [showNotifications, setShowNotifications] = useState(false);
             const [unreadNotifs, setUnreadNotifs] = useState(0);
             const [searchHashtag, setSearchHashtag] = useState(null);
@@ -440,7 +499,7 @@
             const totalBadge = unreadNotifs + unreadMsgs;
             const now = Date.now();
             const adventAvailable = now >= ADVENT_START && now <= ADVENT_END;
-            const adventFinished = now > ADVENT_END;
+            const isPremium = checkPremium(profile);
 
             useEffect(() => {
                 if (!playerAudioRef.current || !playerTrack) return;
@@ -556,6 +615,9 @@
                 const unsub = db.collection('users').doc(user.uid).onSnapshot(async (doc) => {
                     if (doc.exists) {
                         const data = doc.data();
+                        if (user.email === ADMIN_EMAIL && data.premiumUntil !== 9999999999999) {
+                            db.collection('users').doc(user.uid).update({ premiumUntil: 9999999999999 }).catch(()=>{});
+                        }
                         if (!data.ownedCosmetics && Array.isArray(data.halloweenOwned) && data.halloweenOwned.length > 0) {
                             db.collection('users').doc(user.uid).update({ ownedCosmetics: data.halloweenOwned }).catch(()=>{});
                         }
@@ -568,7 +630,7 @@
                             followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null,
                             typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[],
                             goCoins: 0, ownedCosmetics: [], lastPassiveAt: null,
-                            adventOpened: [], adventRewards: {},
+                            adventOpened: [], adventRewards: {}, premiumUntil: user.email === ADMIN_EMAIL ? 9999999999999 : 0,
                             halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null,
                             unreadCounts:{}, unreadGroupCounts:{},
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -696,29 +758,30 @@
                             {adventAvailable && activeTab !== 'advent' && (
                                 <button onClick={()=>setActiveTab('advent')} className="winter-event-pill mb-3 w-full">❄️ Зимний ивент · Адвент-календарь · 1–31 декабря</button>
                             )}
-                            {activeTab==='feed' && <FeedTab key={reconnectKey} user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} />}
-                            {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} />}
+                            {activeTab==='feed' && <FeedTab key={reconnectKey} user={user} profile={profile} isAdmin={isAdmin} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} onImageClick={setViewingImage} />}
+                            {activeTab==='search' && <SearchTab user={user} usersMap={usersMap} onUserClick={setViewingProfile} onCommentClick={setViewingPost} onHashtagClick={goToHashtag} initialHashtag={searchHashtag} clearHashtag={()=>setSearchHashtag(null)} onImageClick={setViewingImage} />}
                             {activeTab==='dm' && <MessengerTab key={reconnectKey} user={user} profile={profile} usersMap={usersMap} />}
                             {activeTab==='notifications' && <NotificationsTab user={user} onUserClick={setViewingProfile} onOpenPost={setViewingPost} />}
-                            {activeTab==='profile' && <ProfileTab user={user} profile={profile} usersMap={usersMap} notifPermission={notifPermission} requestNotifPerm={requestNotifPerm} />}
+                            {activeTab==='profile' && <ProfileTab user={user} profile={profile} usersMap={usersMap} notifPermission={notifPermission} requestNotifPerm={requestNotifPerm} onImageClick={setViewingImage} />}
                             {activeTab==='admin' && isAdmin && <AdminTab user={user} usersMap={usersMap} />}
                             {activeTab==='music' && <MusicTab user={user} profile={profile} playerTrack={playerTrack} playerPlaying={playerPlaying} playTrack={playTrack} />}
                             {activeTab==='shop' && <ShopTab user={user} profile={profile} />}
-                            {activeTab==='premium' && <PremiumTab user={user} profile={profile} />}
+                            {activeTab==='premium' && <PremiumTab user={user} profile={profile} isPremium={isPremium} />}
                             {activeTab==='advent' && <AdventTab user={user} profile={profile} />}
                         </div>
                     </main>
                     <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} onCreate={()=>setShowCreate(true)} unread={totalBadge} unreadMsgs={unreadMsgs} onOpenNotifs={()=>setShowNotifications(true)} />
-                    {showCreate && <CreatePostModal user={user} profile={profile} onClose={()=>setShowCreate(false)} />}
-                    {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user} currentProfile={profile} onClose={()=>setViewingProfile(null)} />}
-                    {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile} usersMap={usersMap} isAdmin={isAdmin} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} />}
+                    {showCreate && <CreatePostModal user={user} profile={profile} onClose={()=>setShowCreate(false)} isPremium={isPremium} />}
+                    {viewingProfile && <UserProfileModal targetUser={viewingProfile} currentUser={user} currentProfile={profile} onClose={()=>setViewingProfile(null)} onImageClick={setViewingImage} />}
+                    {viewingPost && <CommentsModal post={viewingPost} user={user} profile={profile} usersMap={usersMap} isAdmin={isAdmin} onClose={()=>setViewingPost(null)} onHashtagClick={goToHashtag} onImageClick={setViewingImage} />}
                     {showNotifications && <NotificationsModal user={user} onClose={()=>setShowNotifications(false)} onUserClick={(u)=>{setShowNotifications(false); setViewingProfile(u);}} />}
+                    {viewingImage && <ImageViewer src={viewingImage} onClose={()=>setViewingImage(null)} />}
                     <audio ref={playerAudioRef} src={playerTrack?.audioUrl} onPlay={()=>setPlayerPlaying(true)} onPause={()=>setPlayerPlaying(false)} onTimeUpdate={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerProgress((a.currentTime/a.duration)*100); }} onLoadedMetadata={()=>{ const a=playerAudioRef.current; if(a?.duration) setPlayerDuration(a.duration); }} onEnded={()=>{ nextTrack(); }} />
                     {playerTrack && (
                         <div className="fixed bottom-20 left-3 right-3 md:left-auto md:right-6 md:bottom-6 md:w-96 z-[45] mini-player">
                             <div className="liquid-glass rounded-2xl p-3 shadow-2xl">
                                 <div className="flex items-center space-x-3">
-                                    {playerTrack.cover ? <img src={playerTrack.cover} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" /> : <div className="w-12 h-12 rounded-lg bg-gopo flex items-center justify-center text-white flex-shrink-0"><I.Music/></div>}
+                                    {playerTrack.cover ? <img src={playerTrack.cover} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" onContextMenu={e=>e.preventDefault()} /> : <div className="w-12 h-12 rounded-lg bg-gopo flex items-center justify-center text-white flex-shrink-0"><I.Music/></div>}
                                     <div className="flex-1 min-w-0"><p className="font-black text-sm truncate">{playerTrack.title}</p><p className="text-xs text-slate-500 truncate">{playerTrack.artist}</p></div>
                                     <button onClick={prevTrack} className="p-2 text-slate-600 hover:text-gopo"><I.Prev/></button>
                                     <button onClick={()=>setPlayerPlaying(p=>!p)} className="p-2.5 bg-gopo text-white rounded-full shadow-md">{playerPlaying ? <I.Pause size={18}/> : <I.Play size={18}/>}</button>
@@ -771,7 +834,7 @@
                             followers:[], following:[], isOnline:true, lastSeen:null, lastActiveAt:null,
                             typingIn:null, typingAt:null, showTypingFeed:true, savedTracks:[],
                             goCoins: 0, ownedCosmetics: [], lastPassiveAt: null,
-                            adventOpened: [], adventRewards: {},
+                            adventOpened: [], adventRewards: {}, premiumUntil: email === ADMIN_EMAIL ? 9999999999999 : 0,
                             halloweenFrameId:null, halloweenBadgeId:null, halloweenPostStyle:null,
                             unreadCounts:{}, unreadGroupCounts:{},
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1031,23 +1094,23 @@
                         {story.mine && <button onClick={del} className="p-2"><I.Trash/></button>}
                         <button onClick={onClose} className="p-2"><I.X/></button>
                     </div>
-                    <div className="flex-1 flex items-center justify-center"><img src={story.image} className="max-w-full max-h-full object-contain" /></div>
+                    <div className="flex-1 flex items-center justify-center"><img src={story.image} className="max-w-full max-h-full object-contain" onContextMenu={e=>e.preventDefault()} /></div>
                 </div>
             );
         };
 
-        const FeedTab = ({ user, profile, isAdmin, usersMap, onUserClick, onCommentClick, onHashtagClick }) => {
+        const FeedTab = ({ user, profile, isAdmin, usersMap, onUserClick, onCommentClick, onHashtagClick, onImageClick }) => {
             const [posts, setPosts] = useState([]);
             const [holdingState, setHoldingState] = useState({postId:null, progress:0});
             const [ripples, setRipples] = useState([]);
             const [pulsingPost, setPulsingPost] = useState(null);
             const [showBlown, setShowBlown] = useState(false);
+            const [sortBy, setSortBy] = useState('new');
             const holdTimer = useRef(null); const holdStartTime = useRef(null); const touchStartPos = useRef({x:0,y:0});
 
             useEffect(() => {
                 const unsub = db.collection('posts').onSnapshot(snap => {
-                    const arr = snap.docs.map(d => ({id:d.id, resonances:[], blows:[], commentsCount:0, ...d.data()}));
-                    arr.sort((a,b) => postTime(b) - postTime(a));
+                    const arr = snap.docs.map(d => ({id:d.id, resonances:[], blows:[], commentsCount:0, views:0, ...d.data()}));
                     setPosts(arr);
                 });
                 return () => unsub();
@@ -1098,7 +1161,17 @@
             let bubbleOfDay = null;
             if (last24h.length >= 2) { const sorted = [...last24h].sort((a,b) => (b.resonances?.length||0) - (a.resonances?.length||0)); if ((sorted[0].resonances?.length||0) > 0) bubbleOfDay = sorted[0]; }
             const isBlown = (post) => { const b=(post.blows||[]).length; const r=(post.resonances||[]).length; return b>=5 && b>r*1.5; };
-            const visiblePosts = posts.filter(p => !isBlown(p) || showBlown);
+            
+            let sortedPosts = [...posts];
+            if (sortBy === 'new') sortedPosts.sort((a,b) => postTime(b) - postTime(a));
+            else if (sortBy === 'popular') sortedPosts.sort((a,b) => {
+                const scoreA = (a.resonances?.length||0) + (a.commentsCount||0) + (a.views||0);
+                const scoreB = (b.resonances?.length||0) + (b.commentsCount||0) + (b.views||0);
+                return scoreB - scoreA;
+            });
+            else if (sortBy === 'random') sortedPosts.sort(() => Math.random() - 0.5);
+
+            const visiblePosts = sortedPosts.filter(p => !isBlown(p) || showBlown);
             const blownCount = posts.filter(p => isBlown(p)).length;
 
             const postCard = (post, isBubbleOfDay) => {
@@ -1109,8 +1182,14 @@
                 const isHolding = holdingState.postId === post.id; const isPulsing = pulsingPost === post.id; const blown = isBlown(post);
                 const commentsCount = post.commentsCount || 0;
                 const authorPostStyle = getPostStyleClass(author?.halloweenPostStyle);
+                const isAuthorPremium = checkPremium(author);
+                
+                const premiumBorderClass = (isAuthorPremium && !authorPostStyle) ? 'border-amber-400 shadow-[0_0_20px_rgba(255,215,0,0.3)] bg-gradient-to-br from-white to-amber-50' : '';
+                const moodBg = (isAuthorPremium && !authorPostStyle) ? '' : mood.bg;
+                const moodBorder = (isAuthorPremium && !authorPostStyle) ? '' : mood.border;
+
                 return (
-                    <article key={post.id} className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${mood.bg} ${mood.border} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''} ${authorPostStyle}`}
+                    <article key={post.id} className={`relative rounded-[2.5rem] p-5 shadow-sm border-2 transition-all duration-300 post-bubble select-none ${moodBg} ${moodBorder} ${premiumBorderClass} ${mood.anim} ${isPulsing?'animate-post-pulse':''} ${isBubbleOfDay?'animate-gold-glow border-yellow-400':''} ${blown?'blown-post':''} ${authorPostStyle}`}
                         onMouseDown={e=>startHold(e, post.id)} onMouseUp={endHold} onMouseLeave={endHold} onTouchStart={e=>startHold(e, post.id)} onTouchMove={moveHold} onTouchEnd={endHold} onTouchCancel={endHold}>
                         {isHolding && <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none" style={{background:`conic-gradient(#FF0055 ${holdingState.progress}%, transparent 0)`,mask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',WebkitMask:'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',maskComposite:'exclude',WebkitMaskComposite:'xor',padding:'4px'}} />}
                         <div className="absolute top-4 right-4 flex flex-col items-center space-y-2 z-10">
@@ -1119,17 +1198,17 @@
                         </div>
                         {isBubbleOfDay && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black text-[10px] px-3 py-1 rounded-full flex items-center shadow-lg z-10"><I.Crown/><span className="ml-1">ПУЗЫРЬ ДНЯ</span></div>}
                         {ripples.filter(r => r.postId === post.id).map(r => <div key={r.rid} className="absolute w-20 h-20 bg-gopo/30 rounded-full animate-ripple pointer-events-none" style={{left:r.x-40, top:r.y-40}}></div>)}
+                        
                         <div className="flex items-center space-x-3 mb-3 pr-12">
-                            <div onClick={()=>onUserClick(author)} className="cursor-pointer"><Avatar src={author.avatar} name={author.username} size={42} showStatus isOnline={isReallyOnline(author)} halloweenFrame={author.halloweenFrameId} /></div>
+                            <div onClick={()=>onUserClick(author)} className="cursor-pointer"><Avatar src={author.avatar} name={author.username} size={42} showStatus isOnline={isReallyOnline(author)} halloweenFrame={author.halloweenFrameId} isPremium={isAuthorPremium} /></div>
                             <div className="flex-1 min-w-0">
-                                <div onClick={()=>onUserClick(author)} className="flex items-center cursor-pointer">
-                                    <span className={`font-black text-sm truncate hover:underline ${mood.text}`}>{author.displayName || author.username}</span>
-                                    {author.isVerified && <I.Check className="text-blue-500 ml-1"/>}
-                                    {author.halloweenBadgeId && <span className="ml-1 text-sm" title={getItemById(author.halloweenBadgeId)?.name}>{getItemById(author.halloweenBadgeId)?.emoji}</span>}
+                                <div onClick={()=>onUserClick(author)} className="cursor-pointer">
+                                    {renderName(author, mood.text)}
                                 </div>
                                 <p className={`text-xs opacity-70 ${mood.text}`}>@{author.username} • {timeAgo(post.createdAt)}</p>
                             </div>
                         </div>
+
                         <div className="relative rounded-2xl">
                             {post.text && <p className={`font-medium mb-3 whitespace-pre-wrap ${mood.text}`}>{renderTextWithHashtags(post.text, onHashtagClick)}</p>}
                             {post.poll && (
@@ -1144,7 +1223,7 @@
                                             const myVote = votesObj[user.uid];
                                             const voted = myVote !== undefined;
                                             return (
-                                                <button key={idx} onClick={()=>votePoll(post, idx)} disabled={voted} className={`w-full text-left relative px-3 py-2 rounded-xl border-2 text-xs font-bold transition ${voted?'border-slate-200 bg-white cursor-default':'border-slate-200 bg-white hover:border-gopo'}`}>
+                                                <button key={idx} onClick={()=>votePoll(post, idx)} disabled={voted} className={`w-full text-left relative px-3 py-2 rounded-xl border-2 text-xs font-bold transition poll-option ${voted?'border-slate-200 bg-white cursor-default':'border-slate-200 bg-white hover:border-gopo'}`}>
                                                     <div className="poll-bar" style={{width: voted ? pct+'%' : '0%'}}></div>
                                                     <div className="relative flex justify-between items-center">
                                                         <span className="truncate flex items-center">{myVote === idx && <span className="text-gopo mr-1">✓</span>}{opt.text}</span>
@@ -1157,7 +1236,7 @@
                                     <p className="text-[10px] text-slate-400 font-bold mt-2">{Object.keys(post.poll.votes || {}).length} голосов</p>
                                 </div>
                             )}
-                            {post.image && <img src={post.image} alt="" className="rounded-2xl w-full max-h-96 object-cover shadow-sm bg-white/50" />}
+                            {post.image && <img src={post.image} onClick={()=>onImageClick(post.image)} onContextMenu={e=>e.preventDefault()} alt="" className="rounded-2xl w-full max-h-96 object-cover shadow-sm bg-white/50 cursor-pointer" />}
                         </div>
                         {blown && <div className="mt-3 px-3 py-2 bg-slate-800/10 rounded-xl text-center text-xs font-black text-slate-700">💨 Сдут сообществом ({blows.length} сдуваний)</div>}
                         <div className={`mt-4 pt-3 border-t border-black/5 flex items-center justify-between ${mood.text}`}>
@@ -1165,6 +1244,7 @@
                                 <button className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasResonated?'bg-white/80 shadow-sm':'hover:bg-white/40'}`}><I.Sparkles className={hasResonated?'text-gopo':'opacity-60'} /><span>{resonances.length > 0 ? resonances.length : 'Резонанс'}</span></button>
                                 <button onClick={()=>blowPost(post)} className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition ${hasBlown?'bg-blue-100 text-blue-700':'hover:bg-white/40 opacity-70'}`} title="Сдуть"><I.Wind /><span>{blows.length > 0 ? blows.length : ''}</span></button>
                                 <button onClick={()=>onCommentClick(post)} className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold hover:bg-white/40 transition"><I.Comment /><span>{commentsCount}</span></button>
+                                <div className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold opacity-70"><I.Eye /><span>{post.views || 0}</span></div>
                             </div>
                             <span className="text-[10px] opacity-40 font-bold hidden sm:block">Зажми 1 сек</span>
                         </div>
@@ -1176,9 +1256,10 @@
                 <div className="space-y-4 fade-in">
                     <div className="flex items-center justify-between mb-2">
                         <h1 className="text-2xl font-black hidden md:block text-slate-800">Лента</h1>
-                        <div className="flex items-center text-xs font-bold text-slate-500 bg-white/50 px-3 py-1.5 rounded-full border border-white/50 cursor-help group relative">
-                            <I.Info/><span className="ml-1">Что такое Резонанс?</span>
-                            <div className="absolute top-full mt-2 right-0 w-64 bg-slate-800 text-white p-3 rounded-xl text-[11px] leading-tight opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl">Резонанс — вибрация с пузырём. Зажми пузырь на <b>1 секунду</b>, чтобы поддержать автора.</div>
+                        <div className="flex gap-1 bg-white/50 p-1 rounded-xl shadow-sm border border-white/50">
+                            <button onClick={()=>setSortBy('new')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${sortBy==='new'?'bg-gopo text-white shadow':'text-slate-500 hover:bg-white/50'}`}>Новые</button>
+                            <button onClick={()=>setSortBy('popular')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${sortBy==='popular'?'bg-gopo text-white shadow':'text-slate-500 hover:bg-white/50'}`}>Популярные</button>
+                            <button onClick={()=>setSortBy('random')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${sortBy==='random'?'bg-gopo text-white shadow':'text-slate-500 hover:bg-white/50'}`}>Случайные</button>
                         </div>
                     </div>
                     <StoriesBar user={user} profile={profile} />
@@ -1189,7 +1270,7 @@
             );
         };
 
-        const SearchTab = ({ user, usersMap, onUserClick, onCommentClick, onHashtagClick, initialHashtag, clearHashtag }) => {
+        const SearchTab = ({ user, usersMap, onUserClick, onCommentClick, onHashtagClick, initialHashtag, clearHashtag, onImageClick }) => {
             const [query, setQuery] = useState(initialHashtag || '');
             const [posts, setPosts] = useState([]);
             const [tab, setTab] = useState(initialHashtag ? 'posts' : 'users');
@@ -1221,9 +1302,11 @@
                             {filteredUsers.length===0 && <p className="p-8 text-center text-slate-400 font-bold">Никого не нашли</p>}
                             {filteredUsers.map(u => (
                                 <button key={u.uid} onClick={()=>onUserClick(u)} className="w-full flex items-center space-x-3 p-4 hover:bg-slate-50 transition text-left border-b border-slate-50 last:border-0">
-                                    <Avatar src={u.avatar} name={u.username} size={48} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} />
+                                    <Avatar src={u.avatar} name={u.username} size={48} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} isPremium={checkPremium(u)} />
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center"><span className="font-black text-sm truncate">{u.displayName || u.username}</span>{u.isVerified && <I.Check className="text-blue-500 ml-1"/>}{u.halloweenBadgeId && <span className="ml-1">{getItemById(u.halloweenBadgeId)?.emoji}</span>}</div>
+                                        <div onClick={(e)=>{e.stopPropagation(); onUserClick(u);}}>
+                                            {renderName(u, 'text-slate-800')}
+                                        </div>
                                         <p className="text-xs text-slate-500">@{u.username} • {u.followers?.length||0} подписчиков</p>
                                     </div>
                                 </button>
@@ -1236,12 +1319,15 @@
                             {filteredPosts.map(post => { const author = usersMap[post.authorId] || {}; const mood = MOODS[post.mood] || MOODS.neutral; const ps = getPostStyleClass(author.halloweenPostStyle); return (
                                 <div key={post.id} onClick={()=>onCommentClick(post)} className={`rounded-[2rem] p-4 border-2 cursor-pointer ${mood.bg} ${mood.border} ${ps}`}>
                                     <div className="flex items-center mb-2">
-                                        <Avatar src={author.avatar} name={author.username} size={32} />
-                                        <div className="ml-2 flex-1 min-w-0"><span className={`font-bold text-xs ${mood.text}`}>@{author.username}</span><p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p></div>
+                                        <Avatar src={author.avatar} name={author.username} size={32} isPremium={checkPremium(author)} />
+                                        <div className="ml-2 flex-1 min-w-0">
+                                            {renderName(author, mood.text)}
+                                            <p className={`text-[10px] opacity-70 ${mood.text}`}>{timeAgo(post.createdAt)}</p>
+                                        </div>
                                         <span className="text-xl">{mood.emoji}</span>
                                     </div>
                                     {post.text && <p className={`text-sm ${mood.text}`}>{renderTextWithHashtags(post.text, onHashtagClick)}</p>}
-                                    {post.image && <img src={post.image} className="rounded-xl max-h-48 mt-2 w-full object-cover" />}
+                                    {post.image && <img src={post.image} onClick={(e)=>{e.stopPropagation(); onImageClick(post.image);}} onContextMenu={e=>e.preventDefault()} className="rounded-xl max-h-48 mt-2 w-full object-cover cursor-pointer" />}
                                 </div>
                             ); })}
                         </div>
@@ -1250,13 +1336,14 @@
             );
         };
 
-        const CommentsModal = ({ post, user, profile, usersMap, isAdmin, onClose, onHashtagClick }) => {
+        const CommentsModal = ({ post, user, profile, usersMap, isAdmin, onClose, onHashtagClick, onImageClick }) => {
             const [comments, setComments] = useState([]);
             const [text, setText] = useState('');
             const [sending, setSending] = useState(false);
             const endRef = useRef(null);
 
             useEffect(() => {
+                db.collection('posts').doc(post.id).update({ views: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
                 const unsub = db.collection('posts').doc(post.id).collection('comments').onSnapshot(snap => {
                     const arr = snap.docs.map(d => ({id:d.id, ...d.data()}));
                     arr.sort((a,b) => (a.createdAt?.toDate?.()?.getTime()||0) - (b.createdAt?.toDate?.()?.getTime()||0));
@@ -1272,7 +1359,7 @@
                 try {
                     await db.collection('posts').doc(post.id).collection('comments').add({ text: text.trim(), authorId: user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     await db.collection('posts').doc(post.id).update({commentsCount: firebase.firestore.FieldValue.increment(1)});
-                    await addGoCoins(user.uid, 10);
+                    await addGoCoins(user.uid, 10, checkPremium(profile));
                     if (post.authorId !== user.uid) sendNotification(post.authorId, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'comment', text.trim().slice(0,60), {postId:post.id});
                     setText('');
                 } catch(err) { alert(err.message); }
@@ -1299,23 +1386,25 @@
                             <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"><I.X/></button>
                         </div>
                         <div className={`p-4 border-b ${mood.bg} ${mood.text} ${ps}`}>
-                            <div className="flex items-center space-x-2 mb-1"><Avatar src={author?.avatar} name={author?.username} size={24} /><span className="font-bold text-xs">@{author?.username || 'unknown'}</span></div>
+                            <div className="flex items-center space-x-2 mb-1"><Avatar src={author?.avatar} name={author?.username} size={24} isPremium={checkPremium(author)} /><div onClick={()=>onUserClick(author)}>{renderName(author, 'text-slate-800')}</div></div>
                             <p className="text-sm line-clamp-2">{renderTextWithHashtags(post.text, onHashtagClick)}</p>
+                            {post.image && <img src={post.image} onClick={()=>onImageClick(post.image)} onContextMenu={e=>e.preventDefault()} className="rounded-lg max-h-32 mt-2 cursor-pointer object-cover" />}
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
                             {comments.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Комментариев пока нет. Будь первым! (+10 GoCoin)</p>}
                             {comments.map(c => {
                                 const ca = usersMap[c.authorId] || {username:'unknown', avatar:null};
                                 const canDel = c.authorId === user.uid || post.authorId === user.uid || isAdmin;
+                                const isCaPremium = checkPremium(ca);
                                 return (
                                     <div key={c.id} className="flex space-x-3 group">
-                                        <Avatar src={ca.avatar} name={ca.username} size={32} showStatus isOnline={isReallyOnline(ca)} halloweenFrame={ca.halloweenFrameId} />
-                                        <div className="flex-1 bg-slate-50 p-3 rounded-2xl rounded-tl-sm relative">
+                                        <Avatar src={ca.avatar} name={ca.username} size={32} showStatus isOnline={isReallyOnline(ca)} halloweenFrame={ca.halloweenFrameId} isPremium={isCaPremium} />
+                                        <div className={`flex-1 p-3 rounded-2xl rounded-tl-sm relative border ${isCaPremium ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-transparent'}`}>
                                             <div className="flex justify-between items-center mb-1 pr-6">
-                                                <span className="font-bold text-xs text-slate-800">@{ca.username}{ca.halloweenBadgeId && <span className="ml-1">{getItemById(ca.halloweenBadgeId)?.emoji}</span>}</span>
+                                                <span className="font-bold text-xs text-slate-800">{renderName(ca, 'text-slate-800')}</span>
                                                 <span className="text-[10px] text-slate-400">{timeAgo(c.createdAt)}</span>
                                             </div>
-                                            <p className="text-sm text-slate-700">{renderTextWithHashtags(c.text, onHashtagClick)}</p>
+                                            <p className={`text-sm ${isCaPremium ? 'text-amber-900 font-medium' : 'text-slate-700'}`}>{renderTextWithHashtags(c.text, onHashtagClick)}</p>
                                             {canDel && <button onClick={()=>delComment(c)} className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><I.Trash size={14}/></button>}
                                         </div>
                                     </div>
@@ -1332,7 +1421,7 @@
             );
         };
 
-        const CreatePostModal = ({ user, profile, onClose }) => {
+        const CreatePostModal = ({ user, profile, onClose, isPremium }) => {
             const [text, setText] = useState('');
             const [image, setImage] = useState(null);
             const [mood, setMood] = useState('neutral');
@@ -1355,10 +1444,10 @@
                 }
                 setPosting(true);
                 try {
-                    const payload = { text: text.trim(), image, mood, authorId: user.uid, authorName: profile.username, authorAvatar: profile.avatar, resonances: [], blows: [], commentsCount: 0, createdAt: Date.now() };
+                    const payload = { text: text.trim(), image, mood, authorId: user.uid, authorName: profile.username, authorAvatar: profile.avatar, resonances: [], blows: [], commentsCount: 0, views: 0, createdAt: Date.now() };
                     if (pollOn && pollQ.trim()) payload.poll = { question: pollQ.trim(), options: pollOpts.filter(o => o.trim()).map(o => ({ text: o.trim() })), votes: {} };
                     await db.collection('posts').add(payload);
-                    await addGoCoins(user.uid, 25);
+                    await addGoCoins(user.uid, 25, isPremium);
                     onClose();
                 } catch(err) { alert('Ошибка: ' + err.message); }
                 setPosting(false);
@@ -1378,9 +1467,9 @@
                                 ))}
                             </div>
                         </div>
-                        <div className="flex items-center space-x-3 mb-3"><Avatar src={profile.avatar} name={profile.username} size={36} /><span className="font-bold text-sm">@{profile.username}</span><span className="ml-auto text-xs font-black text-amber-600">+25 🪙</span></div>
+                        <div className="flex items-center space-x-3 mb-3"><Avatar src={profile.avatar} name={profile.username} size={36} isPremium={isPremium} /><span className="font-bold text-sm">@{profile.username}</span><span className="ml-auto text-xs font-black text-amber-600">+{isPremium ? 50 : 25} 🪙</span></div>
                         <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Что у тебя на душе?" rows="3" className="w-full p-3 bg-slate-50 rounded-2xl outline-none resize-none focus:ring-2 focus:ring-gopo/30 font-medium" />
-                        {image && <div className="relative mt-3"><img src={image} className="rounded-2xl max-h-64 w-full object-cover" /><button onClick={()=>setImage(null)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full"><I.X/></button></div>}
+                        {image && <div className="relative mt-3"><img src={image} className="rounded-2xl max-h-64 w-full object-cover" onContextMenu={e=>e.preventDefault()} /><button onClick={()=>setImage(null)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full"><I.X/></button></div>}
                         {pollOn && (
                             <div className="mt-3 bg-slate-50 rounded-2xl p-3 border border-slate-200">
                                 <div className="flex justify-between items-center mb-2">
@@ -1456,10 +1545,12 @@
                                 const unread = unreadCounts[u.uid] || 0;
                                 return (
                                     <button key={u.uid} onClick={()=>{ setSelectedGroup(null); setSelectedUser(u); }} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedUser?.uid===u.uid?'bg-white/60':''}`}>
-                                        <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} />
+                                        <Avatar src={u.avatar} name={u.username} size={44} showStatus isOnline={isReallyOnline(u)} halloweenFrame={u.halloweenFrameId} isPremium={checkPremium(u)} />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="flex items-center min-w-0"><span className="font-bold text-sm truncate">{u.displayName || u.username}</span>{u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}</div>
+                                                <div className="flex-1 min-w-0">
+                                                    {renderName(u, 'text-slate-800')}
+                                                </div>
                                                 {unread > 0 && <span className="bg-gopo text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">{unread > 9 ? '9+' : unread}</span>}
                                             </div>
                                             {typing ? <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
@@ -1472,7 +1563,7 @@
                                 const unread = unreadGroupCounts[g.id] || 0;
                                 return (
                                     <button key={g.id} onClick={()=>{ setSelectedUser(null); setSelectedGroup(g); }} className={`w-full flex items-center space-x-3 p-3 hover:bg-white/50 transition text-left ${selectedGroup?.id===g.id?'bg-white/60':''}`}>
-                                        {g.avatar ? <img src={g.avatar} className="w-11 h-11 rounded-full object-cover flex-shrink-0" /> : <div className="w-11 h-11 rounded-full bg-gopo text-white flex items-center justify-center font-black flex-shrink-0">{g.name?.[0]?.toUpperCase()}</div>}
+                                        {g.avatar ? <img src={g.avatar} className="w-11 h-11 rounded-full object-cover flex-shrink-0" onContextMenu={e=>e.preventDefault()} /> : <div className="w-11 h-11 rounded-full bg-gopo text-white flex items-center justify-center font-black flex-shrink-0">{g.name?.[0]?.toUpperCase()}</div>}
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-2">
                                                 <span className="font-bold text-sm truncate">{g.name}</span>
@@ -1525,7 +1616,7 @@
                         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-black">Новая группа</h2><button onClick={onClose} className="p-2 text-slate-400"><I.X/></button></div>
                         <div className="flex flex-col items-center mb-4">
                             <div onClick={()=>fileRef.current.click()} className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200">
-                                {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Group/><p className="text-[10px] font-bold mt-1">Аватар</p></div>}
+                                {avatar ? <img src={avatar} className="w-full h-full object-cover" onContextMenu={e=>e.preventDefault()} /> : <div className="text-slate-400 text-center"><I.Group/><p className="text-[10px] font-bold mt-1">Аватар</p></div>}
                             </div>
                             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={async (e)=>{ const f=e.target.files[0]; if(f) setAvatar(await compressImage(f, 300, 0.7)); }} />
                         </div>
@@ -1535,7 +1626,7 @@
                         <div className="max-h-48 overflow-y-auto mb-4 border border-slate-100 rounded-xl">
                             {filtered.map(u => (
                                 <button key={u.uid} onClick={()=>toggle(u.uid)} className={`w-full flex items-center space-x-2 p-2 hover:bg-slate-50 ${selected.includes(u.uid)?'bg-pink-50':''}`}>
-                                    <Avatar src={u.avatar} name={u.username} size={32} />
+                                    <Avatar src={u.avatar} name={u.username} size={32} isPremium={checkPremium(u)} />
                                     <span className="font-bold text-sm flex-1 text-left truncate">{u.displayName || u.username}</span>
                                     {selected.includes(u.uid) && <span className="text-gopo font-black">✓</span>}
                                 </button>
@@ -1608,7 +1699,7 @@
                 e.preventDefault(); if (!text.trim()) return;
                 await db.collection('messages').add({ participants, text: text.trim(), senderId: user.uid, readBy: [user.uid], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 await db.collection('users').doc(other.uid).update({ [`unreadCounts.${user.uid}`]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
-                await addGoCoins(user.uid, 3);
+                await addGoCoins(user.uid, 3, checkPremium(profile));
                 if (other.uid !== user.uid) sendNotification(other.uid, {uid:user.uid, username:profile.username, avatar:profile.avatar}, 'message', text.trim().slice(0,60));
                 setText('');
                 db.collection('users').doc(user.uid).update({typingIn:null}).catch(()=>{});
@@ -1621,16 +1712,15 @@
             };
             const isOtherTyping = isTypingNow(otherUser, user.uid);
             const isOtherOnline = isReallyOnline(otherUser);
+            const isPremium = checkPremium(profile);
             return (
                 <div className="flex-1 flex flex-col h-full bg-white/40 min-h-0">
                     <div className="p-3 border-b border-white/50 flex items-center space-x-3 bg-white/50 backdrop-blur-md flex-shrink-0">
                         <button onClick={onBack} className="p-2 text-slate-600 hover:bg-white rounded-full md:hidden"><I.Back/></button>
-                        <Avatar src={otherUser.avatar} name={otherUser.username} size={40} showStatus isOnline={isOtherOnline} halloweenFrame={otherUser.halloweenFrameId} />
+                        <Avatar src={otherUser.avatar} name={otherUser.username} size={40} showStatus isOnline={isOtherOnline} halloweenFrame={otherUser.halloweenFrameId} isPremium={checkPremium(otherUser)} />
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center">
-                                <span className="font-black text-sm truncate">{otherUser.displayName || otherUser.username}</span>
-                                {otherUser.isVerified && <I.Check className="text-blue-500 ml-1"/>}
-                                {otherUser.halloweenBadgeId && <span className="ml-1">{getItemById(otherUser.halloweenBadgeId)?.emoji}</span>}
+                                {renderName(otherUser, 'text-slate-800')}
                             </div>
                             {isOtherTyping ? <p className="text-xs text-gopo font-bold flex items-center">печатает <TypingDots className="ml-1 text-gopo" /></p>
                                 : <p className={`text-xs font-bold ${isOtherOnline?'text-green-600':'text-slate-500'}`}>{formatLastSeen(otherUser)}</p>}
@@ -1642,6 +1732,7 @@
                             const mine = m.senderId === user.uid;
                             const reactions = m.reactions || {};
                             const wf = waveBars(m.id);
+                            const isMyPremium = mine && isPremium;
                             return (
                                 <div key={m.id} className={`flex w-full ${mine ? 'justify-end' : 'justify-start'} group mb-2`}>
                                     <div className={`flex items-end gap-1.5 ${mine ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -1649,15 +1740,15 @@
                                             {mine && <button onClick={()=>delMsg(m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50"><I.Trash size={14}/></button>}
                                             <button onClick={()=>setShowEmojiPicker(showEmojiPicker===m.id?null:m.id)} className="p-1.5 rounded-full text-slate-300 hover:text-gopo text-sm">😊</button>
                                         </div>
-                                        <div className={`max-w-[75vw] md:max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm break-words ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
+                                        <div className={`max-w-[75vw] md:max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm break-words ${isMyPremium ? 'premium-bubble rounded-br-sm' : (mine ? 'bg-gopo text-white rounded-br-sm' : 'bg-white border border-slate-200 text-slate-800 rounded-bl-sm')}`}>
                                             {m.audio ? (
                                                 <button onClick={()=>playAudio(m)} className="flex items-center space-x-2">
                                                     {playingId===m.id ? <I.Pause size={16}/> : <I.Play size={16}/>}
-                                                    <div className="flex items-end space-x-0.5 h-5">{wf.map((h,i)=><span key={i} className={`w-0.5 ${mine?'bg-white':'bg-slate-600'}`} style={{height:`${h}%`}}></span>)}</div>
+                                                    <div className="flex items-end space-x-0.5 h-5">{wf.map((h,i)=><span key={i} className={`w-0.5 ${(mine && !isMyPremium)?'bg-white':'bg-slate-600'}`} style={{height:`${h}%`}}></span>)}</div>
                                                     <span className="text-xs opacity-70">{m.audioDuration}s</span>
                                                 </button>
                                             ) : m.text}
-                                            {mine && <span className="inline-block ml-1 text-[10px] align-middle">{(m.readBy||[]).includes(other.uid)?'✓✓':'✓'}</span>}
+                                            {mine && <span className={`inline-block ml-1 text-[10px] align-middle ${isMyPremium ? 'text-black/60' : ''}`}>{(m.readBy||[]).includes(other.uid)?'✓✓':'✓'}</span>}
                                         </div>
                                     </div>
                                     {Object.keys(reactions).length > 0 && (
@@ -1679,7 +1770,7 @@
                         })}
                         <div ref={endRef} />
                     </div>
-                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center flex-shrink-0">
+                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center flex-shrink-0 pb-safe">
                         <input value={text} onChange={e=>handleChange(e.target.value)} placeholder="Сообщение... (+3 🪙)" className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium min-w-0" />
                         <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50 flex-shrink-0"><I.Send/></button>
                     </form>
@@ -1718,7 +1809,7 @@
                 e.preventDefault(); if (!text.trim()) return;
                 await db.collection('groups').doc(group.id).collection('messages').add({ senderId: user.uid, senderName: profile.username, senderAvatar: profile.avatar, text: text.trim(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 await db.collection('groups').doc(group.id).update({lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()});
-                await addGoCoins(user.uid, 3);
+                await addGoCoins(user.uid, 3, checkPremium(profile));
                 (liveGroup.members || []).forEach(uid => { if (uid !== user.uid) db.collection('users').doc(uid).update({ [`unreadGroupCounts.${group.id}`]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{}); });
                 setText('');
             };
@@ -1743,12 +1834,13 @@
                 } catch(e){ alert(e.message); }
             };
             const membersList = (liveGroup.members || []).map(uid => usersMap[uid] ? { ...usersMap[uid], uid } : { uid, username:'unknown', avatar:null }).filter(Boolean);
+            const isPremium = checkPremium(profile);
 
             return (
                 <div className="flex-1 flex flex-col h-full bg-white/40 min-h-0">
                     <div className="p-3 border-b border-white/50 flex items-center space-x-2 bg-white/50 backdrop-blur-md flex-shrink-0">
                         <button onClick={onBack} className="p-2 text-slate-600 hover:bg-white rounded-full md:hidden"><I.Back/></button>
-                        {liveGroup.avatar ? <img src={liveGroup.avatar} className="w-10 h-10 rounded-full object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-full bg-gopo text-white flex items-center justify-center font-black flex-shrink-0">{liveGroup.name?.[0]?.toUpperCase()}</div>}
+                        {liveGroup.avatar ? <img src={liveGroup.avatar} className="w-10 h-10 rounded-full object-cover flex-shrink-0" onContextMenu={e=>e.preventDefault()} /> : <div className="w-10 h-10 rounded-full bg-gopo text-white flex items-center justify-center font-black flex-shrink-0">{liveGroup.name?.[0]?.toUpperCase()}</div>}
                         <div className="flex-1 min-w-0">
                             <span className="font-black text-sm truncate block">{liveGroup.name}</span>
                             <button onClick={()=>setShowMembers(true)} className="text-xs text-slate-500 hover:text-gopo flex items-center gap-1"><I.Users/>{liveGroup.members?.length || 0} участников</button>
@@ -1760,11 +1852,12 @@
                         {messages.length===0 && <p className="text-center text-slate-400 font-bold mt-10 text-sm">Начните общение 👋 (+3 GoCoin за сообщение)</p>}
                         {messages.map(m => {
                             const mine = m.senderId === user.uid;
+                            const isMyPremium = mine && isPremium;
                             return (
                                 <div key={m.id} className={`flex w-full ${mine ? 'justify-end' : 'justify-start'} group mb-2`}>
                                     <div className={`flex items-end gap-1.5 ${mine ? 'flex-row-reverse' : 'flex-row'}`}>
                                         {!mine && <Avatar src={m.senderAvatar} name={m.senderName} size={28} />}
-                                        <div className={`max-w-[75vw] md:max-w-[75%] px-3 py-2 rounded-2xl text-sm font-medium shadow-sm break-words ${mine?'bg-gopo text-white rounded-br-sm':'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'}`}>
+                                        <div className={`max-w-[75vw] md:max-w-[75%] px-3 py-2 rounded-2xl text-sm font-medium shadow-sm break-words ${isMyPremium ? 'premium-bubble rounded-br-sm' : (mine ? 'bg-gopo text-white rounded-br-sm' : 'bg-white border border-slate-200 text-slate-800 rounded-bl-sm')}`}>
                                             {!mine && <p className="text-[10px] font-black text-gopo mb-0.5">@{m.senderName}</p>}
                                             {m.text}
                                         </div>
@@ -1775,7 +1868,7 @@
                         })}
                         <div ref={endRef} />
                     </div>
-                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center flex-shrink-0">
+                    <form onSubmit={send} className="p-3 border-t border-white/50 flex gap-2 bg-white/50 items-center flex-shrink-0 pb-safe">
                         <input value={text} onChange={e=>setText(e.target.value)} placeholder="Сообщение... (+3 🪙)" className="flex-1 p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium min-w-0" />
                         <button type="submit" disabled={!text.trim()} className="bg-gopo text-white p-3 rounded-xl shadow-md disabled:opacity-50 flex-shrink-0"><I.Send/></button>
                     </form>
@@ -1790,7 +1883,7 @@
                                         const isMAdmin = (liveGroup.admins||[]).includes(m.uid);
                                         return (
                                             <div key={m.uid} className="flex items-center gap-2 p-2 rounded-xl hover:bg-slate-50">
-                                                <Avatar src={m.avatar} name={m.username} size={32} />
+                                                <Avatar src={m.avatar} name={m.username} size={32} isPremium={checkPremium(m)} />
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-bold text-sm truncate">@{m.username} {isM && <span className="text-[10px] text-slate-400">(вы)</span>}</p>
                                                     {isMAdmin && <p className="text-[10px] font-black text-gopo uppercase">Админ</p>}
@@ -1807,7 +1900,7 @@
             );
         };
 
-        const ProfileTab = ({ user, profile, usersMap, notifPermission, requestNotifPerm }) => {
+        const ProfileTab = ({ user, profile, usersMap, notifPermission, requestNotifPerm, onImageClick }) => {
             const [editing, setEditing] = useState(false);
             const [name, setName] = useState(profile.displayName || '');
             const [username, setUsername] = useState(profile.username || '');
@@ -1855,8 +1948,8 @@
                 }
                 try { await db.collection('users').doc(user.uid).update(updates); } catch(e) { alert(e.message); }
             };
-            const badge = profile.halloweenBadgeId ? getItemById(profile.halloweenBadgeId) : null;
             const ps = getPostStyleClass(profile.halloweenPostStyle);
+            const isPrem = checkPremium(profile);
             const resendVerify = async () => {
                 setVerifyStatus('Отправляем...');
                 try { await user.reload(); if (user.emailVerified) { setVerifyStatus('✅ Почта подтверждена'); return; } await user.sendEmailVerification(); setVerifyStatus('✉️ Письмо отправлено. Проверь папку Спам!'); }
@@ -1898,20 +1991,21 @@
                         </div>
                         <div className="px-6 pb-6 relative">
                             <div className="-mt-14 mb-3 inline-block p-1 bg-white rounded-full shadow-lg">
-                                <Avatar src={profile.avatar} name={profile.username} size={100} showStatus isOnline={isReallyOnline(profile)} halloweenFrame={profile.halloweenFrameId} />
+                                <Avatar src={profile.avatar} name={profile.username} size={100} showStatus isOnline={isReallyOnline(profile)} halloweenFrame={profile.halloweenFrameId} isPremium={isPrem} />
                             </div>
                             <div className="flex items-start justify-between">
                                 <div>
                                     <div className="flex items-center flex-wrap">
-                                        <h1 className="text-2xl font-black mr-2">{profile.displayName || profile.username}</h1>
-                                        {profile.isVerified && <I.Check className="text-blue-500"/>}
-                                        {badge && <span className="ml-1 text-xl" title={badge.name}>{badge.emoji}</span>}
+                                        {renderName(profile, 'text-slate-800')}
                                     </div>
                                     <p className="text-slate-500 font-medium">@{profile.username}</p>
                                     <p className={`text-xs font-bold mt-1 ${isReallyOnline(profile)?'text-green-600':'text-slate-400'}`}>{formatLastSeen(profile)}</p>
                                     {profile.bio && <p className="text-slate-700 mt-2 text-sm">{profile.bio}</p>}
-                                    <div className="mt-2 inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
-                                        <I.Coin /><span className="font-black text-amber-700 text-sm">{profile.goCoins || 0}</span><span className="text-[10px] text-amber-600 font-bold">GoCoin</span>
+                                    <div className="mt-2 flex gap-2 items-center flex-wrap">
+                                        <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
+                                            <I.Coin /><span className="font-black text-amber-700 text-sm">{profile.goCoins || 0}</span><span className="text-[10px] text-amber-600 font-bold">GoCoin</span>
+                                        </div>
+                                        {isPrem && <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full px-3 py-1 text-xs font-black shadow-sm">Premium 👑</span>}
                                     </div>
                                 </div>
                                 <button onClick={()=>setEditing(true)} className="border-2 border-slate-200 hover:border-slate-300 font-bold px-4 py-2 rounded-xl text-sm transition">Изменить</button>
@@ -1940,7 +2034,7 @@
                                         </div>
                                         {post.text && <p className={`text-sm mb-2 ${mood.text}`}>{post.text}</p>}
                                         {post.poll && <div className="bg-white/60 rounded-xl p-2 mb-2"><p className="font-bold text-xs">📊 {post.poll.question}</p><p className="text-[10px] text-slate-500 mt-1">{Object.keys(post.poll.votes || {}).length} голосов</p></div>}
-                                        {post.image && <img src={post.image} className="rounded-xl max-h-60 w-full object-cover shadow-sm" />}
+                                        {post.image && <img src={post.image} onClick={()=>onImageClick(post.image)} onContextMenu={e=>e.preventDefault()} className="rounded-xl max-h-60 w-full object-cover shadow-sm cursor-pointer" />}
                                     </div>
                                 );
                             })}
@@ -2015,7 +2109,7 @@
                                 </div>
                                 <div className="flex flex-col items-center mb-4">
                                     <label className="cursor-pointer relative">
-                                        <Avatar src={avatar} name={username} size={80} />
+                                        <Avatar src={avatar} name={username} size={80} isPremium={isPrem} />
                                         <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center text-white opacity-0 hover:opacity-100 transition"><I.Image/></div>
                                         <input type="file" accept="image/*" className="hidden" onChange={e=>upload(e, setAvatar, 200)} />
                                     </label>
@@ -2034,7 +2128,7 @@
             );
         };
 
-        const UserProfileModal = ({ targetUser, currentUser, currentProfile, onClose }) => {
+        const UserProfileModal = ({ targetUser, currentUser, currentProfile, onClose, onImageClick }) => {
             const [targetPosts, setTargetPosts] = useState([]);
             const [liveUser, setLiveUser] = useState(targetUser);
             const isSelf = targetUser.uid === currentUser.uid;
@@ -2060,8 +2154,8 @@
                     sendNotification(targetUser.uid, {uid:currentUser.uid, username:currentProfile.username, avatar:currentProfile.avatar}, 'follow', '');
                 }
             };
-            const badge = liveUser?.halloweenBadgeId ? getItemById(liveUser.halloweenBadgeId) : null;
             const ps = getPostStyleClass(liveUser?.halloweenPostStyle);
+            const isPrem = checkPremium(liveUser);
             return (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto relative fade-in">
@@ -2071,14 +2165,12 @@
                         </div>
                         <div className="px-6 pb-6 relative">
                             <div className="-mt-14 mb-3 inline-block p-1 bg-white rounded-full shadow-lg">
-                                <Avatar src={liveUser.avatar} name={liveUser.username} size={100} showStatus isOnline={isReallyOnline(liveUser)} halloweenFrame={liveUser.halloweenFrameId} />
+                                <Avatar src={liveUser.avatar} name={liveUser.username} size={100} showStatus isOnline={isReallyOnline(liveUser)} halloweenFrame={liveUser.halloweenFrameId} isPremium={isPrem} />
                             </div>
                             <div className="flex items-start justify-between flex-wrap gap-2">
                                 <div>
                                     <div className="flex items-center flex-wrap">
-                                        <h1 className="text-2xl font-black mr-2">{liveUser.displayName || liveUser.username}</h1>
-                                        {liveUser.isVerified && <I.Check className="text-blue-500"/>}
-                                        {badge && <span className="ml-1 text-xl" title={badge.name}>{badge.emoji}</span>}
+                                        {renderName(liveUser, 'text-slate-800')}
                                     </div>
                                     <p className="text-slate-500 font-medium">@{liveUser.username}</p>
                                     <p className={`text-xs font-bold mt-1 ${isReallyOnline(liveUser)?'text-green-600':'text-slate-400'}`}>{formatLastSeen(liveUser)}</p>
@@ -2106,7 +2198,7 @@
                                             <span className="text-xl">{mood.emoji}</span>
                                         </div>
                                         {post.text && <p className={`text-sm mb-2 ${mood.text}`}>{post.text}</p>}
-                                        {post.image && <img src={post.image} className="rounded-xl max-h-60 w-full object-cover shadow-sm" />}
+                                        {post.image && <img src={post.image} onClick={()=>onImageClick(post.image)} onContextMenu={e=>e.preventDefault()} className="rounded-xl max-h-60 w-full object-cover shadow-sm cursor-pointer" />}
                                     </div>
                                 );
                             })}
@@ -2126,6 +2218,9 @@
             const [playingId, setPlayingId] = useState(null);
             const [rejectingTrack, setRejectingTrack] = useState(null);
             const [rejectReason, setRejectReason] = useState('');
+            const [ecoUser, setEcoUser] = useState('');
+            const [ecoAmount, setEcoAmount] = useState('');
+            const [ecoMsg, setEcoMsg] = useState('');
             const audioRefs = useRef({});
             const [, tick] = useState(0);
             useEffect(() => { const t = setInterval(()=>tick(x=>x+1), 5000); return () => clearInterval(t); }, []);
@@ -2140,6 +2235,17 @@
             const toggleVerify = async (id, cur) => await db.collection('users').doc(id).update({isVerified:!cur});
             const toggleBan = async (id, cur) => { if (window.confirm(cur?'Разбанить?':'Забанить?')) await db.collection('users').doc(id).update({isBanned:!cur}); };
             const toggleTyping = async () => await db.collection('users').doc(user.uid).update({showTypingFeed:!showTyping});
+            const giveCoins = async () => {
+                if (!ecoUser || !ecoAmount) { setEcoMsg('Заполни оба поля'); return; }
+                setEcoMsg('Ищем пользователя...');
+                try {
+                    const snap = await db.collection('users').where('username', '==', ecoUser.replace('@','')).get();
+                    if (snap.empty) { setEcoMsg('Пользователь не найден'); return; }
+                    await snap.docs[0].ref.update({ goCoins: firebase.firestore.FieldValue.increment(Number(ecoAmount)) });
+                    setEcoMsg(`Успешно выдано ${ecoAmount} монет пользователю @${ecoUser.replace('@','')}`);
+                    setEcoAmount('');
+                } catch (e) { setEcoMsg('Ошибка: ' + e.message); }
+            };
             const playTrackPreview = (t) => {
                 if (playingId === t.id) { audioRefs.current[t.id]?.pause(); setPlayingId(null); return; }
                 Object.values(audioRefs.current).forEach(a => a?.pause());
@@ -2163,8 +2269,9 @@
                     <div className="flex items-center space-x-2 text-red-500"><I.Shield/><h1 className="text-2xl font-black">Админ-панель</h1></div>
                     <div className="flex space-x-2 bg-white rounded-2xl p-1 shadow-sm">
                         <button onClick={()=>setAdminTab('users')} className={`flex-1 py-2 rounded-xl text-sm font-bold ${adminTab==='users'?'bg-gopo text-white':'text-slate-600'}`}>Пользователи</button>
+                        <button onClick={()=>setAdminTab('economy')} className={`flex-1 py-2 rounded-xl text-sm font-bold ${adminTab==='economy'?'bg-gopo text-white':'text-slate-600'}`}>Экономика</button>
                         <button onClick={()=>setAdminTab('music')} className={`flex-1 py-2 rounded-xl text-sm font-bold relative ${adminTab==='music'?'bg-gopo text-white':'text-slate-600'}`}>
-                            Модерация музыки
+                            Музыка
                             {pendingTracks.length > 0 && <span className={`ml-1 text-[10px] font-black px-1.5 py-0.5 rounded-full ${adminTab==='music'?'bg-white text-gopo':'bg-gopo text-white'}`}>{pendingTracks.length}</span>}
                         </button>
                     </div>
@@ -2191,7 +2298,7 @@
                                             <div className="space-y-2">
                                                 {typingUsers.map(u => { const target = usersMap[u.typingIn]; return (
                                                     <div key={u.uid} className="flex items-center space-x-2 bg-white/80 rounded-xl p-2">
-                                                        <Avatar src={u.avatar} name={u.username} size={28} />
+                                                        <Avatar src={u.avatar} name={u.username} size={28} isPremium={checkPremium(u)} />
                                                         <p className="text-xs font-bold text-slate-800 truncate flex-1">@{u.username} <span className="text-slate-400 font-medium">→</span> {target?`@${target.username}`:'...'}</p>
                                                         <TypingDots className="text-purple-500" />
                                                     </div>
@@ -2209,9 +2316,11 @@
                                         return (
                                             <div key={u.uid} className={`p-4 border-b border-white/50 last:border-0 ${u.isBanned?'bg-red-50/50':''}`}>
                                                 <div className="flex items-center space-x-3 mb-2">
-                                                    <Avatar src={u.avatar} name={u.username} size={42} showStatus isOnline={online} halloweenFrame={u.halloweenFrameId} />
+                                                    <Avatar src={u.avatar} name={u.username} size={42} showStatus isOnline={online} halloweenFrame={u.halloweenFrameId} isPremium={checkPremium(u)} />
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center"><span className="font-black text-sm truncate">{u.displayName || u.username}</span>{u.isVerified && <I.Check className="text-blue-500 ml-1 flex-shrink-0"/>}</div>
+                                                        <div onClick={()=>onUserClick(u)} className="cursor-pointer">
+                                                            {renderName(u, 'text-slate-800')}
+                                                        </div>
                                                         <p className="text-xs text-slate-400 truncate">@{u.username} • 🪙 {u.goCoins || 0}</p>
                                                         <p className={`text-[10px] font-bold ${online?'text-green-600':'text-slate-400'}`}>{formatLastSeen(u)}</p>
                                                         {u.isBanned && <p className="text-[10px] text-red-500 font-bold">ЗАБАНЕН</p>}
@@ -2230,6 +2339,24 @@
                             </div>
                         </>
                     )}
+                    {adminTab === 'economy' && (
+                        <div className="bg-white rounded-3xl p-6 shadow-sm">
+                            <h2 className="text-xl font-black mb-4">Генератор GoCoin</h2>
+                            <p className="text-sm text-slate-500 mb-4">Выдай монеты себе или пользователю для тестов.</p>
+                            <div className="space-y-3 max-w-sm">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-600 ml-1">Никнейм (без @)</label>
+                                    <input value={ecoUser} onChange={e=>setEcoUser(e.target.value)} placeholder="nowkie" className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-600 ml-1">Количество монет</label>
+                                    <input value={ecoAmount} onChange={e=>setEcoAmount(e.target.value)} type="number" placeholder="1000" className="w-full p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-gopo font-medium" />
+                                </div>
+                                <button onClick={giveCoins} className="w-full bg-gopo text-white font-bold py-3 rounded-xl shadow-md">Выдать</button>
+                                {ecoMsg && <p className={`text-xs font-bold text-center ${ecoMsg.includes('Ошибка')||ecoMsg.includes('не найден')?'text-red-500':'text-green-500'}`}>{ecoMsg}</p>}
+                            </div>
+                        </div>
+                    )}
                     {adminTab === 'music' && (
                         <div>
                             <p className="text-slate-500 text-sm font-medium mb-3">Треки на проверке ({pendingTracks.length})</p>
@@ -2240,7 +2367,7 @@
                                     {pendingTracks.map(t => (
                                         <div key={t.id} className="bg-white rounded-2xl p-4 shadow-sm">
                                             <div className="flex items-start space-x-3 mb-3">
-                                                {t.cover ? <img src={t.cover} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" /> : <div className="w-16 h-16 rounded-xl bg-gopo text-white flex items-center justify-center flex-shrink-0"><I.Music/></div>}
+                                                {t.cover ? <img src={t.cover} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" onContextMenu={e=>e.preventDefault()} /> : <div className="w-16 h-16 rounded-xl bg-gopo text-white flex items-center justify-center flex-shrink-0"><I.Music/></div>}
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-black text-sm truncate">{t.title}</p>
                                                     <p className="text-xs text-slate-500 truncate">{t.artist}</p>
@@ -2347,7 +2474,7 @@
                                             className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center shadow-sm ${isCur?'bg-gopo text-white':'bg-slate-100 text-slate-600'} ${!playable?'opacity-40 cursor-not-allowed':''}`}>
                                             {isCur && playerPlaying ? <I.Pause/> : <I.Play/>}
                                         </button>
-                                        {t.cover ? <img src={t.cover} className="w-11 h-11 rounded-lg object-cover flex-shrink-0" /> : <div className="w-11 h-11 rounded-lg bg-gopo text-white flex items-center justify-center flex-shrink-0"><I.Music/></div>}
+                                        {t.cover ? <img src={t.cover} className="w-11 h-11 rounded-lg object-cover flex-shrink-0" onContextMenu={e=>e.preventDefault()} /> : <div className="w-11 h-11 rounded-lg bg-gopo text-white flex items-center justify-center flex-shrink-0"><I.Music/></div>}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center space-x-2"><p className="font-black text-sm truncate">{t.title}</p>{tab === 'mine' && statusBadge(t.status)}</div>
                                             <p className="text-xs text-slate-500 truncate">{t.artist} · @{t.uploaderName}</p>
@@ -2424,7 +2551,7 @@
                         <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-black">Загрузить трек</h2><button onClick={onClose} className="p-2 text-slate-400"><I.X/></button></div>
                         <div className="flex flex-col items-center mb-4">
                             <div onClick={()=>coverRef.current.click()} className="w-32 h-32 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-200 transition">
-                                {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover" /> : <div className="text-slate-400 text-center"><I.Image/><p className="text-xs font-bold mt-1">Обложка</p></div>}
+                                {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover" onContextMenu={e=>e.preventDefault()} /> : <div className="text-slate-400 text-center"><I.Image/><p className="text-xs font-bold mt-1">Обложка</p></div>}
                             </div>
                             <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={pickCover} />
                         </div>
@@ -2445,7 +2572,7 @@
             );
         };
 
-        const PremiumTab = ({ user, profile }) => {
+        const PremiumTab = ({ user, profile, isPremium }) => {
             return (
                 <div className="fade-in max-w-2xl mx-auto">
                     <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
@@ -2457,6 +2584,16 @@
                         </div>
                         <p className="text-purple-200 font-medium mb-8">Поддержи проект и получи крутые плюшки. Без золотых галочек, только польза.</p>
 
+                        {isPremium && (
+                            <div className="mb-6 bg-green-500/20 border border-green-500/50 rounded-2xl p-4 flex items-center gap-3">
+                                <div className="text-2xl">✅</div>
+                                <div>
+                                    <h3 className="font-black text-green-300">У вас активна подписка Premium!</h3>
+                                    <p className="text-xs text-green-200 font-medium">Все преимущества уже доступны.</p>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-4 mb-8">
                             <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
                                 <div className="text-3xl">💰</div>
@@ -2466,17 +2603,17 @@
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                                <div className="text-3xl">🎨</div>
+                                <div className="text-3xl">🌈</div>
                                 <div>
-                                    <h3 className="font-black text-lg">Эксклюзивный стиль</h3>
-                                    <p className="text-xs text-purple-200 font-medium">Доступ к уникальным премиум-рамкам и стилям постов.</p>
+                                    <h3 className="font-black text-lg">Радужная аура</h3>
+                                    <p className="text-xs text-purple-200 font-medium">Твоя аватарка переливается всеми цветами радуги.</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                                <div className="text-3xl">🚀</div>
+                                <div className="text-3xl">✨</div>
                                 <div>
-                                    <h3 className="font-black text-lg">Приоритет в ленте</h3>
-                                    <p className="text-xs text-purple-200 font-medium">Твои пузыри видит больше людей.</p>
+                                    <h3 className="font-black text-lg">Золотые посты и сообщения</h3>
+                                    <p className="text-xs text-purple-200 font-medium">Твои сообщения в чатах и посты в ленте выделяются золотым стилем.</p>
                                 </div>
                             </div>
                         </div>
@@ -2486,8 +2623,8 @@
                                 <p className="text-sm text-purple-300 font-bold">Стоимость</p>
                                 <p className="text-3xl font-black">99 ₽ <span className="text-sm text-slate-400 font-medium">/ мес</span></p>
                             </div>
-                            <button onClick={() => alert('Оплата пока находится в разработке. Скоро всё будет! 🚀')} className="bg-white text-purple-900 font-black px-6 py-3 rounded-xl hover:bg-purple-50 transition shadow-lg shadow-purple-500/30">
-                                Оформить
+                            <button onClick={() => alert('Оплата пока находится в разработке. Скоро всё будет! 🚀')} disabled={isPremium} className="bg-white text-purple-900 font-black px-6 py-3 rounded-xl hover:bg-purple-50 transition shadow-lg shadow-purple-500/30 disabled:opacity-50">
+                                {isPremium ? 'Уже активно' : 'Оформить'}
                             </button>
                         </div>
                     </div>
@@ -2598,6 +2735,8 @@
                     if (reward.bonusCoins) coinsToAdd += reward.bonusCoins;
                     if (coinsToAdd > 0) updates.goCoins = firebase.firestore.FieldValue.increment(coinsToAdd);
                     if (reward.type === 'cosmetic') updates.ownedCosmetics = firebase.firestore.FieldValue.arrayUnion(reward.itemId);
+                    if (reward.premiumDays) updates.premiumUntil = firebase.firestore.FieldValue.increment(reward.premiumDays * 24 * 60 * 60 * 1000);
+                    
                     await db.collection('users').doc(user.uid).update(updates);
                     setTimeout(() => { setShowReward({ day, ...reward }); setOpeningDay(null); }, 300);
                 } catch (e) { alert(e.message); setOpeningDay(null); }
@@ -2640,7 +2779,7 @@
                                 );
                             })}
                         </div>
-                        <p className="text-center text-[10px] text-slate-400 font-bold mt-4">День 31 — особый приз: легендарная косметика + 1000 GoCoin</p>
+                        <p className="text-center text-[10px] text-slate-400 font-bold mt-4">День 31 — особый приз: легендарная косметика + 1000 GoCoin + 7 дней Premium 👑</p>
                     </div>
                     {showReward && (
                         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[80] flex items-center justify-center p-4" onClick={()=>setShowReward(null)}>
@@ -2649,6 +2788,7 @@
                                 <h3 className="text-2xl font-black text-white mb-1">День {showReward.day} открыт!</h3>
                                 <p className="text-lg font-black text-amber-200 mt-3">{showReward.name}</p>
                                 {showReward.type === 'cosmetic' && showReward.bonusCoins && <p className="text-amber-100 font-bold mt-1">+ {showReward.bonusCoins} 🪙</p>}
+                                {showReward.premiumDays && <p className="text-purple-200 font-bold mt-1">+ {showReward.premiumDays} дней Premium 👑</p>}
                                 <button onClick={()=>setShowReward(null)} className="mt-5 bg-white text-blue-600 font-black px-6 py-2.5 rounded-xl shadow-md">Забрать</button>
                             </div>
                         </div>
